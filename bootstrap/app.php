@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
+        // La isla de práctica (mismo dominio) consume /api/v1 con la cookie
+        // de sesión vía Sanctum; sin tokens hasta la etapa Capacitor.
+        $middleware->statefulApi();
+
         $middleware->web(append: [
             HandleAppearance::class,
             HandleInertiaRequests::class,

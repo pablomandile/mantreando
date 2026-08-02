@@ -16,13 +16,21 @@ export function useDeviceTimezone(): void {
     const page = usePage<{ auth: { user: AuthUser | null } }>();
 
     onMounted(() => {
-        if (captured) return;
+        if (captured) {
+            return;
+        }
 
         const user = page.props.auth?.user;
-        if (!user || user.timezone !== null) return;
+
+        if (!user || user.timezone !== null) {
+            return;
+        }
 
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (!timezone) return;
+
+        if (!timezone) {
+            return;
+        }
 
         captured = true;
         router.patch(

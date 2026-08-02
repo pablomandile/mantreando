@@ -73,6 +73,25 @@ export default defineConfigWithVueTs(
         },
     },
     {
+        // La isla de práctica es TS puro: sin Inertia ni Vue, para que el
+        // módulo funcione offline y sea portable (Capacitor) sin refactor.
+        files: ['resources/js/lib/practice/**', 'resources/js/lib/mala/**'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    patterns: [
+                        {
+                            group: ['@inertiajs/*', 'vue', 'vue-*', '@vueuse/*'],
+                            message:
+                                'lib/practice y lib/mala son TS puro (isla offline): mové la integración con Vue a composables/.',
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+    {
         ignores: [
             'vendor',
             'node_modules',

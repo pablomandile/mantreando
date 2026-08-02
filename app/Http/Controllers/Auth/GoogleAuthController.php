@@ -71,6 +71,6 @@ class GoogleAuthController
 
         request()->session()->regenerate();
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(route('practice.index'));
     }
 }

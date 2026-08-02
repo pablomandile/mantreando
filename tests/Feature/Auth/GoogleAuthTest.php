@@ -35,7 +35,7 @@ test('crea un usuario nuevo sin password desde google', function () {
 
     $response = $this->get('/auth/google/callback');
 
-    $response->assertRedirect(route('dashboard'));
+    $response->assertRedirect(route('practice.index'));
 
     $user = User::where('email', 'practicante@gmail.com')->first();
     expect($user)->not->toBeNull()
@@ -53,7 +53,7 @@ test('linkea una cuenta existente por email sin tocar su password', function () 
 
     mockGoogleCallback(fakeGoogleUser());
 
-    $this->get('/auth/google/callback')->assertRedirect(route('dashboard'));
+    $this->get('/auth/google/callback')->assertRedirect(route('practice.index'));
 
     $existing->refresh();
     expect($existing->google_id)->toBe('108977312345678901234')
@@ -71,7 +71,7 @@ test('matchea un usuario que vuelve por google_id aunque cambie el email', funct
 
     mockGoogleCallback(fakeGoogleUser());
 
-    $this->get('/auth/google/callback')->assertRedirect(route('dashboard'));
+    $this->get('/auth/google/callback')->assertRedirect(route('practice.index'));
 
     $this->assertAuthenticatedAs($existing);
     expect(User::count())->toBe(1);
@@ -79,7 +79,7 @@ test('matchea un usuario que vuelve por google_id aunque cambie el email', funct
 
 test('un fallo del provider redirige al login con error', function () {
     config(['services.google.client_id' => 'test-client-id']);
-    Socialite::shouldReceive('driver')->with('google')->andThrow(new RuntimeException('provider caído'));
+    Socialite::shouldReceive('driver')->with('google')->andThrow(new RuntimeException('provider caido'));
 
     $response = $this->get('/auth/google/callback');
 

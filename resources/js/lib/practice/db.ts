@@ -25,7 +25,7 @@ class MalaflowDB extends Dexie {
         super('malaflow');
 
         this.version(1).stores({
-            mantras: 'id',
+            mantras: 'id, name', // name indexado: la lista ordena por nombre
             outbox: 'uuid, createdAt',
             sessionState: 'key',
             meta: 'key',

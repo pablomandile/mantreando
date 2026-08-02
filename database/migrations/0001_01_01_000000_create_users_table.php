@@ -16,7 +16,16 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('password')->nullable(); // null = cuenta creada vía Google
+            $table->string('google_id')->nullable()->unique();
+            $table->string('avatar')->nullable();
+            // Timezone IANA del usuario. Toda la lógica de "día" (rachas, compromisos)
+            // usa local_date calculada EN EL DISPOSITIVO con esta zona; el servidor
+            // nunca deriva ni recalcula fechas locales históricas.
+            $table->string('timezone', 64)->nullable();
+            $table->string('locale', 10)->default('es');
+            $table->string('theme', 16)->default('system');
+            $table->json('settings')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

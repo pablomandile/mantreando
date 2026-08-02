@@ -29,11 +29,26 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'timezone' => 'America/Argentina/Buenos_Aires',
+            'locale' => 'es',
+            'theme' => 'system',
             'remember_token' => Str::random(10),
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
         ];
+    }
+
+    /**
+     * Cuenta creada vía Google: sin password, con google_id y avatar.
+     */
+    public function googleUser(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'password' => null,
+            'google_id' => (string) fake()->unique()->numberBetween(100000000, 999999999),
+            'avatar' => fake()->imageUrl(96, 96),
+        ]);
     }
 
     /**

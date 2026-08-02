@@ -25,6 +25,12 @@ defineOptions({
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+
+// Lista IANA del propio runtime: siempre actualizada, sin payload extra.
+const timezones =
+    typeof Intl.supportedValuesOf === 'function'
+        ? Intl.supportedValuesOf('timeZone')
+        : ['UTC'];
 </script>
 
 <template>
@@ -71,6 +77,32 @@ const user = computed(() => page.props.auth.user);
                     placeholder="Email address"
                 />
                 <InputError class="mt-2" :message="errors.email" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label for="timezone">Zona horaria</Label>
+                <select
+                    id="timezone"
+                    name="timezone"
+                    class="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                >
+                    <option value="" :selected="!user.timezone">
+                        Detectar automáticamente
+                    </option>
+                    <option
+                        v-for="tz in timezones"
+                        :key="tz"
+                        :value="tz"
+                        :selected="tz === user.timezone"
+                    >
+                        {{ tz }}
+                    </option>
+                </select>
+                <p class="text-sm text-muted-foreground">
+                    Tus rachas y compromisos diarios se calculan según esta
+                    zona.
+                </p>
+                <InputError class="mt-2" :message="errors.timezone" />
             </div>
 
             <div v-if="page.props.mustVerifyEmail && !user.email_verified_at">

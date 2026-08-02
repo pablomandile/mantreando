@@ -163,7 +163,7 @@ return [
     'features' => [
         Features::registration(),
         Features::resetPasswords(),
-        Features::emailVerification(),
+        // emailVerification: deshabilitada hasta configurar un transporte de mail.
         Features::twoFactorAuthentication([
             'confirm' => true,
             'confirmPassword' => true,

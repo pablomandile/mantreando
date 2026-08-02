@@ -11,3 +11,9 @@ test('la página de práctica renderiza para un usuario autenticado', function (
 test('un guest es redirigido al login', function () {
     $this->get('/practice')->assertRedirect(route('login'));
 });
+
+test('la página del spike del mala renderiza para un usuario autenticado', function () {
+    $this->actingAs(User::factory()->create())
+        ->get('/practice/spike')
+        ->assertOk();
+});

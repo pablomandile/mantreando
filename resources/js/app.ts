@@ -13,6 +13,9 @@ createInertiaApp({
         switch (true) {
             case name === 'Welcome':
                 return null;
+            // Pantalla de práctica inmersiva: sin chrome de layout.
+            case name === 'practice/Spike':
+                return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('settings/'):

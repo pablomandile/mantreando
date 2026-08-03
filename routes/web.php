@@ -36,7 +36,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('mantras/{mantra}/favorite', MantraFavoriteController::class)->name('mantras.favorite');
     Route::patch('mantras/{mantra}/practice-settings', MantraPracticeSettingsController::class)->name('mantras.practice-settings');
 
-    Route::inertia('stats', 'stats/Index')->name('stats.index');
+    Route::get('stats', App\Http\Controllers\StatsController::class)->name('stats.index');
 });
 
 require __DIR__.'/settings.php';

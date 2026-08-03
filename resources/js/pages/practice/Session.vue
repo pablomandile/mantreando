@@ -260,6 +260,7 @@ onUnmounted(() => {
                 :pool="mala.pool"
                 :material="preset.material"
                 :texture-url="preset.texture_url"
+                :aria-label="t('Mala: deslizá verticalmente para avanzar una cuenta')"
                 :set-container="mala.setContainer"
                 :set-column="mala.setColumn"
                 :on-pointer-down="mala.onPointerDown"

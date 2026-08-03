@@ -18,6 +18,7 @@ const props = defineProps<{
     pool: PoolBead[];
     material: BeadMaterial;
     textureUrl?: string | null;
+    ariaLabel?: string;
     setContainer: (el: HTMLElement | null) => void;
     setColumn: (el: HTMLElement | null) => void;
     onPointerDown: (event: PointerEvent) => void;
@@ -32,6 +33,8 @@ const columnStyle = () =>
 <template>
     <div
         class="mala-surface"
+        role="application"
+        :aria-label="ariaLabel"
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"
         @pointerup="onPointerUp"

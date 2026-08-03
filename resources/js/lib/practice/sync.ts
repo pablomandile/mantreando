@@ -28,6 +28,8 @@ export async function refreshBootstrap(): Promise<void> {
         await db.meta.bulkPut([
             { key: 'user', value: payload.user },
             { key: 'today', value: payload.today },
+            { key: 'totals', value: payload.totals },
+            { key: 'streak', value: payload.streak },
             { key: 'lastBootstrapAt', value: Date.now() },
         ]);
     });

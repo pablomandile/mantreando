@@ -26,6 +26,11 @@ const props = defineProps<{
         daily_commitment: number | null;
         total_goal: number | null;
     };
+    progress: {
+        total_recitations: number;
+        streak_current: number;
+        streak_max: number;
+    };
 }>();
 
 defineOptions({
@@ -142,6 +147,45 @@ function toggleFavorite(): void {
         <!-- Compromiso y objetivo (pivot del usuario, aplica también a mantras del sistema) -->
         <section class="rounded-xl border p-4">
             <h2 class="text-sm font-medium">Mi práctica con este mantra</h2>
+
+            <div
+                v-if="progress.total_recitations > 0"
+                class="mt-3 space-y-2 text-sm text-muted-foreground"
+            >
+                <p>
+                    <span class="font-medium text-foreground">
+                        {{ progress.total_recitations.toLocaleString() }}
+                    </span>
+                    recitaciones acumuladas
+                    <template v-if="progress.streak_current > 0">
+                        · racha de {{ progress.streak_current }}
+                        {{ progress.streak_current === 1 ? 'día' : 'días' }}
+                    </template>
+                </p>
+                <div v-if="prefs.total_goal" class="space-y-1">
+                    <div class="h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div
+                            class="h-full rounded-full bg-foreground/70 transition-all"
+                            :style="{
+                                width: `${Math.min(100, (progress.total_recitations / prefs.total_goal) * 100)}%`,
+                            }"
+                        />
+                    </div>
+                    <p class="text-xs">
+                        {{
+                            Math.min(
+                                100,
+                                Math.round(
+                                    (progress.total_recitations /
+                                        prefs.total_goal) *
+                                        100,
+                                ),
+                            )
+                        }}% de tu objetivo de
+                        {{ prefs.total_goal.toLocaleString() }}
+                    </p>
+                </div>
+            </div>
             <form
                 class="mt-3 grid gap-4 sm:grid-cols-2"
                 @submit.prevent="saveSettings"

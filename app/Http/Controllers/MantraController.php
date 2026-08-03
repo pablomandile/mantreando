@@ -72,10 +72,19 @@ class MantraController
     {
         Gate::authorize('view', $mantra);
 
+        $user = $request->user();
+
         $prefs = DB::table('mantra_user')
-            ->where('user_id', $request->user()->id)
+            ->where('user_id', $user->id)
             ->where('mantra_id', $mantra->id)
             ->first();
+
+        // Progreso histórico del usuario con este mantra (para el objetivo total)
+        $totalRecitations = (int) $user->dailyAggregates()
+            ->where('mantra_id', $mantra->id)
+            ->sum('recitations');
+
+        $mantraStreak = $user->streaks()->where('mantra_id', $mantra->id)->first();
 
         return Inertia::render('mantras/Show', [
             'mantra' => [
@@ -96,6 +105,11 @@ class MantraController
                 'is_favorite' => (bool) ($prefs->is_favorite ?? false),
                 'daily_commitment' => $prefs->daily_commitment ?? null,
                 'total_goal' => $prefs->total_goal ?? null,
+            ],
+            'progress' => [
+                'total_recitations' => $totalRecitations,
+                'streak_current' => (int) ($mantraStreak->current_count ?? 0),
+                'streak_max' => (int) ($mantraStreak->max_count ?? 0),
             ],
         ]);
     }

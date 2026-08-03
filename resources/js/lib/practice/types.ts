@@ -108,5 +108,7 @@ export interface BootstrapPayload {
     user: CachedUser;
     mantras: CachedMantra[];
     today: CachedToday;
+    totals: { by_mantra: Record<string, number> };
+    streak: { current: number; max: number };
     server_time: string;
 }

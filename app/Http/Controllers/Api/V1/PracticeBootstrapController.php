@@ -46,6 +46,16 @@ class PracticeBootstrapController
             ->where('local_date', $localToday)
             ->get();
 
+        // Totales históricos por mantra (progreso de objetivos totales)
+        $totalsByMantra = $user->dailyAggregates()
+            ->whereNotNull('mantra_id')
+            ->selectRaw('mantra_id, SUM(recitations) as total')
+            ->groupBy('mantra_id')
+            ->pluck('total', 'mantra_id')
+            ->mapWithKeys(fn ($total, $id) => [(string) $id => (int) $total]);
+
+        $globalStreak = $user->streaks()->whereNull('mantra_id')->first();
+
         return response()->json([
             'data' => [
                 'user' => [
@@ -63,6 +73,11 @@ class PracticeBootstrapController
                     'by_mantra' => $todayAggregates
                         ->whereNotNull('mantra_id')
                         ->mapWithKeys(fn ($row) => [(string) $row->mantra_id => (int) $row->recitations]),
+                ],
+                'totals' => ['by_mantra' => $totalsByMantra],
+                'streak' => [
+                    'current' => (int) ($globalStreak->current_count ?? 0),
+                    'max' => (int) ($globalStreak->max_count ?? 0),
                 ],
                 'server_time' => now()->toIso8601String(),
             ],

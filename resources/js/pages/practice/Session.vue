@@ -28,12 +28,14 @@ const mantra = ref<CachedMantra | null>(null);
 const loading = ref(true);
 const missing = ref(false);
 const resumeCandidate = ref<ActiveSessionState | null>(null);
-const celebration = ref<'mala' | 'commitment' | null>(null);
+const celebration = ref<'mala' | 'commitment' | 'goal' | null>(null);
 const exiting = ref(false);
 
 let timezone: string | undefined;
 let todayBase = 0; // recitaciones de HOY previas a esta sesión (este mantra)
+let totalBase = 0; // recitaciones históricas previas (objetivo total)
 let commitmentCelebrated = false;
+let goalCelebrated = false;
 let celebrationTimer: ReturnType<typeof setTimeout> | undefined;
 
 const recorder = new SessionRecorder();
@@ -45,8 +47,12 @@ const dailyCommitment = computed(
 const dailyProgress = computed(
     () => todayBase + mala.snapshot.value.totalCount,
 );
+const totalGoal = computed(() => mantra.value?.pivot.total_goal ?? null);
+const totalProgress = computed(
+    () => totalBase + mala.snapshot.value.totalCount,
+);
 
-function celebrate(kind: 'mala' | 'commitment'): void {
+function celebrate(kind: 'mala' | 'commitment' | 'goal'): void {
     celebration.value = kind;
     clearTimeout(celebrationTimer);
     celebrationTimer = setTimeout(() => (celebration.value = null), 3500);
@@ -114,10 +120,11 @@ async function exit(): Promise<void> {
 const userSettings = ref<Record<string, unknown> | null>(null);
 
 onMounted(async () => {
-    const [mantraRow, userMeta, todayMeta] = await Promise.all([
+    const [mantraRow, userMeta, todayMeta, totalsMeta] = await Promise.all([
         db.mantras.get(props.mantraId),
         db.meta.get('user'),
         db.meta.get('today'),
+        db.meta.get('totals'),
     ]);
 
     if (!mantraRow) {
@@ -152,6 +159,14 @@ onMounted(async () => {
         todayBase = today.by_mantra[String(props.mantraId)] ?? 0;
     }
 
+    // Progreso histórico (objetivo total)
+    const totals = totalsMeta?.value as
+        | { by_mantra: Record<string, number> }
+        | undefined;
+    totalBase = totals?.by_mantra[String(props.mantraId)] ?? 0;
+    goalCelebrated =
+        totalGoal.value !== null && totalBase >= totalGoal.value;
+
     // ¿Sesión interrumpida de este mantra?
     const active = await SessionRecorder.findActive(props.mantraId);
 
@@ -178,14 +193,24 @@ onMounted(async () => {
             celebrate('mala');
         }
 
-        if (
-            event.type === 'bead' &&
-            !commitmentCelebrated &&
-            dailyCommitment.value !== null &&
-            dailyProgress.value >= dailyCommitment.value
-        ) {
-            commitmentCelebrated = true;
-            celebrate('commitment');
+        if (event.type === 'bead') {
+            if (
+                !commitmentCelebrated &&
+                dailyCommitment.value !== null &&
+                dailyProgress.value >= dailyCommitment.value
+            ) {
+                commitmentCelebrated = true;
+                celebrate('commitment');
+            }
+
+            if (
+                !goalCelebrated &&
+                totalGoal.value !== null &&
+                totalProgress.value >= totalGoal.value
+            ) {
+                goalCelebrated = true;
+                celebrate('goal');
+            }
         }
     });
 });
@@ -341,7 +366,9 @@ onUnmounted(() => {
                         {{
                             celebration === 'mala'
                                 ? 'Completaste un mala'
-                                : 'Alcanzaste tu compromiso diario'
+                                : celebration === 'commitment'
+                                  ? 'Alcanzaste tu compromiso diario'
+                                  : 'Alcanzaste tu objetivo total'
                         }}
                     </p>
                     <span class="h-px w-10 bg-foreground/30" />

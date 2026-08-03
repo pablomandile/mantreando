@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { trans as t } from 'laravel-vue-i18n';
 import MantraForm from '@/components/mantras/MantraForm.vue';
 
 defineProps<{
@@ -17,13 +18,13 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Nuevo mantra" />
+    <Head :title="t('Nuevo mantra')" />
 
     <div class="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 p-4">
         <div>
-            <h1 class="text-xl font-semibold">Nuevo mantra</h1>
+            <h1 class="text-xl font-semibold">{{ t('Nuevo mantra') }}</h1>
             <p class="text-sm text-muted-foreground">
-                Agregá un mantra personal a tu biblioteca.
+                {{ t('Agregá un mantra personal a tu biblioteca.') }}
             </p>
         </div>
 

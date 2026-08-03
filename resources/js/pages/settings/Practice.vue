@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
+import { trans as t } from 'laravel-vue-i18n';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -37,20 +38,20 @@ const hapticsSupported =
 </script>
 
 <template>
-    <Head title="Ajustes de práctica" />
+    <Head :title="t('Ajustes de práctica')" />
 
-    <h1 class="sr-only">Ajustes de práctica</h1>
+    <h1 class="sr-only">{{ t('Ajustes de práctica') }}</h1>
 
     <div class="space-y-6">
         <Heading
             variant="small"
-            title="Práctica"
-            description="Cómo se comporta el mala durante la recitación"
+            :title="t('Práctica')"
+            :description="t('Cómo se comporta el mala durante la recitación')"
         />
 
         <form class="space-y-6" @submit.prevent="submit">
             <div class="grid gap-3">
-                <Label>Modo por defecto</Label>
+                <Label>{{ t('Modo por defecto') }}</Label>
                 <div class="flex gap-2">
                     <button
                         type="button"
@@ -60,9 +61,9 @@ const hapticsSupported =
                         }"
                         @click="form.default_mode = 'traditional'"
                     >
-                        Tradicional
+                        {{ t('Tradicional') }}
                         <span class="block text-xs text-muted-foreground">
-                            Cuenta por cuenta, el gurú invierte la dirección
+                            {{ t('Cuenta por cuenta, el gurú invierte la dirección') }}
                         </span>
                     </button>
                     <button
@@ -73,9 +74,9 @@ const hapticsSupported =
                         }"
                         @click="form.default_mode = 'assisted'"
                     >
-                        Asistido
+                        {{ t('Asistido') }}
                         <span class="block text-xs text-muted-foreground">
-                            Gestos libres con inercia, o tocar para avanzar
+                            {{ t('Gestos libres con inercia, o tocar para avanzar') }}
                         </span>
                     </button>
                 </div>
@@ -95,13 +96,12 @@ const hapticsSupported =
                     "
                 />
                 <span>
-                    Vibración al pasar cada cuenta
+                    {{ t('Vibración al pasar cada cuenta') }}
                     <span
                         v-if="!hapticsSupported"
                         class="block text-xs text-muted-foreground"
                     >
-                        No disponible en este dispositivo (p. ej. iPhone o
-                        escritorio)
+                        {{ t('No disponible en este dispositivo (p. ej. iPhone o escritorio)') }}
                     </span>
                 </span>
             </Label>
@@ -114,10 +114,10 @@ const hapticsSupported =
                             (form.sound_enabled = value === true)
                     "
                 />
-                <span>Sonido suave de madera al pasar cada cuenta</span>
+                <span>{{ t('Sonido suave de madera al pasar cada cuenta') }}</span>
             </Label>
 
-            <Button :disabled="form.processing">Guardar</Button>
+            <Button :disabled="form.processing">{{ t('Guardar') }}</Button>
         </form>
     </div>
 </template>

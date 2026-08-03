@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { X } from '@lucide/vue';
+import { trans as t } from 'laravel-vue-i18n';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import MalaStrand from '@/components/mala/MalaStrand.vue';
 import { useMala } from '@/composables/useMala';
@@ -230,7 +231,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Head :title="mantra ? `Práctica — ${mantra.name}` : 'Práctica'" />
+    <Head :title="mantra ? `${t('Práctica')} — ${mantra.name}` : t('Práctica')" />
 
     <div class="min-h-dvh bg-background text-foreground">
         <template v-if="missing">
@@ -238,15 +239,18 @@ onUnmounted(() => {
                 class="flex min-h-dvh flex-col items-center justify-center gap-3 p-6 text-center"
             >
                 <p class="text-sm text-muted-foreground">
-                    No se encontró este mantra en la memoria local. Conectate
-                    una vez para descargar tu biblioteca.
+                    {{
+                        t(
+                            'No se encontró este mantra en la memoria local. Conectate una vez para descargar tu biblioteca.',
+                        )
+                    }}
                 </p>
                 <button
                     type="button"
                     class="text-sm underline underline-offset-4"
                     @click="router.visit('/practice')"
                 >
-                    Volver a Práctica
+                    {{ t('Volver a Práctica') }}
                 </button>
             </div>
         </template>
@@ -271,7 +275,7 @@ onUnmounted(() => {
                     <button
                         type="button"
                         class="-m-2 rounded-md p-2 text-muted-foreground transition-colors hover:text-foreground"
-                        aria-label="Terminar la práctica y salir"
+                        :aria-label="t('Terminar la práctica y salir')"
                         @click="exit"
                     >
                         <X class="size-5" />
@@ -308,19 +312,26 @@ onUnmounted(() => {
                                 {{ mala.snapshot.value.round }}
                                 {{
                                     mala.snapshot.value.round === 1
-                                        ? 'mala completo'
-                                        : 'malas completos'
+                                        ? t('mala completo')
+                                        : t('malas completos')
                                 }}
                                 ·
                             </template>
-                            {{ mala.snapshot.value.totalCount }} en esta sesión
+                            {{
+                                t(':count en esta sesión', {
+                                    count: String(
+                                        mala.snapshot.value.totalCount,
+                                    ),
+                                })
+                            }}
                         </p>
                         <p
                             v-if="dailyCommitment"
                             class="mt-1 text-xs text-muted-foreground"
                         >
                             {{ Math.min(dailyProgress, dailyCommitment) }} /
-                            {{ dailyCommitment }} de tu compromiso diario
+                            {{ dailyCommitment }}
+                            {{ t('de tu compromiso diario') }}
                         </p>
                     </div>
                 </main>
@@ -333,9 +344,13 @@ onUnmounted(() => {
             >
                 <div class="w-full max-w-sm space-y-4 text-center">
                     <p class="text-sm text-muted-foreground">
-                        Tenés una práctica sin terminar con este mantra:
+                        {{ t('Tenés una práctica sin terminar con este mantra:') }}
                         <span class="font-medium text-foreground">
-                            {{ resumeCandidate.totalCount }} recitaciones
+                            {{
+                                t(':count recitaciones', {
+                                    count: String(resumeCandidate.totalCount),
+                                })
+                            }}
                         </span>
                     </p>
                     <div class="flex flex-col gap-2">
@@ -344,14 +359,14 @@ onUnmounted(() => {
                             class="rounded-md border bg-foreground px-4 py-2.5 text-sm font-medium text-background"
                             @click="resolveResume('continue')"
                         >
-                            Continuar donde quedé
+                            {{ t('Continuar donde quedé') }}
                         </button>
                         <button
                             type="button"
                             class="rounded-md border px-4 py-2.5 text-sm"
                             @click="resolveResume('finish-and-restart')"
                         >
-                            Guardarla y empezar de nuevo
+                            {{ t('Guardarla y empezar de nuevo') }}
                         </button>
                     </div>
                 </div>
@@ -374,10 +389,10 @@ onUnmounted(() => {
                     <p class="text-lg font-light">
                         {{
                             celebration === 'mala'
-                                ? 'Completaste un mala'
+                                ? t('Completaste un mala')
                                 : celebration === 'commitment'
-                                  ? 'Alcanzaste tu compromiso diario'
-                                  : 'Alcanzaste tu objetivo total'
+                                  ? t('Alcanzaste tu compromiso diario')
+                                  : t('Alcanzaste tu objetivo total')
                         }}
                     </p>
                     <span class="h-px w-10 bg-foreground/30" />

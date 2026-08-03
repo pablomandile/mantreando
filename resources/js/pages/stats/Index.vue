@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
+import { trans as t } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import BarChart from '@/components/stats/BarChart.vue';
 
@@ -30,11 +31,14 @@ defineOptions({
     },
 });
 
-const RANGES = [
-    { key: 'week', label: '7 días' },
-    { key: 'month', label: '30 días' },
-    { key: 'year', label: '12 meses' },
-] as const;
+const RANGES = computed(
+    () =>
+        [
+            { key: 'week', label: t('7 días') },
+            { key: 'month', label: t('30 días') },
+            { key: 'year', label: t('12 meses') },
+        ] as const,
+);
 
 function apply(range: string, mantra: number | null): void {
     router.get(
@@ -63,12 +67,14 @@ const maxByMantra = computed(() =>
 </script>
 
 <template>
-    <Head title="Estadísticas" />
+    <Head :title="t('Estadísticas')" />
 
     <div class="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-4">
         <header>
-            <h1 class="text-xl font-semibold">Estadísticas</h1>
-            <p class="text-sm text-muted-foreground">Tu progreso, sin ruido.</p>
+            <h1 class="text-xl font-semibold">{{ t('Estadísticas') }}</h1>
+            <p class="text-sm text-muted-foreground">
+                {{ t('Tu progreso, sin ruido.') }}
+            </p>
         </header>
 
         <!-- fila de filtros -->
@@ -92,11 +98,11 @@ const maxByMantra = computed(() =>
 
             <select
                 class="h-8 rounded-md border border-input bg-transparent px-2 text-xs focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
-                aria-label="Filtrar por mantra"
+                :aria-label="t('Filtrar por mantra')"
                 @change="onMantraChange"
             >
                 <option value="" :selected="filters.mantra === null">
-                    Todos los mantras
+                    {{ t('Todos los mantras') }}
                 </option>
                 <option
                     v-for="mantra in mantras"
@@ -116,7 +122,7 @@ const maxByMantra = computed(() =>
                     {{ totals.recitations.toLocaleString('es') }}
                 </p>
                 <p class="mt-0.5 text-xs text-muted-foreground">
-                    recitaciones en el período
+                    {{ t('recitaciones en el período') }}
                 </p>
             </div>
             <div class="rounded-xl border p-4">
@@ -124,45 +130,45 @@ const maxByMantra = computed(() =>
                     {{ totals.malas.toLocaleString('es') }}
                 </p>
                 <p class="mt-0.5 text-xs text-muted-foreground">
-                    malas completos
+                    {{ t('malas completos') }}
                 </p>
             </div>
             <div class="rounded-xl border p-4">
                 <p class="text-2xl font-semibold">{{ durationLabel }}</p>
                 <p class="mt-0.5 text-xs text-muted-foreground">
-                    tiempo de práctica
+                    {{ t('tiempo de práctica') }}
                 </p>
             </div>
             <div class="rounded-xl border p-4">
                 <p class="text-2xl font-semibold">
                     {{ streak.current }}
                     <span class="text-sm font-normal text-muted-foreground">
-                        {{ streak.current === 1 ? 'día' : 'días' }}
+                        {{ streak.current === 1 ? t('día') : t('días') }}
                     </span>
                 </p>
                 <p class="mt-0.5 text-xs text-muted-foreground">
-                    racha actual · máx {{ streak.max }}
+                    {{ t('racha actual · máx :max', { max: String(streak.max) }) }}
                 </p>
             </div>
         </div>
 
         <!-- serie temporal -->
         <section class="rounded-xl border p-4">
-            <h2 class="mb-3 text-sm font-medium">Recitaciones</h2>
+            <h2 class="mb-3 text-sm font-medium">{{ t('Recitaciones') }}</h2>
             <BarChart :data="series" :granularity="granularity" />
 
             <details class="mt-3">
                 <summary
                     class="cursor-pointer text-xs text-muted-foreground select-none"
                 >
-                    Ver como tabla
+                    {{ t('Ver como tabla') }}
                 </summary>
                 <table class="mt-2 w-full text-xs">
                     <thead>
                         <tr class="text-left text-muted-foreground">
-                            <th class="py-1 font-normal">Período</th>
+                            <th class="py-1 font-normal">{{ t('Período') }}</th>
                             <th class="py-1 text-right font-normal">
-                                Recitaciones
+                                {{ t('Recitaciones') }}
                             </th>
                         </tr>
                     </thead>
@@ -187,7 +193,7 @@ const maxByMantra = computed(() =>
             v-if="byMantra.length > 0 && filters.mantra === null"
             class="rounded-xl border p-4"
         >
-            <h2 class="mb-3 text-sm font-medium">Por mantra</h2>
+            <h2 class="mb-3 text-sm font-medium">{{ t('Por mantra') }}</h2>
             <ul class="space-y-2.5">
                 <li v-for="mantra in byMantra" :key="mantra.id">
                     <div class="mb-1 flex items-baseline justify-between gap-3">
@@ -211,8 +217,11 @@ const maxByMantra = computed(() =>
         </section>
 
         <p class="text-center text-xs text-muted-foreground">
-            {{ allTimeRecitations.toLocaleString('es') }} recitaciones desde el
-            comienzo
+            {{
+                t(':total recitaciones desde el comienzo', {
+                    total: allTimeRecitations.toLocaleString('es'),
+                })
+            }}
         </p>
     </div>
 </template>

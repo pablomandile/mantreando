@@ -19,13 +19,13 @@ class MantraResource extends JsonResource
         return [
             'id' => $this->id,
             'is_system' => $this->isSystem(),
-            'name' => $this->name,
+            'name' => $this->resource->localized('name'),
             'original_name' => $this->original_name,
             'transliteration' => $this->transliteration,
             'text' => $this->text,
-            'translation' => $this->translation,
-            'description' => $this->description,
-            'benefits' => $this->benefits,
+            'translation' => $this->resource->localized('translation'),
+            'description' => $this->resource->localized('description'),
+            'benefits' => $this->resource->localized('benefits'),
             'image_url' => $this->image_url,
             'category' => $this->whenLoaded('category', fn () => [
                 'id' => $this->category->id,

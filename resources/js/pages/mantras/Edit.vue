@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
+import { trans as t } from 'laravel-vue-i18n';
 import MantraForm from '@/components/mantras/MantraForm.vue';
 import { Button } from '@/components/ui/button';
 
@@ -29,25 +30,25 @@ defineOptions({
 });
 
 function destroy(): void {
-    if (confirm('¿Eliminar este mantra? Esta acción no se puede deshacer.')) {
+    if (confirm(t('¿Eliminar este mantra? Esta acción no se puede deshacer.'))) {
         router.delete(`/mantras/${props.mantra.id}`);
     }
 }
 </script>
 
 <template>
-    <Head :title="`Editar ${mantra.name}`" />
+    <Head :title="`${t('Editar mantra')} — ${mantra.name}`" />
 
     <div class="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 p-4">
         <div>
-            <h1 class="text-xl font-semibold">Editar mantra</h1>
+            <h1 class="text-xl font-semibold">{{ t('Editar mantra') }}</h1>
             <p class="text-sm text-muted-foreground">{{ mantra.name }}</p>
         </div>
 
         <MantraForm :mantra="mantra" :categories="categories">
             <template #actions>
                 <Button type="button" variant="destructive" @click="destroy">
-                    Eliminar
+                    {{ t('Eliminar') }}
                 </Button>
             </template>
         </MantraForm>

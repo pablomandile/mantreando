@@ -22,7 +22,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // de sesión vía Sanctum; sin tokens hasta la etapa Capacitor.
         $middleware->statefulApi();
 
+        // El bootstrap del API también localiza contenido (mantras del sistema).
+        $middleware->api(append: [\App\Http\Middleware\SetLocale::class]);
+
         $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

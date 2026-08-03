@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
+import { trans as t } from 'laravel-vue-i18n';
 import MantraList from '@/components/practice/MantraList.vue';
 import { Button } from '@/components/ui/button';
 import { useLiveQuery } from '@/composables/useLiveQuery';
@@ -29,23 +30,23 @@ function startPractice(mantra: CachedMantra): void {
 </script>
 
 <template>
-    <Head title="Práctica" />
+    <Head :title="t('Práctica')" />
 
     <div class="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-4">
         <header class="flex items-center justify-between">
             <div>
-                <h1 class="text-xl font-semibold">Práctica</h1>
+                <h1 class="text-xl font-semibold">{{ t('Práctica') }}</h1>
                 <p class="text-sm text-muted-foreground">
-                    Elegí un mantra para comenzar.
+                    {{ t('Elegí un mantra para comenzar.') }}
                 </p>
             </div>
 
             <span
                 v-if="outboxCount > 0"
                 class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
-                title="Sesiones pendientes de sincronizar"
+                :title="t('Sesiones pendientes de sincronizar')"
             >
-                {{ outboxCount }} sin sincronizar
+                {{ t(':count sin sincronizar', { count: String(outboxCount) }) }}
             </span>
         </header>
 
@@ -58,7 +59,7 @@ function startPractice(mantra: CachedMantra): void {
             class="mx-auto"
             @click="() => void syncAll()"
         >
-            Sincronizar ahora
+            {{ t('Sincronizar ahora') }}
         </Button>
     </div>
 </template>

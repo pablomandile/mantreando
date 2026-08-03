@@ -80,13 +80,59 @@ class SystemMantraSeeder extends Seeder
             ],
         ];
 
+        $english = [
+            'Om Mani Padme Hum' => [
+                'name' => 'Om Mani Padme Hum',
+                'translation' => 'Om, the jewel in the lotus, Hum',
+                'description' => 'The mantra of Avalokiteshvara (Chenrezig), the Buddha of Compassion. It is the most recited mantra in Tibetan Buddhism.',
+                'benefits' => 'Cultivates compassion toward all beings. It is said to purify the six realms of existence, one syllable per realm.',
+            ],
+            'Mantra de Tara Verde' => [
+                'name' => 'Green Tara Mantra',
+                'translation' => 'Om, Tara, she who liberates, swift and brave, Soha',
+                'description' => 'The mantra of Green Tara, mother of all buddhas, a protector who acts swiftly.',
+                'benefits' => 'Protects from fears and obstacles. Helps overcome difficulties and develops the active energy of compassion.',
+            ],
+            'Mantra de la Perfección de la Sabiduría' => [
+                'name' => 'Perfection of Wisdom Mantra',
+                'translation' => 'Gone, gone, gone beyond, completely gone beyond, awakening, Soha',
+                'description' => 'The mantra of the Heart Sutra, essence of the Perfection of Wisdom (Prajñāpāramitā).',
+                'benefits' => 'Develops the wisdom that understands emptiness. It condenses the entire path to enlightenment.',
+            ],
+            'Mantra del Buda de la Medicina' => [
+                'name' => 'Medicine Buddha Mantra',
+                'translation' => 'Thus: Om, medicine, medicine, great medicine, supreme king, Soha',
+                'description' => 'The mantra of Sangye Menla, the Medicine Buddha, lapis-lazuli blue in color.',
+                'benefits' => 'Supports physical and mental healing, one\'s own and others\'. Pacifies illness and suffering.',
+            ],
+            'Mantra de Vajrasattva (cien sílabas)' => [
+                'name' => 'Vajrasattva Mantra (hundred syllables)',
+                'translation' => 'Om Vajrasattva, keep your commitment, remain firm in me...',
+                'description' => 'The hundred-syllable mantra of Vajrasattva, the main purification practice in Tibetan Buddhism.',
+                'benefits' => 'Purifies negative karma, transgressions and mental obscurations.',
+            ],
+            'Om Ah Hum' => [
+                'name' => 'Om Ah Hum',
+                'translation' => 'Enlightened body, speech and mind',
+                'description' => 'The three seed syllables representing the body, speech and mind of all buddhas.',
+                'benefits' => 'Blesses and purifies body, speech and mind. A simple mantra, ideal to start the practice.',
+            ],
+        ];
+
         foreach ($mantras as $data) {
             $category = $data['category'];
             unset($data['category']);
 
             Mantra::updateOrCreate(
                 ['name' => $data['name'], 'user_id' => null],
-                [...$data, 'user_id' => null, 'category_id' => $categories[$category]],
+                [
+                    ...$data,
+                    'user_id' => null,
+                    'category_id' => $categories[$category],
+                    'translations' => isset($english[$data['name']])
+                        ? ['en' => $english[$data['name']]]
+                        : null,
+                ],
             );
         }
     }

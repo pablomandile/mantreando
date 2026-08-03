@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import { trans as t } from 'laravel-vue-i18n';
+import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -10,28 +12,28 @@ import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
 
-const sidebarNavItems: NavItem[] = [
+const sidebarNavItems = computed<NavItem[]>(() => [
     {
-        title: 'Perfil',
+        title: t('Perfil'),
         href: editProfile(),
     },
     {
-        title: 'Práctica',
+        title: t('Práctica'),
         href: '/settings/practice',
     },
     {
-        title: 'Mi mala',
+        title: t('Mi mala'),
         href: '/settings/mala',
     },
     {
-        title: 'Seguridad',
+        title: t('Seguridad'),
         href: editSecurity(),
     },
     {
-        title: 'Apariencia',
+        title: t('Apariencia'),
         href: editAppearance(),
     },
-];
+]);
 
 const { isCurrentOrParentUrl } = useCurrentUrl();
 </script>
@@ -39,8 +41,8 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
 <template>
     <div class="px-4 py-6">
         <Heading
-            title="Ajustes"
-            description="Tu perfil, tu práctica y tu cuenta"
+            :title="t('Ajustes')"
+            :description="t('Tu perfil, tu práctica y tu cuenta')"
         />
 
         <div class="flex flex-col lg:flex-row lg:space-x-12">

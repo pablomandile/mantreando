@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Pencil, Star } from '@lucide/vue';
+import { trans as t } from 'laravel-vue-i18n';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -84,8 +85,8 @@ function toggleFavorite(): void {
                     class="rounded-md p-2 hover:bg-accent"
                     :aria-label="
                         prefs.is_favorite
-                            ? 'Quitar de favoritos'
-                            : 'Agregar a favoritos'
+                            ? t('Quitar de favoritos')
+                            : t('Agregar a favoritos')
                     "
                     @click="toggleFavorite"
                 >
@@ -101,7 +102,7 @@ function toggleFavorite(): void {
                 <Button v-if="mantra.can_edit" as-child variant="ghost" size="sm">
                     <Link :href="`/mantras/${mantra.id}/edit`">
                         <Pencil class="size-4" />
-                        Editar
+                        {{ t('Editar') }}
                     </Link>
                 </Button>
             </div>
@@ -131,14 +132,14 @@ function toggleFavorite(): void {
         </section>
 
         <section v-if="mantra.description" class="space-y-1">
-            <h2 class="text-sm font-medium">Descripción</h2>
+            <h2 class="text-sm font-medium">{{ t('Descripción') }}</h2>
             <p class="text-sm whitespace-pre-line text-muted-foreground">
                 {{ mantra.description }}
             </p>
         </section>
 
         <section v-if="mantra.benefits" class="space-y-1">
-            <h2 class="text-sm font-medium">Beneficios</h2>
+            <h2 class="text-sm font-medium">{{ t('Beneficios') }}</h2>
             <p class="text-sm whitespace-pre-line text-muted-foreground">
                 {{ mantra.benefits }}
             </p>
@@ -146,7 +147,9 @@ function toggleFavorite(): void {
 
         <!-- Compromiso y objetivo (pivot del usuario, aplica también a mantras del sistema) -->
         <section class="rounded-xl border p-4">
-            <h2 class="text-sm font-medium">Mi práctica con este mantra</h2>
+            <h2 class="text-sm font-medium">
+                {{ t('Mi práctica con este mantra') }}
+            </h2>
 
             <div
                 v-if="progress.total_recitations > 0"
@@ -156,10 +159,18 @@ function toggleFavorite(): void {
                     <span class="font-medium text-foreground">
                         {{ progress.total_recitations.toLocaleString() }}
                     </span>
-                    recitaciones acumuladas
+                    {{ t('recitaciones acumuladas') }}
                     <template v-if="progress.streak_current > 0">
-                        · racha de {{ progress.streak_current }}
-                        {{ progress.streak_current === 1 ? 'día' : 'días' }}
+                        ·
+                        {{
+                            t('racha de :count :unit', {
+                                count: String(progress.streak_current),
+                                unit:
+                                    progress.streak_current === 1
+                                        ? t('día')
+                                        : t('días'),
+                            })
+                        }}
                     </template>
                 </p>
                 <div v-if="prefs.total_goal" class="space-y-1">
@@ -173,16 +184,20 @@ function toggleFavorite(): void {
                     </div>
                     <p class="text-xs">
                         {{
-                            Math.min(
-                                100,
-                                Math.round(
-                                    (progress.total_recitations /
-                                        prefs.total_goal) *
+                            t(':pct% de tu objetivo de :goal', {
+                                pct: String(
+                                    Math.min(
                                         100,
+                                        Math.round(
+                                            (progress.total_recitations /
+                                                prefs.total_goal) *
+                                                100,
+                                        ),
+                                    ),
                                 ),
-                            )
-                        }}% de tu objetivo de
-                        {{ prefs.total_goal.toLocaleString() }}
+                                goal: prefs.total_goal.toLocaleString(),
+                            })
+                        }}
                     </p>
                 </div>
             </div>
@@ -191,32 +206,34 @@ function toggleFavorite(): void {
                 @submit.prevent="saveSettings"
             >
                 <div class="grid gap-2">
-                    <Label for="daily_commitment">Compromiso diario</Label>
+                    <Label for="daily_commitment">
+                        {{ t('Compromiso diario') }}
+                    </Label>
                     <Input
                         id="daily_commitment"
                         v-model.number="settingsForm.daily_commitment"
                         type="number"
                         min="1"
-                        placeholder="Recitaciones por día"
+                        :placeholder="t('Recitaciones por día')"
                     />
                     <InputError
                         :message="settingsForm.errors.daily_commitment"
                     />
                 </div>
                 <div class="grid gap-2">
-                    <Label for="total_goal">Objetivo total</Label>
+                    <Label for="total_goal">{{ t('Objetivo total') }}</Label>
                     <Input
                         id="total_goal"
                         v-model.number="settingsForm.total_goal"
                         type="number"
                         min="1"
-                        placeholder="Ej: 100000"
+                        placeholder="100000"
                     />
                     <InputError :message="settingsForm.errors.total_goal" />
                 </div>
                 <div class="sm:col-span-2">
                     <Button size="sm" :disabled="settingsForm.processing">
-                        Guardar
+                        {{ t('Guardar') }}
                     </Button>
                 </div>
             </form>
@@ -224,7 +241,7 @@ function toggleFavorite(): void {
 
         <Button as-child variant="outline">
             <Link :href="`/practice/session/${mantra.id}`">
-                Practicar con este mantra
+                {{ t('Practicar con este mantra') }}
             </Link>
         </Button>
     </div>

@@ -49,7 +49,7 @@ class MantraController
             ->get()
             ->map(fn (Mantra $mantra) => [
                 'id' => $mantra->id,
-                'name' => $mantra->name,
+                'name' => $mantra->localized('name'),
                 'text' => $mantra->text,
                 'transliteration' => $mantra->transliteration,
                 'image_url' => $mantra->image_url,
@@ -89,13 +89,13 @@ class MantraController
         return Inertia::render('mantras/Show', [
             'mantra' => [
                 'id' => $mantra->id,
-                'name' => $mantra->name,
+                'name' => $mantra->localized('name'),
                 'original_name' => $mantra->original_name,
                 'transliteration' => $mantra->transliteration,
                 'text' => $mantra->text,
-                'translation' => $mantra->translation,
-                'description' => $mantra->description,
-                'benefits' => $mantra->benefits,
+                'translation' => $mantra->localized('translation'),
+                'description' => $mantra->localized('description'),
+                'benefits' => $mantra->localized('benefits'),
                 'image_url' => $mantra->image_url,
                 'is_system' => $mantra->isSystem(),
                 'category' => $mantra->category->localized_name,

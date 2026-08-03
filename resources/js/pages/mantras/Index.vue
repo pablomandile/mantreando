@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Plus, Search, Star } from '@lucide/vue';
+import { trans as t } from 'laravel-vue-i18n';
 import { ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,20 +65,20 @@ function toggleFavorite(mantra: MantraItem): void {
 </script>
 
 <template>
-    <Head title="Mantras" />
+    <Head :title="t('Mantras')" />
 
     <div class="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 p-4">
         <header class="flex items-center justify-between gap-3">
             <div>
-                <h1 class="text-xl font-semibold">Mantras</h1>
+                <h1 class="text-xl font-semibold">{{ t('Mantras') }}</h1>
                 <p class="text-sm text-muted-foreground">
-                    Tu biblioteca de práctica.
+                    {{ t('Tu biblioteca de práctica.') }}
                 </p>
             </div>
             <Button as-child size="sm">
                 <Link href="/mantras/create">
                     <Plus class="size-4" />
-                    Nuevo mantra
+                    {{ t('Nuevo mantra') }}
                 </Link>
             </Button>
         </header>
@@ -89,7 +90,7 @@ function toggleFavorite(mantra: MantraItem): void {
             <Input
                 v-model="search"
                 type="search"
-                placeholder="Buscar por nombre, texto o transliteración…"
+                :placeholder="t('Buscar por nombre, texto o transliteración…')"
                 class="pl-9"
             />
         </div>
@@ -115,7 +116,7 @@ function toggleFavorite(mantra: MantraItem): void {
             v-if="mantras.length === 0"
             class="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground"
         >
-            No hay mantras que coincidan con la búsqueda.
+            {{ t('No hay mantras que coincidan con la búsqueda.') }}
         </p>
 
         <div class="flex flex-col gap-3">
@@ -145,7 +146,7 @@ function toggleFavorite(mantra: MantraItem): void {
                                 v-if="!mantra.is_system"
                                 class="rounded-full border px-2 py-0.5 text-xs text-muted-foreground"
                             >
-                                propio
+                                {{ t('propio') }}
                             </span>
                         </div>
                     </div>
@@ -154,8 +155,8 @@ function toggleFavorite(mantra: MantraItem): void {
                         class="relative z-10 rounded-md p-2 hover:bg-accent"
                         :aria-label="
                             mantra.is_favorite
-                                ? 'Quitar de favoritos'
-                                : 'Agregar a favoritos'
+                                ? t('Quitar de favoritos')
+                                : t('Agregar a favoritos')
                         "
                         @click.stop="toggleFavorite(mantra)"
                     >

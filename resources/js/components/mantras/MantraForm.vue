@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
+import { trans as t } from 'laravel-vue-i18n';
 import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -73,23 +74,23 @@ const textareaClass =
 <template>
     <form class="space-y-5" @submit.prevent="submit">
         <div class="grid gap-2">
-            <Label for="name">Nombre *</Label>
-            <Input id="name" v-model="form.name" required placeholder="Ej: Om Mani Padme Hum" />
+            <Label for="name">{{ t('Nombre') }} *</Label>
+            <Input id="name" v-model="form.name" required placeholder="Om Mani Padme Hum" />
             <InputError :message="form.errors.name" />
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2">
             <div class="grid gap-2">
-                <Label for="original_name">Nombre original</Label>
+                <Label for="original_name">{{ t('Nombre original') }}</Label>
                 <Input
                     id="original_name"
                     v-model="form.original_name"
-                    placeholder="En tibetano o sánscrito"
+                    :placeholder="t('En tibetano o sánscrito')"
                 />
                 <InputError :message="form.errors.original_name" />
             </div>
             <div class="grid gap-2">
-                <Label for="transliteration">Transliteración</Label>
+                <Label for="transliteration">{{ t('Transliteración') }}</Label>
                 <Input
                     id="transliteration"
                     v-model="form.transliteration"
@@ -100,19 +101,19 @@ const textareaClass =
         </div>
 
         <div class="grid gap-2">
-            <Label for="text">Texto del mantra *</Label>
+            <Label for="text">{{ t('Texto del mantra') }} *</Label>
             <textarea
                 id="text"
                 v-model="form.text"
                 required
                 :class="textareaClass"
-                placeholder="El texto tal como se recita"
+                :placeholder="t('El texto tal como se recita')"
             />
             <InputError :message="form.errors.text" />
         </div>
 
         <div class="grid gap-2">
-            <Label for="translation">Traducción</Label>
+            <Label for="translation">{{ t('Traducción') }}</Label>
             <textarea
                 id="translation"
                 v-model="form.translation"
@@ -122,14 +123,16 @@ const textareaClass =
         </div>
 
         <div class="grid gap-2">
-            <Label for="category_id">Categoría *</Label>
+            <Label for="category_id">{{ t('Categoría') }} *</Label>
             <select
                 id="category_id"
                 v-model="form.category_id"
                 required
                 class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
             >
-                <option :value="null" disabled>Elegí una categoría</option>
+                <option :value="null" disabled>
+                    {{ t('Elegí una categoría') }}
+                </option>
                 <option
                     v-for="category in categories"
                     :key="category.id"
@@ -142,18 +145,18 @@ const textareaClass =
         </div>
 
         <div class="grid gap-2">
-            <Label for="description">Descripción</Label>
+            <Label for="description">{{ t('Descripción') }}</Label>
             <textarea
                 id="description"
                 v-model="form.description"
                 :class="textareaClass"
-                placeholder="Origen, deidad asociada, contexto…"
+                :placeholder="t('Origen, deidad asociada, contexto…')"
             />
             <InputError :message="form.errors.description" />
         </div>
 
         <div class="grid gap-2">
-            <Label for="benefits">Beneficios</Label>
+            <Label for="benefits">{{ t('Beneficios') }}</Label>
             <textarea
                 id="benefits"
                 v-model="form.benefits"
@@ -163,11 +166,11 @@ const textareaClass =
         </div>
 
         <div class="grid gap-2">
-            <Label for="image">Imagen</Label>
+            <Label for="image">{{ t('Imagen') }}</Label>
             <img
                 v-if="imagePreview"
                 :src="imagePreview"
-                alt="Vista previa"
+                :alt="t('Vista previa')"
                 class="h-32 w-32 rounded-lg object-cover"
             />
             <div class="flex items-center gap-2">
@@ -185,17 +188,19 @@ const textareaClass =
                     size="sm"
                     @click="removeImage"
                 >
-                    Quitar
+                    {{ t('Quitar') }}
                 </Button>
             </div>
-            <p class="text-xs text-muted-foreground">JPG/PNG/WebP, máx. 2 MB.</p>
+            <p class="text-xs text-muted-foreground">
+                {{ t('JPG/PNG/WebP, máx. 2 MB.') }}
+            </p>
             <InputError :message="form.errors.image" />
         </div>
 
         <div class="flex items-center gap-3">
             <Button :disabled="form.processing">
                 <Spinner v-if="form.processing" />
-                {{ mantra?.id ? 'Guardar cambios' : 'Crear mantra' }}
+                {{ mantra?.id ? t('Guardar cambios') : t('Crear mantra') }}
             </Button>
             <slot name="actions" />
         </div>

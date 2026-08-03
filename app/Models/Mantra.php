@@ -27,12 +27,29 @@ use Illuminate\Support\Facades\Storage;
  */
 #[Fillable([
     'user_id', 'category_id', 'name', 'original_name', 'transliteration',
-    'text', 'translation', 'description', 'benefits', 'image_path',
+    'text', 'translation', 'description', 'benefits', 'image_path', 'translations',
 ])]
 class Mantra extends Model
 {
     /** @use HasFactory<MantraFactory> */
     use HasFactory;
+
+    protected function casts(): array
+    {
+        return [
+            'translations' => 'array',
+        ];
+    }
+
+    /**
+     * Campo localizado: la traducción del locale actual si existe
+     * (mantras del sistema), o la columna base en español.
+     */
+    public function localized(string $field): ?string
+    {
+        return data_get($this->translations, app()->getLocale().'.'.$field)
+            ?? $this->{$field};
+    }
 
     /** @return BelongsTo<User, $this> */
     public function owner(): BelongsTo

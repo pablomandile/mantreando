@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Star } from '@lucide/vue';
+import { trans as t } from 'laravel-vue-i18n';
 import { useLiveQuery } from '@/composables/useLiveQuery';
 import { db } from '@/lib/practice/db';
 import type { CachedMantra } from '@/lib/practice/types';
@@ -26,8 +27,11 @@ const emit = defineEmits<{
             v-if="mantras.length === 0"
             class="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground"
         >
-            Todavía no hay mantras en la memoria local. Conectate una vez para
-            descargar tu biblioteca.
+            {{
+                t(
+                    'Todavía no hay mantras en la memoria local. Conectate una vez para descargar tu biblioteca.',
+                )
+            }}
         </p>
 
         <button

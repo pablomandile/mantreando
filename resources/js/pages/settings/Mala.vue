@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { trans as t } from 'laravel-vue-i18n';
+import { computed, ref } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 
@@ -24,12 +25,12 @@ defineOptions({
     },
 });
 
-const MATERIAL_LABELS: Record<string, string> = {
-    wood: 'Madera',
-    bodhi: 'Semilla de Bodhi',
-    red: 'Degradado rojo',
-    blue: 'Degradado azul',
-};
+const MATERIAL_LABELS = computed<Record<string, string>>(() => ({
+    wood: t('Madera'),
+    bodhi: t('Semilla de Bodhi'),
+    red: t('Degradado rojo'),
+    blue: t('Degradado azul'),
+}));
 
 const MATERIAL_SWATCHES: Record<string, string> = {
     wood: 'radial-gradient(circle at 35% 30%, #d3a878, #9a6b42 55%, #5e3a21)',
@@ -76,19 +77,19 @@ function save(): void {
 </script>
 
 <template>
-    <Head title="Mi mala" />
+    <Head :title="t('Mi mala')" />
 
-    <h1 class="sr-only">Personalización del mala</h1>
+    <h1 class="sr-only">{{ t('Personalización del mala') }}</h1>
 
     <div class="space-y-6">
         <Heading
             variant="small"
-            title="Mi mala"
-            description="El material y la textura de tus cuentas"
+            :title="t('Mi mala')"
+            :description="t('El material y la textura de tus cuentas')"
         />
 
         <div class="grid gap-3">
-            <p class="text-sm font-medium">Material</p>
+            <p class="text-sm font-medium">{{ t('Material') }}</p>
             <div class="flex flex-wrap gap-3">
                 <button
                     v-for="key in materials"
@@ -106,17 +107,19 @@ function save(): void {
                         class="size-12 rounded-full shadow-inner"
                         :style="{ background: MATERIAL_SWATCHES[key] }"
                     />
-                    <span class="text-xs">{{ MATERIAL_LABELS[key] }}</span>
+                    <span class="text-xs">{{ MATERIAL_LABELS[key] ?? key }}</span>
                 </button>
             </div>
         </div>
 
         <div class="grid gap-2">
-            <p class="text-sm font-medium">Textura propia</p>
+            <p class="text-sm font-medium">{{ t('Textura propia') }}</p>
             <p class="text-xs text-muted-foreground">
-                Una imagen tuya como superficie de las cuentas (reemplaza al
-                material). JPG/PNG/WebP, máx. 2 MB. Es privada: solo vos la
-                ves.
+                {{
+                    t(
+                        'Una imagen tuya como superficie de las cuentas (reemplaza al material). JPG/PNG/WebP, máx. 2 MB. Es privada: solo vos la ves.',
+                    )
+                }}
             </p>
             <div class="flex items-center gap-3">
                 <span
@@ -137,11 +140,11 @@ function save(): void {
                     size="sm"
                     @click="clearTexture"
                 >
-                    Quitar
+                    {{ t('Quitar') }}
                 </Button>
             </div>
         </div>
 
-        <Button :disabled="saving" @click="save">Guardar</Button>
+        <Button :disabled="saving" @click="save">{{ t('Guardar') }}</Button>
     </div>
 </template>

@@ -54,6 +54,12 @@ class Mantra extends Model
             ->withTimestamps();
     }
 
+    /** @return \Illuminate\Database\Eloquent\Relations\HasMany<PracticeSession, $this> */
+    public function practiceSessions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PracticeSession::class);
+    }
+
     /** Mantras del sistema (compartidos, sin dueño). */
     public function scopeSystem(Builder $query): Builder
     {

@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\MantraController;
+use App\Http\Controllers\MantraFavoriteController;
+use App\Http\Controllers\MantraPracticeSettingsController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -19,7 +22,12 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('practice', 'practice/Index')->name('practice.index');
     Route::inertia('practice/spike', 'practice/Spike')->name('practice.spike');
-    Route::inertia('mantras', 'mantras/Index')->name('mantras.index');
+
+    Route::resource('mantras', MantraController::class)->except(['show'])->parameters(['mantras' => 'mantra']);
+    Route::get('mantras/{mantra}', [MantraController::class, 'show'])->name('mantras.show')->whereNumber('mantra');
+    Route::post('mantras/{mantra}/favorite', MantraFavoriteController::class)->name('mantras.favorite');
+    Route::patch('mantras/{mantra}/practice-settings', MantraPracticeSettingsController::class)->name('mantras.practice-settings');
+
     Route::inertia('stats', 'stats/Index')->name('stats.index');
 });
 

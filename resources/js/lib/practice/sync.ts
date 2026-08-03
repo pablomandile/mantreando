@@ -1,3 +1,4 @@
+import { requestBackgroundSync } from '@/lib/pwa';
 import { fetchBootstrap, postSessions } from './api';
 import { db } from './db';
 import type { OutboxItem } from './types';
@@ -124,4 +125,8 @@ export async function enqueueSession(
     session: Omit<OutboxItem, 'createdAt' | 'invalid'>,
 ): Promise<void> {
     await db.outbox.put({ ...session, createdAt: Date.now() });
+
+    // Best effort: si el navegador soporta Background Sync, el SW avisará
+    // al recuperar conectividad aunque esta pestaña se cierre.
+    void requestBackgroundSync();
 }

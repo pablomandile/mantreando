@@ -1,0 +1,139 @@
+/**
+ * Service worker de malaflow (Etapa 10). Escrito a mano — sin Workbox:
+ * menos magia, cero riesgo de incompatibilidad con Vite 8/rolldown.
+ *
+ * Estrategias:
+ * - /build/*  (assets con hash inmutable) → cache-first.
+ * - /storage/* (imágenes/texturas)        → stale-while-revalidate.
+ * - Navegaciones (HTML)                   → network-first con fallback a la
+ *   copia cacheada de esa URL y, en última instancia, al shell de /practice.
+ * - /api/*                                → passthrough: la isla ya tiene su
+ *   propia cache en IndexedDB (Dexie) y el sync maneja el offline.
+ *
+ * Background Sync: al recuperar conectividad el SW avisa a las pestañas
+ * abiertas para que drenen la outbox (postMessage 'sync-outbox'). Si no hay
+ * pestañas, el fallback de siempre aplica: se sincroniza al abrir la app
+ * (regla del plan: Background Sync nunca es el único camino).
+ */
+
+const VERSION = 'v1';
+const ASSET_CACHE = `malaflow-assets-${VERSION}`;
+const PAGE_CACHE = `malaflow-pages-${VERSION}`;
+const KNOWN_CACHES = [ASSET_CACHE, PAGE_CACHE];
+
+self.addEventListener('install', () => {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        (async () => {
+            const names = await caches.keys();
+            await Promise.all(
+                names
+                    .filter((name) => name.startsWith('malaflow-') && !KNOWN_CACHES.includes(name))
+                    .map((name) => caches.delete(name)),
+            );
+            await self.clients.claim();
+        })(),
+    );
+});
+
+async function cacheFirst(request) {
+    const cached = await caches.match(request);
+
+    if (cached) {
+        return cached;
+    }
+
+    const response = await fetch(request);
+
+    if (response.ok) {
+        const cache = await caches.open(ASSET_CACHE);
+        cache.put(request, response.clone());
+    }
+
+    return response;
+}
+
+async function staleWhileRevalidate(request) {
+    const cache = await caches.open(ASSET_CACHE);
+    const cached = await cache.match(request);
+
+    const network = fetch(request)
+        .then((response) => {
+            if (response.ok) {
+                cache.put(request, response.clone());
+            }
+
+            return response;
+        })
+        .catch(() => cached);
+
+    return cached ?? network;
+}
+
+async function pageNetworkFirst(request) {
+    const cache = await caches.open(PAGE_CACHE);
+
+    try {
+        const response = await fetch(request);
+
+        if (response.ok) {
+            cache.put(request, response.clone());
+        }
+
+        return response;
+    } catch {
+        const cached = await cache.match(request, { ignoreSearch: true });
+
+        return cached ?? (await cache.match('/practice')) ?? Response.error();
+    }
+}
+
+self.addEventListener('fetch', (event) => {
+    const request = event.request;
+
+    if (request.method !== 'GET') {
+        return;
+    }
+
+    const url = new URL(request.url);
+
+    if (url.origin !== self.location.origin) {
+        return;
+    }
+
+    if (url.pathname.startsWith('/api/')) {
+        return; // la isla maneja su propio offline
+    }
+
+    if (url.pathname.startsWith('/build/')) {
+        event.respondWith(cacheFirst(request));
+
+        return;
+    }
+
+    if (url.pathname.startsWith('/storage/') || url.pathname.startsWith('/icons/')) {
+        event.respondWith(staleWhileRevalidate(request));
+
+        return;
+    }
+
+    if (request.mode === 'navigate') {
+        event.respondWith(pageNetworkFirst(request));
+    }
+});
+
+// Background Sync: avisar a las pestañas que drenen la outbox.
+self.addEventListener('sync', (event) => {
+    if (event.tag === 'sync-outbox') {
+        event.waitUntil(
+            self.clients
+                .matchAll({ type: 'window' })
+                .then((clients) =>
+                    clients.forEach((client) => client.postMessage({ type: 'sync-outbox' })),
+                ),
+        );
+    }
+});

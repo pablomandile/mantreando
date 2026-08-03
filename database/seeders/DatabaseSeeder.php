@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
             SystemMantraSeeder::class,
         ]);
 
-        if (app()->isLocal()) {
+        if (app()->isLocal() && ! User::where('email', 'test@example.com')->exists()) {
             User::factory()->create([
                 'name' => 'Test User',
                 'email' => 'test@example.com',

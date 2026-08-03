@@ -15,6 +15,8 @@ class MantraCategorySeeder extends Seeder
             ['slug' => 'purification', 'position' => 3, 'name' => ['es' => 'Purificación', 'en' => 'Purification']],
             ['slug' => 'healing', 'position' => 4, 'name' => ['es' => 'Sanación', 'en' => 'Healing']],
             ['slug' => 'protection', 'position' => 5, 'name' => ['es' => 'Protección', 'en' => 'Protection']],
+            ['slug' => 'tantra', 'position' => 6, 'name' => ['es' => 'Tantra', 'en' => 'Tantra']],
+            ['slug' => 'guru-yoga', 'position' => 7, 'name' => ['es' => 'Guru yoga', 'en' => 'Guru yoga']],
         ];
 
         foreach ($categories as $category) {

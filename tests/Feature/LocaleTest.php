@@ -39,15 +39,17 @@ test('los mantras del sistema se sirven traducidos según el locale', function (
     $response = $this->actingAs($userEn)->getJson('/api/v1/practice/bootstrap');
     $names = collect($response->json('data.mantras'))->pluck('name');
 
-    expect($names)->toContain('Green Tara Mantra')
-        ->and($names)->toContain('Medicine Buddha Mantra');
+    expect($names)->toContain('Green Tara')
+        ->and($names)->toContain('Medicine Buddha')
+        ->and($names)->toContain('Vajrasattva (long)');
 
     $userEs = User::factory()->create(['locale' => 'es']);
     $namesEs = collect(
         $this->actingAs($userEs)->getJson('/api/v1/practice/bootstrap')->json('data.mantras'),
     )->pluck('name');
 
-    expect($namesEs)->toContain('Mantra de Tara Verde');
+    expect($namesEs)->toContain('Tara Verde')
+        ->and($namesEs)->toContain('Gueshe Kelsang Gyatso');
 });
 
 test('los mantras de usuario nunca se traducen', function () {

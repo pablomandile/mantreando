@@ -43,6 +43,25 @@ class User extends Authenticatable implements PasskeyUser
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
+    /** @var list<string> */
+    protected $appends = ['avatar_url'];
+
+    /**
+     * URL del avatar: puede ser externa (Google) o un path local subido.
+     */
+    protected function avatarUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::get(function (): ?string {
+            if ($this->avatar === null) {
+                return null;
+            }
+
+            return str_starts_with($this->avatar, 'http')
+                ? $this->avatar
+                : \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar);
+        });
+    }
+
     /**
      * Get the attributes that should be cast.
      *

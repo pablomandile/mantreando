@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Settings\AvatarController;
+use App\Http\Controllers\Settings\PracticeSettingsController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use App\Http\Controllers\Settings\TimezoneController;
@@ -12,6 +14,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('settings/timezone', TimezoneController::class)->name('timezone.update');
+
+    Route::post('settings/avatar', [AvatarController::class, 'store'])->name('avatar.store');
+    Route::delete('settings/avatar', [AvatarController::class, 'destroy'])->name('avatar.destroy');
+
+    Route::get('settings/practice', [PracticeSettingsController::class, 'edit'])->name('practice-settings.edit');
+    Route::patch('settings/practice', [PracticeSettingsController::class, 'update'])->name('practice-settings.update');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

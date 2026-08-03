@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Form, Head, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Form, Head, router, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
@@ -29,6 +29,39 @@ const timezones =
     typeof Intl.supportedValuesOf === 'function'
         ? Intl.supportedValuesOf('timeZone')
         : ['UTC'];
+
+// ── Avatar ──────────────────────────────────────────────────────────────────
+const avatarInput = ref<HTMLInputElement | null>(null);
+const avatarUploading = ref(false);
+
+function uploadAvatar(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+
+    if (!file) {
+        return;
+    }
+
+    avatarUploading.value = true;
+    router.post(
+        '/settings/avatar',
+        { avatar: file },
+        {
+            forceFormData: true,
+            preserveScroll: true,
+            onFinish: () => {
+                avatarUploading.value = false;
+
+                if (avatarInput.value) {
+                    avatarInput.value.value = '';
+                }
+            },
+        },
+    );
+}
+
+function removeAvatar(): void {
+    router.delete('/settings/avatar', { preserveScroll: true });
+}
 </script>
 
 <template>
@@ -39,9 +72,43 @@ const timezones =
     <div class="flex flex-col space-y-6">
         <Heading
             variant="small"
-            title="Profile"
-            description="Update your name and email address"
+            title="Perfil"
+            description="Tu nombre, email, avatar y preferencias"
         />
+
+        <!-- Avatar: form propio (upload de archivo, POST directo) -->
+        <div class="flex items-center gap-4">
+            <img
+                v-if="user.avatar_url"
+                :src="user.avatar_url as string"
+                alt="Avatar"
+                class="size-16 rounded-full object-cover"
+            />
+            <div
+                v-else
+                class="flex size-16 items-center justify-center rounded-full bg-muted text-lg font-medium text-muted-foreground"
+            >
+                {{ user.name.charAt(0) }}
+            </div>
+            <div class="flex flex-col gap-1">
+                <input
+                    ref="avatarInput"
+                    type="file"
+                    accept="image/*"
+                    class="text-sm text-muted-foreground file:mr-3 file:rounded-md file:border file:border-input file:bg-transparent file:px-3 file:py-1.5 file:text-sm file:text-foreground"
+                    :disabled="avatarUploading"
+                    @change="uploadAvatar"
+                />
+                <button
+                    v-if="user.avatar_url"
+                    type="button"
+                    class="w-fit text-xs text-muted-foreground underline underline-offset-4"
+                    @click="removeAvatar"
+                >
+                    Quitar avatar
+                </button>
+            </div>
+        </div>
 
         <Form
             v-bind="ProfileController.update.form()"
@@ -101,6 +168,23 @@ const timezones =
                     zona.
                 </p>
                 <InputError class="mt-2" :message="errors.timezone" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label for="locale">Idioma</Label>
+                <select
+                    id="locale"
+                    name="locale"
+                    class="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                >
+                    <option value="es" :selected="user.locale === 'es'">
+                        Español
+                    </option>
+                    <option value="en" :selected="user.locale === 'en'">
+                        English
+                    </option>
+                </select>
+                <InputError class="mt-2" :message="errors.locale" />
             </div>
 
             <!-- Bloque de verificación de email eliminado: la feature está

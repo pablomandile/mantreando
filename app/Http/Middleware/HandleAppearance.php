@@ -16,7 +16,22 @@ class HandleAppearance
      */
     public function handle(Request $request, Closure $next): Response
     {
-        View::share('appearance', $request->cookie('appearance') ?? 'system');
+        $appearance = $request->cookie('appearance') ?? 'system';
+
+        View::share('appearance', $appearance);
+
+        // Persistencia sin endpoint: el cliente ya manda su tema en la cookie
+        // en cada request; si difiere del guardado, se sincroniza acá. Así
+        // users.theme queda disponible para otros dispositivos y Capacitor.
+        $user = $request->user();
+
+        if (
+            $user !== null
+            && in_array($appearance, ['light', 'dark', 'system'], true)
+            && $user->theme !== $appearance
+        ) {
+            $user->update(['theme' => $appearance]);
+        }
 
         return $next($request);
     }

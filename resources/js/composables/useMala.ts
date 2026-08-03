@@ -266,6 +266,40 @@ export function useMala(initialMode: MalaMode = 'assisted') {
         snapshot.value = engine.getSnapshot();
     }
 
+    /** Restaura una sesión interrumpida (recuperación de práctica). */
+    function restore(state: {
+        mode: MalaMode;
+        count: number;
+        round: number;
+        totalCount: number;
+        direction: 1 | -1;
+        position: number;
+    }): void {
+        mode.value = state.mode;
+        engine.restore(state);
+        physics.setMode(state.mode, engine.bounds());
+        physics.animateToBead(state.position, performance.now());
+        snapshot.value = engine.getSnapshot();
+        poolBase = Number.NaN;
+        refreshPool(state.position);
+    }
+
+    /** Suscripción directa a los eventos del motor (recorder de sesiones). */
+    const subscribe = engine.subscribe.bind(engine);
+
+    /** Estado inicial de feedback desde las preferencias del usuario. */
+    function applyFeedbackPrefs(prefs: { haptics?: boolean; sound?: boolean }): void {
+        if (prefs.haptics !== undefined) {
+            haptics.value = prefs.haptics;
+            setHapticsEnabled(prefs.haptics);
+        }
+
+        if (prefs.sound !== undefined) {
+            sound.value = prefs.sound;
+            setSoundEnabled(prefs.sound);
+        }
+    }
+
     function toggleHaptics(): void {
         haptics.value = !haptics.value;
         setHapticsEnabled(haptics.value);
@@ -333,6 +367,9 @@ export function useMala(initialMode: MalaMode = 'assisted') {
         setColumn,
         setMode,
         reset,
+        restore,
+        subscribe,
+        applyFeedbackPrefs,
         toggleHaptics,
         toggleSound,
         onPointerDown,

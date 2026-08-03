@@ -27,6 +27,7 @@ export async function refreshBootstrap(): Promise<void> {
         await db.mantras.bulkPut(payload.mantras);
         await db.meta.bulkPut([
             { key: 'user', value: payload.user },
+            { key: 'today', value: payload.today },
             { key: 'lastBootstrapAt', value: Date.now() },
         ]);
     });

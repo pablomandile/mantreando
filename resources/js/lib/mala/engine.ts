@@ -112,6 +112,29 @@ export class MalaEngine {
         this.resetState();
     }
 
+    /**
+     * Hidrata el motor con una sesión interrumpida (recuperación).
+     * El extremum arranca en la posición restaurada: lo ya contado no se
+     * recuenta y el conteo sigue exactamente donde quedó.
+     */
+    restore(state: {
+        mode: MalaMode;
+        count: number;
+        round: number;
+        totalCount: number;
+        direction: Direction;
+        position: number;
+    }): void {
+        this.mode = state.mode;
+        this.count = state.count;
+        this.round = state.round;
+        this.totalCount = state.totalCount;
+        this.direction = state.direction;
+        this.position = state.position;
+        this.extremum = state.position;
+        this.guruLatched = false;
+    }
+
     reset(): void {
         this.resetState();
         this.emit({ type: 'reset' });

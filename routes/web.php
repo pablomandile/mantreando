@@ -23,6 +23,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('practice', 'practice/Index')->name('practice.index');
     Route::inertia('practice/spike', 'practice/Spike')->name('practice.spike');
 
+    // La pantalla de práctica solo recibe el ID: el contenido del mantra
+    // sale de IndexedDB (isla offline).
+    Route::get('practice/session/{mantra}', function (App\Models\Mantra $mantra) {
+        Illuminate\Support\Facades\Gate::authorize('view', $mantra);
+
+        return Inertia::render('practice/Session', ['mantraId' => $mantra->id]);
+    })->name('practice.session')->whereNumber('mantra');
+
     Route::resource('mantras', MantraController::class)->except(['show'])->parameters(['mantras' => 'mantra']);
     Route::get('mantras/{mantra}', [MantraController::class, 'show'])->name('mantras.show')->whereNumber('mantra');
     Route::post('mantras/{mantra}/favorite', MantraFavoriteController::class)->name('mantras.favorite');

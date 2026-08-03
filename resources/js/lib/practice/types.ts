@@ -74,6 +74,7 @@ export interface ActiveSessionState {
     round: number;
     totalCount: number;
     direction: 1 | -1;
+    position: number; // posición continua del mala (para restaurar exacto)
     started_at: string;
     updatedAt: number;
 }
@@ -96,8 +97,16 @@ export interface SyncResult {
     synced_at: string;
 }
 
+/** Progreso de hoy (para compromisos diarios), cacheado del bootstrap. */
+export interface CachedToday {
+    local_date: string;
+    total: number;
+    by_mantra: Record<string, number>;
+}
+
 export interface BootstrapPayload {
     user: CachedUser;
     mantras: CachedMantra[];
+    today: CachedToday;
     server_time: string;
 }

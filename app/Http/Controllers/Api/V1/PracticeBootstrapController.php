@@ -33,6 +33,19 @@ class PracticeBootstrapController
                 $mantra->userPrefs = $prefs->get($mantra->id);
             });
 
+        // "Hoy" del usuario para LEER agregados (compromisos diarios).
+        // Esto no viola la regla de oro: las local_date de las SESIONES
+        // siguen viniendo siempre del dispositivo.
+        try {
+            $localToday = now($user->timezone ?: config('app.timezone'))->toDateString();
+        } catch (\Throwable) {
+            $localToday = now()->toDateString(); // timezone corrupta: UTC
+        }
+
+        $todayAggregates = $user->dailyAggregates()
+            ->where('local_date', $localToday)
+            ->get();
+
         return response()->json([
             'data' => [
                 'user' => [
@@ -44,6 +57,13 @@ class PracticeBootstrapController
                     'settings' => $user->settings ?? (object) [],
                 ],
                 'mantras' => MantraResource::collection($mantras),
+                'today' => [
+                    'local_date' => $localToday,
+                    'total' => (int) ($todayAggregates->firstWhere('mantra_id', null)->recitations ?? 0),
+                    'by_mantra' => $todayAggregates
+                        ->whereNotNull('mantra_id')
+                        ->mapWithKeys(fn ($row) => [(string) $row->mantra_id => (int) $row->recitations]),
+                ],
                 'server_time' => now()->toIso8601String(),
             ],
         ]);

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Settings\AvatarController;
+use App\Http\Controllers\Settings\MalaPresetController;
 use App\Http\Controllers\Settings\PracticeSettingsController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
@@ -20,6 +21,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('settings/practice', [PracticeSettingsController::class, 'edit'])->name('practice-settings.edit');
     Route::patch('settings/practice', [PracticeSettingsController::class, 'update'])->name('practice-settings.update');
+
+    Route::get('settings/mala', [MalaPresetController::class, 'edit'])->name('mala-preset.edit');
+    Route::post('settings/mala', [MalaPresetController::class, 'update'])->name('mala-preset.update');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

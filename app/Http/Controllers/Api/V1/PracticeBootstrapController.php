@@ -56,6 +56,10 @@ class PracticeBootstrapController
 
         $globalStreak = $user->streaks()->whereNull('mantra_id')->first();
 
+        $preset = \App\Models\MalaPreset::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->first();
+
         return response()->json([
             'data' => [
                 'user' => [
@@ -78,6 +82,10 @@ class PracticeBootstrapController
                 'streak' => [
                     'current' => (int) ($globalStreak->current_count ?? 0),
                     'max' => (int) ($globalStreak->max_count ?? 0),
+                ],
+                'mala_preset' => [
+                    'material' => $preset->material ?? 'wood',
+                    'texture_url' => $preset?->texture_url,
                 ],
                 'server_time' => now()->toIso8601String(),
             ],

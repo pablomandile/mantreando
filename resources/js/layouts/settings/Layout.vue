@@ -20,6 +20,10 @@ const sidebarNavItems: NavItem[] = [
         href: '/settings/practice',
     },
     {
+        title: 'Mi mala',
+        href: '/settings/mala',
+    },
+    {
         title: 'Seguridad',
         href: editSecurity(),
     },

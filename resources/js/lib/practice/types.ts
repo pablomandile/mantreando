@@ -104,11 +104,17 @@ export interface CachedToday {
     by_mantra: Record<string, number>;
 }
 
+export interface CachedMalaPreset {
+    material: 'wood' | 'bodhi' | 'red' | 'blue';
+    texture_url: string | null;
+}
+
 export interface BootstrapPayload {
     user: CachedUser;
     mantras: CachedMantra[];
     today: CachedToday;
     totals: { by_mantra: Record<string, number> };
     streak: { current: number; max: number };
+    mala_preset: CachedMalaPreset;
     server_time: string;
 }

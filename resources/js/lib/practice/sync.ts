@@ -30,6 +30,7 @@ export async function refreshBootstrap(): Promise<void> {
             { key: 'today', value: payload.today },
             { key: 'totals', value: payload.totals },
             { key: 'streak', value: payload.streak },
+            { key: 'malaPreset', value: payload.mala_preset },
             { key: 'lastBootstrapAt', value: Date.now() },
         ]);
     });

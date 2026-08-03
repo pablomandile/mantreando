@@ -27,12 +27,26 @@ defineProps<{
     height: calc(var(--pitch) * 0.82);
     transform: translate(-50%, -50%);
     border-radius: 50%;
-    background: radial-gradient(
-        circle at 35% 30%,
-        var(--bead-hi),
-        var(--bead-mid) 55%,
-        var(--bead-lo) 100%
-    );
+    /* Capa 1: sombreado esférico (siempre). Capa 2: textura propia del
+       usuario, o el gradiente del material como fallback. */
+    background-image:
+        radial-gradient(
+            circle at 35% 30%,
+            rgb(255 255 255 / 0.3),
+            transparent 48%,
+            rgb(0 0 0 / 0.28) 100%
+        ),
+        var(
+            --bead-texture,
+            radial-gradient(
+                circle at 35% 30%,
+                var(--bead-hi),
+                var(--bead-mid) 55%,
+                var(--bead-lo) 100%
+            )
+        );
+    background-size: cover;
+    background-position: center;
     box-shadow:
         0 1px 3px rgb(0 0 0 / 0.35),
         inset 0 -2px 4px rgb(0 0 0 / 0.2);
@@ -50,12 +64,23 @@ defineProps<{
 .mala-bead[data-guru] {
     width: calc(var(--pitch) * 1.148); /* 0.82 × 1.4 */
     height: calc(var(--pitch) * 1.148);
-    background: radial-gradient(
-        circle at 35% 30%,
-        var(--bead-mid),
-        var(--bead-lo) 60%,
-        color-mix(in srgb, var(--bead-lo) 55%, black) 100%
-    );
+    /* El gurú siempre lleva un velo más profundo, con o sin textura. */
+    background-image:
+        radial-gradient(
+            circle at 35% 30%,
+            rgb(255 255 255 / 0.15),
+            rgb(0 0 0 / 0.2) 55%,
+            rgb(0 0 0 / 0.5) 100%
+        ),
+        var(
+            --bead-texture,
+            radial-gradient(
+                circle at 35% 30%,
+                var(--bead-mid),
+                var(--bead-lo) 60%,
+                color-mix(in srgb, var(--bead-lo) 55%, black) 100%
+            )
+        );
 }
 
 @media (prefers-reduced-motion: reduce) {

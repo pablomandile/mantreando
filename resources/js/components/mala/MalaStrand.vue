@@ -14,15 +14,19 @@ import type { BeadMaterial } from '@/lib/mala/types';
  * La superficie de gesto ocupa TODO el viewport (zona del pulgar libre);
  * el HUD del spike se superpone con z-index mayor.
  */
-defineProps<{
+const props = defineProps<{
     pool: PoolBead[];
     material: BeadMaterial;
+    textureUrl?: string | null;
     setContainer: (el: HTMLElement | null) => void;
     setColumn: (el: HTMLElement | null) => void;
     onPointerDown: (event: PointerEvent) => void;
     onPointerMove: (event: PointerEvent) => void;
     onPointerUp: (event: PointerEvent) => void;
 }>();
+
+const columnStyle = () =>
+    props.textureUrl ? { '--bead-texture': `url("${props.textureUrl}")` } : {};
 </script>
 
 <template>
@@ -37,6 +41,7 @@ defineProps<{
             :ref="(el) => setColumn(el as HTMLElement | null)"
             class="mala-column"
             :data-material="material"
+            :style="columnStyle()"
         >
             <div class="mala-string" />
             <div
@@ -83,11 +88,29 @@ defineProps<{
     pointer-events: none; /* los gestos los captura la superficie */
 }
 
-/* Paleta del material — el único hook que necesita la Etapa 8. */
+/* Paletas de materiales (Etapa 8). --bead-texture (imagen propia) las tapa. */
 .mala-column[data-material='wood'] {
     --bead-hi: #d3a878;
     --bead-mid: #9a6b42;
     --bead-lo: #5e3a21;
+}
+
+.mala-column[data-material='bodhi'] {
+    --bead-hi: #f2e7cd;
+    --bead-mid: #cdb289;
+    --bead-lo: #8a6f47;
+}
+
+.mala-column[data-material='red'] {
+    --bead-hi: #e8907e;
+    --bead-mid: #b93a2b;
+    --bead-lo: #711b10;
+}
+
+.mala-column[data-material='blue'] {
+    --bead-hi: #93bbe9;
+    --bead-mid: #3b6fb5;
+    --bead-lo: #1c3d6b;
 }
 
 .mala-string {

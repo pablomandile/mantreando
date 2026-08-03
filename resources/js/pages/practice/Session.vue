@@ -10,6 +10,7 @@ import { SessionRecorder } from '@/lib/practice/recorder';
 import { syncAll } from '@/lib/practice/sync';
 import type {
     ActiveSessionState,
+    CachedMalaPreset,
     CachedMantra,
     CachedToday,
     CachedUser,
@@ -118,14 +119,21 @@ async function exit(): Promise<void> {
 }
 
 const userSettings = ref<Record<string, unknown> | null>(null);
+const preset = ref<CachedMalaPreset>({ material: 'wood', texture_url: null });
 
 onMounted(async () => {
-    const [mantraRow, userMeta, todayMeta, totalsMeta] = await Promise.all([
-        db.mantras.get(props.mantraId),
-        db.meta.get('user'),
-        db.meta.get('today'),
-        db.meta.get('totals'),
-    ]);
+    const [mantraRow, userMeta, todayMeta, totalsMeta, presetMeta] =
+        await Promise.all([
+            db.mantras.get(props.mantraId),
+            db.meta.get('user'),
+            db.meta.get('today'),
+            db.meta.get('totals'),
+            db.meta.get('malaPreset'),
+        ]);
+
+    if (presetMeta?.value) {
+        preset.value = presetMeta.value as CachedMalaPreset;
+    }
 
     if (!mantraRow) {
         // Cache vacía (primer uso online): intentar poblarla una vez.
@@ -246,7 +254,8 @@ onUnmounted(() => {
         <template v-else-if="!loading && mantra">
             <MalaStrand
                 :pool="mala.pool"
-                material="wood"
+                :material="preset.material"
+                :texture-url="preset.texture_url"
                 :set-container="mala.setContainer"
                 :set-column="mala.setColumn"
                 :on-pointer-down="mala.onPointerDown"

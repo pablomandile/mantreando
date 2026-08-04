@@ -99,20 +99,27 @@
        mismo palo que las cuentas del mala (arena cálida arriba a la derecha,
        donde cuelga la hebra; una sombra fría abajo a la izquierda). El
        centro queda limpio para que el texto nunca pierda contraste.
-       La fuerza del tinte va de la mano de --muted-foreground: está en
-       36%/28% porque el gris atenuado bajó a 38% y compró margen de
-       contraste. Medido en la esquina más teñida: sigue AA. Si se sube
-       más, volver a medir. */
+       Tres capas: un lavado lineal que recorre TODA la altura (arena
+       arriba → índigo abajo, nunca llega a cero) y las dos esquinas como
+       acentos. La fuerza va de la mano de --muted-foreground (38%):
+       medido en la esquina más teñida y en el centro, sigue AA. */
     --app-backdrop:
         radial-gradient(
             ellipse 72% 58% at 95% -12%,
-            rgba(202, 152, 96, 0.36),
-            transparent 64%
+            rgba(202, 152, 96, 0.34),
+            transparent 70%
         ),
         radial-gradient(
             ellipse 85% 62% at -8% 108%,
             rgba(122, 134, 170, 0.28),
-            transparent 64%
+            transparent 70%
+        ),
+        linear-gradient(
+            180deg,
+            rgba(202, 152, 96, 0.2) 0%,
+            rgba(202, 152, 96, 0.08) 38%,
+            rgba(122, 134, 170, 0.07) 62%,
+            rgba(122, 134, 170, 0.2) 100%
         );
 
     --background: hsl(0 0% 100%);
@@ -126,10 +133,12 @@
     --secondary: hsl(0 0% 92.1%);
     --secondary-foreground: hsl(0 0% 9%);
     --muted: hsl(0 0% 96.1%);
-    /* 38% en vez del 45.1% del kit: el gris original quedaba en 4.74:1
-       sobre blanco puro — sin margen para teñir el fondo. Este da 6.2:1
-       y banca un degradado de fondo con presencia sin romper AA. */
-    --muted-foreground: hsl(0 0% 38%);
+    /* 32% en vez del 45.1% del kit: el gris original quedaba en 4.74:1
+       sobre blanco puro — sin margen para teñir el fondo. Con el fondo
+       actual, este valor deja el peor punto (el velo rojo de Amitayus
+       bajo el switch) en ~4.7:1. Si se sube el fondo o un velo, hay que
+       volver a medir ACÁ antes de dar por buena la mejora. */
+    --muted-foreground: hsl(0 0% 32%);
     --accent: hsl(0 0% 96.1%);
     --accent-foreground: hsl(0 0% 9%);
     --destructive: hsl(0 84.2% 60.2%);
@@ -158,18 +167,25 @@
     color-scheme: dark;
 
     /* En oscuro las manchas son más marcadas: sobre negro casi no se notan.
-       Ámbar de madera arriba, índigo profundo abajo. Medido en la esquina
-       más teñida a 0.6: el texto claro sigue arriba de AA. */
+       Ámbar de madera arriba, índigo profundo abajo, con el mismo lavado
+       lineal de altura completa. Medido: el texto claro sigue arriba de AA. */
     --app-backdrop:
         radial-gradient(
             ellipse 72% 58% at 95% -12%,
-            rgba(154, 107, 66, 0.6),
-            transparent 64%
+            rgba(154, 107, 66, 0.55),
+            transparent 70%
         ),
         radial-gradient(
             ellipse 85% 62% at -8% 108%,
-            rgba(72, 84, 130, 0.56),
-            transparent 64%
+            rgba(72, 84, 130, 0.5),
+            transparent 70%
+        ),
+        linear-gradient(
+            180deg,
+            rgba(154, 107, 66, 0.3) 0%,
+            rgba(154, 107, 66, 0.12) 38%,
+            rgba(72, 84, 130, 0.11) 62%,
+            rgba(72, 84, 130, 0.3) 100%
         );
 
     --background: hsl(0 0% 3.9%);
@@ -183,7 +199,9 @@
     --secondary: hsl(0 0% 14.9%);
     --secondary-foreground: hsl(0 0% 98%);
     --muted: hsl(0 0% 16.08%);
-    --muted-foreground: hsl(0 0% 63.9%);
+    /* 70% en vez del 63.9% del kit: el fondo teñido sube la luminancia de
+       la esquina y el gris original caía a 4.24:1. Ver la nota en :root. */
+    --muted-foreground: hsl(0 0% 70%);
     --accent: hsl(0 0% 14.9%);
     --accent-foreground: hsl(0 0% 98%);
     --destructive: hsl(0 84% 60%);
@@ -222,7 +240,8 @@
        hacer scroll ni le compite al mala, que corre a 60fps. */
     body,
     [data-slot='sidebar-inset'],
-    [data-slot='auth-backdrop'] {
+    [data-slot='auth-backdrop'],
+    [data-sidebar='sidebar'] {
         background-image: var(--app-backdrop);
         background-repeat: no-repeat;
         background-attachment: fixed;
@@ -296,18 +315,23 @@
 /* Velo de la práctica: al elegir un mantra, su color baña la pantalla desde
    arriba como luz ambiente y se disuelve antes de la mitad — el contador y
    la leyenda (texto atenuado) viven abajo, sobre fondo limpio. */
+/* Repartido en TODA la altura en vez de concentrado arriba: cubre más
+   superficie (que es lo que se busca) con un pico más bajo, así el texto
+   del switch y la leyenda del contador no pierden contraste. */
 .mantra-backdrop[data-color] {
-    background-image: radial-gradient(
-        ellipse 130% 75% at 50% -25%,
-        color-mix(in oklab, var(--mantra-color) 38%, transparent),
-        transparent 68%
+    background-image: linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--mantra-color) 26%, transparent) 0%,
+        color-mix(in oklab, var(--mantra-color) 13%, transparent) 45%,
+        color-mix(in oklab, var(--mantra-color) 20%, transparent) 100%
     );
 }
 
 .dark .mantra-backdrop[data-color] {
-    background-image: radial-gradient(
-        ellipse 130% 75% at 50% -25%,
-        color-mix(in oklab, var(--mantra-color) 48%, transparent),
-        transparent 68%
+    background-image: linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--mantra-color) 36%, transparent) 0%,
+        color-mix(in oklab, var(--mantra-color) 18%, transparent) 45%,
+        color-mix(in oklab, var(--mantra-color) 28%, transparent) 100%
     );
 }

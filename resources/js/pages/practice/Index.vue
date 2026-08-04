@@ -226,6 +226,31 @@ function onMantraChange(event: Event): void {
     }
 }
 
+// ── Reinicio de la cuenta ───────────────────────────────────────────────────
+// Mismo camino que cambiar de mantra, quedándose en el mismo: la sesión en
+// curso se cierra (lo recitado queda en el historial y en el total del día)
+// y arranca una nueva en cero. Nunca se descarta práctica.
+const confirmingReset = ref(false);
+let resetConfirmTimer: ReturnType<typeof setTimeout> | undefined;
+
+function onResetClick(): void {
+    if (!confirmingReset.value) {
+        confirmingReset.value = true;
+        resetConfirmTimer = setTimeout(() => {
+            confirmingReset.value = false;
+        }, 3000);
+
+        return;
+    }
+
+    clearTimeout(resetConfirmTimer);
+    confirmingReset.value = false;
+
+    if (selectedId.value !== null) {
+        void switchMantra(selectedId.value);
+    }
+}
+
 async function resolveResume(action: 'continue' | 'finish-and-restart') {
     const candidate = resumeCandidate.value;
 
@@ -393,6 +418,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
     clearTimeout(celebrationTimer);
+    clearTimeout(resetConfirmTimer);
     // Al navegar a otra sección se cierra y encola la sesión en curso.
     void recorder.finish(timezone).then((queued) => {
         if (queued) {
@@ -481,6 +507,20 @@ onUnmounted(() => {
                         }}
                     </span>
                 </div>
+
+                <!-- Reinicia la cuenta a la vista. Pide confirmación en el
+                     mismo botón: un toque al descuido en la cuenta 87
+                     rompe la práctica. Lo recitado NO se pierde: la sesión
+                     se cierra y sigue sumando al total del día. -->
+                <button
+                    v-if="mantra"
+                    type="button"
+                    class="rounded-md border border-input px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    :class="{ 'border-foreground text-foreground': confirmingReset }"
+                    @click="onResetClick"
+                >
+                    {{ confirmingReset ? t('¿Seguro?') : t('Reiniciar cuenta') }}
+                </button>
 
                 <span
                     v-if="outboxCount > 0"

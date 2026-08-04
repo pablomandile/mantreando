@@ -251,6 +251,39 @@ describe('StrandPhysics — tap y utilitarios', () => {
         expect(physics.pointerUp(102, 1400)).toBe('drag'); // 400 ms > umbral
     });
 
+    it('jumpTo teletransporta sin posiciones intermedias (cambio de mantra)', () => {
+        const { physics, positions } = makePhysics();
+
+        // La hebra quedó en la cuenta 11 del mantra anterior
+        physics.animateToBead(11, 0);
+        settle(physics, 0);
+        positions.length = 0;
+
+        physics.jumpTo(0);
+
+        // UNA sola notificación y directa a 0: un motor recién reseteado
+        // no debe recibir la posición vieja (la contaría como avance).
+        expect(positions).toEqual([0]);
+        expect(physics.getPositionBeads()).toBe(0);
+        expect(physics.getState()).toBe('idle');
+    });
+
+    it('jumpTo también corta un momentum en vuelo', () => {
+        const { physics, positions } = makePhysics();
+
+        drag(physics, { fromY: 500, toY: 620, steps: 4, msPerStep: 12 });
+        expect(physics.getState()).toBe('momentum');
+        positions.length = 0;
+
+        physics.jumpTo(0);
+
+        expect(positions).toEqual([0]);
+        expect(physics.getState()).toBe('idle');
+        // Sin velocidad residual: el siguiente tick no mueve nada
+        expect(physics.tick(5000)).toBe(false);
+        expect(physics.getPositionBeads()).toBe(0);
+    });
+
     it('animateToBead llega exacto y termina idle', () => {
         const { physics } = makePhysics();
 

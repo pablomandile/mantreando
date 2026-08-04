@@ -264,7 +264,11 @@ export function useMala(initialMode: MalaMode = 'assisted') {
         mode.value = next;
         engine.setMode(next);
         physics.setMode(next, engine.bounds());
-        physics.animateToBead(0, performance.now());
+        // Salto duro, NO animación: el motor acaba de resetearse a cero y
+        // el primer frame de una animación desde la posición vieja se lo
+        // contaría entero como avance (el contador "arrastraba" el número
+        // del mantra anterior al cambiar).
+        physics.jumpTo(0);
         snapshot.value = engine.getSnapshot();
         poolBase = Number.NaN;
         refreshPool(0);
@@ -272,7 +276,7 @@ export function useMala(initialMode: MalaMode = 'assisted') {
 
     function reset(): void {
         engine.reset();
-        physics.animateToBead(0, performance.now());
+        physics.jumpTo(0);
         snapshot.value = engine.getSnapshot();
     }
 
@@ -288,7 +292,7 @@ export function useMala(initialMode: MalaMode = 'assisted') {
         mode.value = state.mode;
         engine.restore(state);
         physics.setMode(state.mode, engine.bounds());
-        physics.animateToBead(state.position, performance.now());
+        physics.jumpTo(state.position);
         snapshot.value = engine.getSnapshot();
         poolBase = Number.NaN;
         refreshPool(state.position);

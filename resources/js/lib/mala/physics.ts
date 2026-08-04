@@ -110,6 +110,19 @@ export class StrandPhysics {
         this.reducedMotion = value;
     }
 
+    /**
+     * Teletransporta la hebra SIN pasar por posiciones intermedias.
+     * Es el camino correcto tras resetear el motor (cambio de mantra):
+     * animar desde la posición vieja alimentaría al motor recién puesto
+     * en cero con esa posición, y la contaría entera como avance.
+     */
+    jumpTo(positionBeads: number): void {
+        this.state = 'idle';
+        this.velocity = 0;
+        this.offset = this.constrain(positionBeads * this.pitch);
+        this.onChange?.(this.offset / this.pitch);
+    }
+
     /** En resize: re-escala el offset preservando la cuenta actual. */
     setPitch(pitch: number): void {
         const beads = this.offset / this.pitch;

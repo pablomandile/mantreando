@@ -13,6 +13,24 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    # composer setup corre `artisan migrate`, así que hace falta una base de
+    # verdad. Los tests igual usan sqlite en memoria (phpunit.xml): esto
+    # además verifica que las migraciones corran en MySQL, que es donde
+    # viven las columnas generadas y las restricciones de FK sobre ellas.
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: malaflow
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -25,6 +43,7 @@ jobs:
           # 8.4: el lock exige >=8.4.1 (Symfony 8.1, Pest 5, paratest) y en
           # 8.3 el composer install del paso Setup Application ni arranca.
           php-version: '8.4'
+          extensions: pdo_mysql
           tools: composer:v2
           coverage: none
 

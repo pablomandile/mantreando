@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
- * @property int|null $user_id  null = mantra del sistema
+ * @property int|null $user_id null = mantra del sistema
  * @property int $category_id
  * @property string $name
  * @property string|null $original_name
@@ -26,6 +27,14 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $benefits
  * @property string|null $image_path
  * @property MantraColor|null $color
+ * @property array<string, array<string, string>>|null $translations
+ * @property-read string|null $image_url
+ * @property-read string|null $image_thumb_url
+ *
+ * Columnas que agregan los joins del índice y del bootstrap, no la tabla
+ * (se asignan a mano sobre el modelo, así que no son read-only):
+ * @property \stdClass|null $userPrefs fila de mantra_user del usuario actual
+ * @property int|null $sortIndex
  */
 #[Fillable([
     'user_id', 'category_id', 'name', 'original_name', 'transliteration',
@@ -37,6 +46,7 @@ class Mantra extends Model
     /** @use HasFactory<MantraFactory> */
     use HasFactory;
 
+    /** @return array<string, string> */
     protected function casts(): array
     {
         return [
@@ -75,13 +85,18 @@ class Mantra extends Model
             ->withTimestamps();
     }
 
-    /** @return \Illuminate\Database\Eloquent\Relations\HasMany<PracticeSession, $this> */
-    public function practiceSessions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    /** @return HasMany<PracticeSession, $this> */
+    public function practiceSessions(): HasMany
     {
         return $this->hasMany(PracticeSession::class);
     }
 
-    /** Mantras del sistema (compartidos, sin dueño). */
+    /**
+     * Mantras del sistema (compartidos, sin dueño).
+     *
+     * @param  Builder<Mantra>  $query
+     * @return Builder<Mantra>
+     */
     public function scopeSystem(Builder $query): Builder
     {
         return $query->whereNull('mantras.user_id');
@@ -91,6 +106,9 @@ class Mantra extends Model
      * Mantras visibles para un usuario: los del sistema más los propios.
      * Columnas calificadas: el índice y el bootstrap joinean mantra_user
      * (orden personal) y user_id sería ambiguo.
+     *
+     * @param  Builder<Mantra>  $query
+     * @return Builder<Mantra>
      */
     public function scopeAccessibleBy(Builder $query, User $user): Builder
     {
@@ -117,9 +135,10 @@ class Mantra extends Model
             && str_starts_with($this->image_path, self::APP_IMAGE_PREFIX);
     }
 
+    /** @return Attribute<string|null, mixed> */
     protected function imageUrl(): Attribute
     {
-        return Attribute::get(function (): ?string {
+        return Attribute::make(get: function (): ?string {
             if ($this->image_path === null) {
                 return null;
             }
@@ -134,10 +153,12 @@ class Mantra extends Model
      * Miniatura para las tarjetas de la lista. Las imágenes de la app traen
      * una versión cuadrada de 128 px al lado (img/budas/thumb/x.jpg); las que
      * sube el usuario no, y reusan la original.
+     *
+     * @return Attribute<string|null, mixed>
      */
     protected function imageThumbUrl(): Attribute
     {
-        return Attribute::get(function (): ?string {
+        return Attribute::make(get: function (): ?string {
             if (! $this->hasAppImage()) {
                 return $this->image_url;
             }

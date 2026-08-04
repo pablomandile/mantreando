@@ -11,9 +11,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
- * @property array<string, string> $name  {"es": "...", "en": "..."}
+ * @property array<string, string> $name {"es": "...", "en": "..."}
  * @property string $slug
  * @property int $position
+ * @property-read string $localized_name
  */
 #[Fillable(['name', 'slug', 'position'])]
 class MantraCategory extends Model
@@ -21,6 +22,7 @@ class MantraCategory extends Model
     /** @use HasFactory<MantraCategoryFactory> */
     use HasFactory;
 
+    /** @return array<string, string> */
     protected function casts(): array
     {
         return [
@@ -34,10 +36,14 @@ class MantraCategory extends Model
         return $this->hasMany(Mantra::class, 'category_id');
     }
 
-    /** Nombre en el locale actual, con fallback a español y luego al primero disponible. */
+    /**
+     * Nombre en el locale actual, con fallback a español y luego al primero disponible.
+     *
+     * @return Attribute<string, mixed>
+     */
     protected function localizedName(): Attribute
     {
-        return Attribute::get(function (): string {
+        return Attribute::make(get: function (): string {
             $names = $this->name ?? [];
 
             return $names[app()->getLocale()]

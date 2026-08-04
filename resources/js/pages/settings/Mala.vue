@@ -107,7 +107,9 @@ function save(): void {
                         class="size-12 rounded-full shadow-inner"
                         :style="{ background: MATERIAL_SWATCHES[key] }"
                     />
-                    <span class="text-xs">{{ MATERIAL_LABELS[key] ?? key }}</span>
+                    <span class="text-xs">{{
+                        MATERIAL_LABELS[key] ?? key
+                    }}</span>
                 </button>
             </div>
         </div>

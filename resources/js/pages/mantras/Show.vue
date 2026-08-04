@@ -99,7 +99,12 @@ function toggleFavorite(): void {
                         "
                     />
                 </button>
-                <Button v-if="mantra.can_edit" as-child variant="ghost" size="sm">
+                <Button
+                    v-if="mantra.can_edit"
+                    as-child
+                    variant="ghost"
+                    size="sm"
+                >
                     <Link :href="`/mantras/${mantra.id}/edit`">
                         <Pencil class="size-4" />
                         {{ t('Editar') }}

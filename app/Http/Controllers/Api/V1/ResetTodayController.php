@@ -39,6 +39,7 @@ class ResetTodayController
         $mantraIds = $user->practiceSessions()
             ->where('local_date', $date)
             ->pluck('mantra_id')
+            ->map(fn (mixed $id): int => (int) $id)
             ->unique()
             ->values()
             ->all();

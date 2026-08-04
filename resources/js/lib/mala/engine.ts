@@ -1,5 +1,19 @@
-import type { Direction, MalaEvent, MalaMode, MalaSnapshot, PositionBounds } from './types';
-import { ADVANCE_LOCK_MS, BEAD_COUNT, GURU_SLOT, GURU_TRIGGER, mod, SLOT_COUNT, slotAt } from './types';
+import type {
+    Direction,
+    MalaEvent,
+    MalaMode,
+    MalaSnapshot,
+    PositionBounds,
+} from './types';
+import {
+    ADVANCE_LOCK_MS,
+    BEAD_COUNT,
+    GURU_SLOT,
+    GURU_TRIGGER,
+    mod,
+    SLOT_COUNT,
+    slotAt,
+} from './types';
 
 /**
  * Motor de conteo del mala. TypeScript puro, sin Vue: la física le alimenta
@@ -94,7 +108,9 @@ export class MalaEngine {
 
     /** Tradicional: {0, 107} fijos. Asistido: null (loop sin límites). */
     bounds(): PositionBounds | null {
-        return this.mode === 'traditional' ? { min: 0, max: BEAD_COUNT - 1 } : null;
+        return this.mode === 'traditional'
+            ? { min: 0, max: BEAD_COUNT - 1 }
+            : null;
     }
 
     slotAt(position: number): number {
@@ -251,7 +267,11 @@ export class MalaEngine {
         }
 
         // El latch se libera cuando la física asentó de vuelta en el segmento.
-        if (this.guruLatched && position > -GURU_TRIGGER && position < max + GURU_TRIGGER) {
+        if (
+            this.guruLatched &&
+            position > -GURU_TRIGGER &&
+            position < max + GURU_TRIGGER
+        ) {
             this.guruLatched = false;
         }
     }

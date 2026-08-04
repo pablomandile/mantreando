@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Resources\MantraResource;
+use App\Models\MalaPreset;
 use App\Models\Mantra;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -64,7 +65,7 @@ class PracticeBootstrapController
 
         $globalStreak = $user->streaks()->whereNull('mantra_id')->first();
 
-        $preset = \App\Models\MalaPreset::where('user_id', $user->id)
+        $preset = MalaPreset::where('user_id', $user->id)
             ->where('is_active', true)
             ->first();
 

@@ -12,7 +12,8 @@ import { email } from '@/routes/password';
 defineOptions({
     layout: {
         title: 'Recuperar contraseña',
-        description: 'Ingresá tu email y te mandamos un enlace para restablecerla',
+        description:
+            'Ingresá tu email y te mandamos un enlace para restablecerla',
     },
 });
 

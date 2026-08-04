@@ -32,7 +32,9 @@ defineOptions({
 });
 
 function destroy(): void {
-    if (confirm(t('¿Eliminar este mantra? Esta acción no se puede deshacer.'))) {
+    if (
+        confirm(t('¿Eliminar este mantra? Esta acción no se puede deshacer.'))
+    ) {
         router.delete(`/mantras/${props.mantra.id}`);
     }
 }

@@ -16,7 +16,13 @@ import {
 } from '@/lib/mala/haptics';
 import { StrandPhysics } from '@/lib/mala/physics';
 import type { MalaMode, MalaSnapshot } from '@/lib/mala/types';
-import { GURU_SLOT, mod, POOL_SIZE, slotAt, VISIBLE_BEADS } from '@/lib/mala/types';
+import {
+    GURU_SLOT,
+    mod,
+    POOL_SIZE,
+    slotAt,
+    VISIBLE_BEADS,
+} from '@/lib/mala/types';
 
 /**
  * Una cuenta del pool virtualizado. El pool tiene POOL_SIZE nodos DOM fijos
@@ -79,7 +85,11 @@ export function useMala(initialMode: MalaMode = 'assisted') {
         const rest = Math.round(position);
         const base = rest - POOL_BELOW;
 
-        if (base === poolBase && rest === activeK && pool.length === POOL_SIZE) {
+        if (
+            base === poolBase &&
+            rest === activeK &&
+            pool.length === POOL_SIZE
+        ) {
             return;
         }
 
@@ -150,7 +160,9 @@ export function useMala(initialMode: MalaMode = 'assisted') {
         lastFrameT = now;
 
         if (now - fpsWindowStart >= 1000) {
-            fps.value = Math.round((frameCount * 1000) / (now - fpsWindowStart));
+            fps.value = Math.round(
+                (frameCount * 1000) / (now - fpsWindowStart),
+            );
             frameCount = 0;
             fpsWindowStart = now;
         }
@@ -302,7 +314,10 @@ export function useMala(initialMode: MalaMode = 'assisted') {
     const subscribe = engine.subscribe.bind(engine);
 
     /** Estado inicial de feedback desde las preferencias del usuario. */
-    function applyFeedbackPrefs(prefs: { haptics?: boolean; sound?: boolean }): void {
+    function applyFeedbackPrefs(prefs: {
+        haptics?: boolean;
+        sound?: boolean;
+    }): void {
         if (prefs.haptics !== undefined) {
             haptics.value = prefs.haptics;
             setHapticsEnabled(prefs.haptics);
@@ -347,7 +362,9 @@ export function useMala(initialMode: MalaMode = 'assisted') {
             lastSnapshotT = performance.now();
         });
 
-        reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        reducedMotionQuery = window.matchMedia(
+            '(prefers-reduced-motion: reduce)',
+        );
         reducedMotionQuery.addEventListener('change', onReducedMotionChange);
         onReducedMotionChange();
 
@@ -362,7 +379,10 @@ export function useMala(initialMode: MalaMode = 'assisted') {
     onUnmounted(() => {
         stopLoop();
         unsubscribe?.();
-        reducedMotionQuery?.removeEventListener('change', onReducedMotionChange);
+        reducedMotionQuery?.removeEventListener(
+            'change',
+            onReducedMotionChange,
+        );
         window.visualViewport?.removeEventListener('resize', measure);
         window.removeEventListener('resize', measure);
         document.removeEventListener('visibilitychange', onVisibilityChange);

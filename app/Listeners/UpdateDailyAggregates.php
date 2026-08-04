@@ -6,7 +6,6 @@ use App\Actions\Practice\UpdateStreaks;
 use App\Events\PracticeSessionsRecorded;
 use App\Models\DailyAggregate;
 use App\Models\PracticeSession;
-use Illuminate\Support\Facades\DB;
 
 class UpdateDailyAggregates
 {
@@ -33,7 +32,11 @@ class UpdateDailyAggregates
             // El batch siempre es de un solo usuario (viene del sync auth).
             $this->updateStreaks->forUser(
                 $first->user,
-                $event->sessions->pluck('mantra_id')->all(),
+                $event->sessions
+                    ->pluck('mantra_id')
+                    ->map(fn (mixed $id): int => (int) $id)
+                    ->values()
+                    ->all(),
             );
         }
     }
@@ -48,11 +51,13 @@ class UpdateDailyAggregates
             'local_date' => $session->local_date,
         ]);
 
-        // Un solo UPDATE atómico para los cuatro contadores.
-        $aggregate->increment('recitations', $session->recitations, [
-            'malas' => DB::raw('malas + '.(int) $session->completed_malas),
-            'duration_seconds' => DB::raw('duration_seconds + '.(int) $session->duration_seconds),
-            'sessions_count' => DB::raw('sessions_count + 1'),
+        // Un solo UPDATE atómico para los cuatro contadores. incrementEach
+        // en vez de armar el SQL a mano: los valores van como bindings.
+        DailyAggregate::whereKey($aggregate->getKey())->incrementEach([
+            'recitations' => $session->recitations,
+            'malas' => $session->completed_malas,
+            'duration_seconds' => $session->duration_seconds,
+            'sessions_count' => 1,
         ]);
     }
 }

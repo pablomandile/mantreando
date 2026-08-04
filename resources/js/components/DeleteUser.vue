@@ -40,7 +40,10 @@ const passwordInput = useTemplateRef('passwordInput');
             </div>
             <Dialog>
                 <DialogTrigger as-child>
-                    <Button variant="destructive" data-test="delete-user-button">
+                    <Button
+                        variant="destructive"
+                        data-test="delete-user-button"
+                    >
                         {{ t('Eliminar cuenta') }}
                     </Button>
                 </DialogTrigger>
@@ -57,7 +60,9 @@ const passwordInput = useTemplateRef('passwordInput');
                     >
                         <DialogHeader class="space-y-3">
                             <DialogTitle>
-                                {{ t('¿Seguro que querés eliminar tu cuenta?') }}
+                                {{
+                                    t('¿Seguro que querés eliminar tu cuenta?')
+                                }}
                             </DialogTitle>
                             <DialogDescription>
                                 {{

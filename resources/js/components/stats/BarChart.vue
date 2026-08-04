@@ -85,7 +85,20 @@ function gridY(value: number): number {
 
 // ── Labels del eje X ────────────────────────────────────────────────────────
 
-const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const MONTHS = [
+    'ene',
+    'feb',
+    'mar',
+    'abr',
+    'may',
+    'jun',
+    'jul',
+    'ago',
+    'sep',
+    'oct',
+    'nov',
+    'dic',
+];
 const WEEKDAYS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
 
 function shortLabel(bucket: Bucket): string {
@@ -121,7 +134,11 @@ function fullLabel(bucket: Bucket): string {
 
     const date = new Date(`${bucket.key}T12:00:00`);
 
-    return date.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' });
+    return date.toLocaleDateString('es', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+    });
 }
 
 // ── Tooltip ─────────────────────────────────────────────────────────────────
@@ -188,7 +205,9 @@ const tooltipStyle = computed(() => {
                         v-if="bucket.value > 0"
                         :d="barPath(i, bucket.value)"
                         class="viz-bar"
-                        :class="{ 'viz-bar--dim': hovered !== null && hovered !== i }"
+                        :class="{
+                            'viz-bar--dim': hovered !== null && hovered !== i,
+                        }"
                     />
                 </template>
             </g>
@@ -232,7 +251,10 @@ const tooltipStyle = computed(() => {
                     @mouseenter="hovered = i"
                     @mouseleave="hovered = null"
                 >
-                    <title>{{ fullLabel(bucket) }}: {{ bucket.value.toLocaleString('es') }}</title>
+                    <title>
+                        {{ fullLabel(bucket) }}:
+                        {{ bucket.value.toLocaleString('es') }}
+                    </title>
                 </rect>
             </g>
         </svg>
@@ -243,7 +265,9 @@ const tooltipStyle = computed(() => {
             class="pointer-events-none absolute top-0 -translate-x-1/2 rounded-md border bg-background px-2.5 py-1.5 text-xs shadow-sm"
             :style="tooltipStyle"
         >
-            <span class="text-muted-foreground">{{ fullLabel(data[hovered]) }}</span>
+            <span class="text-muted-foreground">{{
+                fullLabel(data[hovered])
+            }}</span>
             <span class="ml-2 font-medium tabular-nums">
                 {{ data[hovered].value.toLocaleString('es') }}
             </span>

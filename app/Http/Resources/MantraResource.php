@@ -11,6 +11,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class MantraResource extends JsonResource
 {
+    /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         /** @var object{is_favorite?: bool|int, daily_commitment?: ?int, total_goal?: ?int}|null $prefs */

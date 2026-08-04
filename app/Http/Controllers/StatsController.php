@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Mantra;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -73,7 +72,9 @@ class StatsController
         $rangeTotals = $user->dailyAggregates()
             ->where('mantra_key', $mantraKey)
             ->where('local_date', '>=', $from->toDateString())
-            ->selectRaw('COALESCE(SUM(recitations),0) as recitations, COALESCE(SUM(malas),0) as malas, COALESCE(SUM(duration_seconds),0) as duration_seconds, COALESCE(SUM(sessions_count),0) as sessions')
+            // Los alias conservan el nombre real de cada columna: así el
+            // modelo los documenta y el análisis estático los resuelve.
+            ->selectRaw('COALESCE(SUM(recitations),0) as recitations, COALESCE(SUM(malas),0) as malas, COALESCE(SUM(duration_seconds),0) as duration_seconds, COALESCE(SUM(sessions_count),0) as sessions_count')
             ->first();
 
         $allTimeRecitations = (int) $user->dailyAggregates()
@@ -107,7 +108,7 @@ class StatsController
                 'recitations' => (int) $rangeTotals->recitations,
                 'malas' => (int) $rangeTotals->malas,
                 'duration_seconds' => (int) $rangeTotals->duration_seconds,
-                'sessions' => (int) $rangeTotals->sessions,
+                'sessions' => (int) $rangeTotals->sessions_count,
             ],
             'allTimeRecitations' => $allTimeRecitations,
             'streak' => [

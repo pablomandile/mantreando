@@ -147,7 +147,11 @@ const maxByMantra = computed(() =>
                     </span>
                 </p>
                 <p class="mt-0.5 text-xs text-muted-foreground">
-                    {{ t('racha actual · máx :max', { max: String(streak.max) }) }}
+                    {{
+                        t('racha actual · máx :max', {
+                            max: String(streak.max),
+                        })
+                    }}
                 </p>
             </div>
         </div>

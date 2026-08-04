@@ -21,7 +21,9 @@ export class SessionRecorder {
     private persistPending = false;
 
     /** Sesión activa persistida (si existe y es del mantra pedido). */
-    static async findActive(mantraId: number): Promise<ActiveSessionState | null> {
+    static async findActive(
+        mantraId: number,
+    ): Promise<ActiveSessionState | null> {
         const state = await db.sessionState.get('active');
 
         return state && state.mantra_id === mantraId ? state : null;

@@ -55,7 +55,7 @@ class MantraController
             ->orderBy('mantras.name')
             ->select('mantras.*')
             ->get()
-            ->map(fn (Mantra $mantra) => [
+            ->map(fn (Mantra $mantra): array => [
                 'id' => $mantra->id,
                 'name' => $mantra->localized('name'),
                 'text' => $mantra->text,
@@ -210,13 +210,18 @@ class MantraController
         return to_route('mantras.index');
     }
 
-    private function categories()
+    /** @return array<int, array{id: int, name: string, slug: string}> */
+    private function categories(): array
     {
-        return MantraCategory::orderBy('position')->get()->map(fn ($category) => [
-            'id' => $category->id,
-            'name' => $category->localized_name,
-            'slug' => $category->slug,
-        ]);
+        return MantraCategory::orderBy('position')
+            ->get()
+            ->map(fn (MantraCategory $category): array => [
+                'id' => $category->id,
+                'name' => $category->localized_name,
+                'slug' => $category->slug,
+            ])
+            ->values()
+            ->all();
     }
 
     private function deleteImage(Mantra $mantra): void

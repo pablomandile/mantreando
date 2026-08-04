@@ -56,7 +56,9 @@ export function fetchBootstrap(): Promise<BootstrapPayload> {
  * Borra la práctica del día en el servidor. Sin esto el reinicio sería
  * cosmético: el siguiente bootstrap traería de vuelta el total.
  */
-export function deleteToday(localDate: string): Promise<{ local_date: string }> {
+export function deleteToday(
+    localDate: string,
+): Promise<{ local_date: string }> {
     return request<{ local_date: string }>(ENDPOINTS.today, {
         method: 'DELETE',
         body: JSON.stringify({ local_date: localDate }),

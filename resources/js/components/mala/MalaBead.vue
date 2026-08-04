@@ -13,7 +13,11 @@ defineProps<{
 </script>
 
 <template>
-    <div class="mala-bead" :data-guru="isGuru || undefined" :data-active="active || undefined">
+    <div
+        class="mala-bead"
+        :data-guru="isGuru || undefined"
+        :data-active="active || undefined"
+    >
         <MalaTassel v-if="isGuru" />
     </div>
 </template>

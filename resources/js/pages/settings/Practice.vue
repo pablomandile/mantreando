@@ -63,7 +63,11 @@ const hapticsSupported =
                     >
                         {{ t('Tradicional') }}
                         <span class="block text-xs text-muted-foreground">
-                            {{ t('Cuenta por cuenta, el gurú invierte la dirección') }}
+                            {{
+                                t(
+                                    'Cuenta por cuenta, el gurú invierte la dirección',
+                                )
+                            }}
                         </span>
                     </button>
                     <button
@@ -76,7 +80,11 @@ const hapticsSupported =
                     >
                         {{ t('Asistido') }}
                         <span class="block text-xs text-muted-foreground">
-                            {{ t('Gestos libres con inercia, o tocar para avanzar') }}
+                            {{
+                                t(
+                                    'Gestos libres con inercia, o tocar para avanzar',
+                                )
+                            }}
                         </span>
                     </button>
                 </div>
@@ -101,7 +109,11 @@ const hapticsSupported =
                         v-if="!hapticsSupported"
                         class="block text-xs text-muted-foreground"
                     >
-                        {{ t('No disponible en este dispositivo (p. ej. iPhone o escritorio)') }}
+                        {{
+                            t(
+                                'No disponible en este dispositivo (p. ej. iPhone o escritorio)',
+                            )
+                        }}
                     </span>
                 </span>
             </Label>
@@ -114,7 +126,9 @@ const hapticsSupported =
                             (form.sound_enabled = value === true)
                     "
                 />
-                <span>{{ t('Sonido suave de madera al pasar cada cuenta') }}</span>
+                <span>{{
+                    t('Sonido suave de madera al pasar cada cuenta')
+                }}</span>
             </Label>
 
             <Button :disabled="form.processing">{{ t('Guardar') }}</Button>

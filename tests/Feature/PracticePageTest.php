@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Mantra;
 use App\Models\User;
 
 test('la página de práctica renderiza para un usuario autenticado', function () {
@@ -9,7 +10,7 @@ test('la página de práctica renderiza para un usuario autenticado', function (
 });
 
 test('la página de práctica acepta el mantra preseleccionado por query', function () {
-    $mantra = \App\Models\Mantra::factory()->create();
+    $mantra = Mantra::factory()->create();
 
     $this->actingAs(User::factory()->create())
         ->get("/practice?mantra={$mantra->id}")

@@ -42,7 +42,9 @@ createInertiaApp({
                     return langs['../../lang/en.json']?.default ?? {};
                 },
             })
-            .mount(el);
+            // el viene tipado como nullable, pero Inertia solo llama a setup
+            // con el elemento raíz ya resuelto: si faltara, no habría app.
+            .mount(el as Element);
     },
     layout: (name) => {
         switch (true) {

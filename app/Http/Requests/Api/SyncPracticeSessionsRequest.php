@@ -9,6 +9,8 @@ class SyncPracticeSessionsRequest extends FormRequest
     /**
      * Solo valida la forma del batch; cada sesión se valida por separado en
      * RecordPracticeSessions para que un ítem inválido no tire 422 al lote.
+     *
+     * @return array<string, list<string>>
      */
     public function rules(): array
     {

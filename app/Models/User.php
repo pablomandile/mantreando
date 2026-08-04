@@ -6,12 +6,14 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -22,13 +24,14 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $name
  * @property string $email
  * @property Carbon|null $email_verified_at
- * @property string|null $password  null = cuenta creada vía Google
+ * @property string|null $password null = cuenta creada vía Google
  * @property string|null $google_id
  * @property string|null $avatar
- * @property string|null $timezone  IANA; toda lógica de "día" usa local_date del dispositivo
+ * @property string|null $timezone IANA; toda lógica de "día" usa local_date del dispositivo
  * @property string $locale
  * @property string $theme
- * @property array|null $settings
+ * @property array<string, mixed>|null $settings
+ * @property-read string|null $avatar_url
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
@@ -58,17 +61,19 @@ class User extends Authenticatable implements PasskeyUser
 
     /**
      * URL del avatar: puede ser externa (Google) o un path local subido.
+     *
+     * @return Attribute<string|null, mixed>
      */
-    protected function avatarUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
+    protected function avatarUrl(): Attribute
     {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::get(function (): ?string {
+        return Attribute::make(get: function (): ?string {
             if ($this->avatar === null) {
                 return null;
             }
 
             return str_starts_with($this->avatar, 'http')
                 ? $this->avatar
-                : \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar);
+                : Storage::disk('public')->url($this->avatar);
         });
     }
 

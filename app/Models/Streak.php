@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $mantra_id
  * @property int $current_count
  * @property int $max_count
- * @property string|null $last_local_date  sin cast, string 'Y-m-d'
+ * @property string|null $last_local_date sin cast, string 'Y-m-d'
  */
 #[Fillable(['user_id', 'mantra_id', 'current_count', 'max_count', 'last_local_date'])]
 class Streak extends Model

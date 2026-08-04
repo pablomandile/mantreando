@@ -21,7 +21,12 @@ function makePhysics(overrides: Partial<StrandPhysicsOptions> = {}): {
 }
 
 /** Corre tick() con frames de dt fijo hasta que la física quede idle. */
-function settle(physics: StrandPhysics, startT: number, dt = 16.67, maxFrames = 1000): number {
+function settle(
+    physics: StrandPhysics,
+    startT: number,
+    dt = 16.67,
+    maxFrames = 1000,
+): number {
     let t = startT;
 
     for (let i = 0; i < maxFrames; i++) {
@@ -38,7 +43,13 @@ function settle(physics: StrandPhysics, startT: number, dt = 16.67, maxFrames = 
 /** Drag sintético: baja el dedo, lo mueve en pasos y lo suelta. */
 function drag(
     physics: StrandPhysics,
-    opts: { fromY: number; toY: number; steps?: number; startT?: number; msPerStep?: number },
+    opts: {
+        fromY: number;
+        toY: number;
+        steps?: number;
+        startT?: number;
+        msPerStep?: number;
+    },
 ): { result: 'tap' | 'drag'; endT: number } {
     const { fromY, toY, steps = 10, startT = 0, msPerStep = 16 } = opts;
     physics.pointerDown(fromY, startT);
@@ -101,7 +112,12 @@ describe('StrandPhysics — dragging', () => {
         const { physics } = makePhysics();
 
         // Flick: 300 px en 100 ms = 3 px/ms
-        const { endT } = drag(physics, { fromY: 0, toY: 300, steps: 6, msPerStep: 16 });
+        const { endT } = drag(physics, {
+            fromY: 0,
+            toY: 300,
+            steps: 6,
+            msPerStep: 16,
+        });
         expect(physics.getState()).toBe('momentum');
 
         physics.tick(endT + 16);
@@ -119,7 +135,12 @@ describe('StrandPhysics — momentum (asistido)', () => {
         const { physics } = makePhysics();
 
         // ~1.5 px/ms: debería recorrer ≈ 500 px ≈ 7-8 cuentas en total
-        const { endT } = drag(physics, { fromY: 0, toY: 150, steps: 6, msPerStep: 16 });
+        const { endT } = drag(physics, {
+            fromY: 0,
+            toY: 150,
+            steps: 6,
+            msPerStep: 16,
+        });
         expect(physics.getState()).toBe('momentum');
 
         settle(physics, endT);
@@ -142,13 +163,20 @@ describe('StrandPhysics — momentum (asistido)', () => {
         settle(physics120, end120, 8.33);
 
         // Misma cuenta final (la integración difiere < 1 punto medio)
-        expect(physics60.getPositionBeads()).toBe(physics120.getPositionBeads());
+        expect(physics60.getPositionBeads()).toBe(
+            physics120.getPositionBeads(),
+        );
     });
 
     it('bajo reduced motion no hay momentum: snap directo', () => {
         const { physics } = makePhysics({ reducedMotion: true });
 
-        const { endT } = drag(physics, { fromY: 0, toY: 150, steps: 6, msPerStep: 16 });
+        const { endT } = drag(physics, {
+            fromY: 0,
+            toY: 150,
+            steps: 6,
+            msPerStep: 16,
+        });
         expect(physics.getState()).toBe('snapping');
 
         settle(physics, endT);
@@ -168,7 +196,12 @@ describe('StrandPhysics — modo tradicional', () => {
     it('nunca entra en momentum: el flick más fuerte hace snap', () => {
         const { physics } = traditional();
 
-        const { endT } = drag(physics, { fromY: 0, toY: 400, steps: 6, msPerStep: 16 });
+        const { endT } = drag(physics, {
+            fromY: 0,
+            toY: 400,
+            steps: 6,
+            msPerStep: 16,
+        });
         expect(physics.getState()).toBe('snapping');
 
         settle(physics, endT);

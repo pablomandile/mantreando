@@ -178,7 +178,9 @@ function move(index: number, direction: -1 | 1): void {
                             <!-- truncate: con la miniatura al lado, un nombre
                                  largo pasaría a dos líneas y estiraría la
                                  tarjeta respecto de las demás. -->
-                            <p class="truncate font-medium">{{ mantra.name }}</p>
+                            <p class="truncate font-medium">
+                                {{ mantra.name }}
+                            </p>
                             <p class="truncate text-sm text-muted-foreground">
                                 {{ mantra.text }}
                             </p>

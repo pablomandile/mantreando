@@ -16,9 +16,7 @@ defineProps<{
 
 defineOptions({
     layout: {
-        breadcrumbs: [
-            { title: 'Otras recitaciones', href: '/recitations' },
-        ],
+        breadcrumbs: [{ title: 'Otras recitaciones', href: '/recitations' }],
     },
 });
 

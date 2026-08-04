@@ -22,7 +22,7 @@ class RecordPracticeSessions
      *   así los agregados diarios se incrementan una única vez.
      *
      * @param  array<int, array<string, mixed>>  $items
-     * @return array{results: list<array{uuid: ?string, status: string, errors?: array}>}
+     * @return array{results: list<array{uuid: mixed, status: string, errors?: array<string, array<int, string>>}>}
      */
     public function handle(User $user, array $items): array
     {
@@ -35,7 +35,7 @@ class RecordPracticeSessions
             ->flip();
 
         foreach ($items as $item) {
-            $validator = Validator::make(is_array($item) ? $item : [], [
+            $validator = Validator::make($item, [
                 'uuid' => ['required', 'uuid'],
                 'mantra_id' => ['required', 'integer'],
                 'mode' => ['required', Rule::enum(PracticeMode::class)],
@@ -49,7 +49,7 @@ class RecordPracticeSessions
 
             if ($validator->fails()) {
                 $results[] = [
-                    'uuid' => is_array($item) ? ($item['uuid'] ?? null) : null,
+                    'uuid' => $item['uuid'] ?? null,
                     'status' => 'invalid',
                     'errors' => $validator->errors()->toArray(),
                 ];

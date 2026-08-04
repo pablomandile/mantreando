@@ -156,7 +156,8 @@ export class StrandPhysics {
             this.samples.shift();
         }
 
-        const raw = this.dragStartOffset + DIRECTION_SIGN * (y - this.dragStartY);
+        const raw =
+            this.dragStartOffset + DIRECTION_SIGN * (y - this.dragStartY);
         this.offset = this.constrain(raw);
         this.notify();
     }
@@ -240,7 +241,8 @@ export class StrandPhysics {
             if (dt > 0) {
                 const rate = this.reducedMotion ? SNAP_RATE_REDUCED : SNAP_RATE;
                 this.offset +=
-                    (this.snapTarget - this.offset) * (1 - Math.exp(-dt * rate));
+                    (this.snapTarget - this.offset) *
+                    (1 - Math.exp(-dt * rate));
 
                 if (Math.abs(this.snapTarget - this.offset) < SNAP_EPSILON_PX) {
                     this.offset = this.snapTarget;
@@ -336,7 +338,9 @@ export class StrandPhysics {
     /** Fórmula iOS: overshoot mostrado, asintótico a 0.5·pitch. */
     private rubberBand(excess: number): number {
         return (
-            0.5 * this.pitch * (1 - 1 / ((excess * RUBBER_COEF) / this.pitch + 1))
+            0.5 *
+            this.pitch *
+            (1 - 1 / ((excess * RUBBER_COEF) / this.pitch + 1))
         );
     }
 }

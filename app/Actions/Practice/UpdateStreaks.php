@@ -15,6 +15,8 @@ class UpdateStreaks
      * fuera de orden (una práctica de ayer sincronizada hoy) y un contador
      * incremental se rompería. Los local_date históricos jamás se recalculan
      * (§7): un cambio de timezone por viaje no reescribe rachas pasadas.
+     *
+     * @param  array<int, int>  $mantraIds
      */
     public function forUser(User $user, array $mantraIds): void
     {

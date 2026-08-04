@@ -80,7 +80,9 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
                 recoveryCodes(),
             )) as string[];
         } catch {
-            errors.value.push('No se pudieron cargar los códigos de recuperación.');
+            errors.value.push(
+                'No se pudieron cargar los códigos de recuperación.',
+            );
             recoveryCodesList.value = [];
         }
     };

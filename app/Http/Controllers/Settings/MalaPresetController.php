@@ -20,7 +20,8 @@ class MalaPresetController extends Controller
 
         return Inertia::render('settings/Mala', [
             'preset' => [
-                'material' => $preset?->material ?? 'wood',
+                // Sin ?-> : dentro de ?? el acceso sobre null ya devuelve null.
+                'material' => $preset->material ?? 'wood',
                 'texture_url' => $preset?->texture_url,
             ],
             'materials' => MalaPreset::MATERIALS,
@@ -44,8 +45,18 @@ class MalaPresetController extends Controller
 
         if ($request->hasFile('texture')) {
             $this->deleteTexture($preset);
-            $preset->texture_path = $request->file('texture')
+            // store() devuelve false si el disco falla: sin esto la columna
+            // (string|null) recibiría un false y guardaría cadena vacía.
+            $stored = $request->file('texture')
                 ->store("malas/{$user->id}/textures", 'public');
+
+            if ($stored === false) {
+                return back()->withErrors([
+                    'texture' => 'No se pudo guardar la textura. Probá de nuevo.',
+                ]);
+            }
+
+            $preset->texture_path = $stored;
         } elseif ($validated['remove_texture'] ?? false) {
             $this->deleteTexture($preset);
             $preset->texture_path = null;

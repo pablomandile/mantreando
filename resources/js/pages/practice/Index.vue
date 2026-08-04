@@ -6,10 +6,10 @@ import MalaStrand from '@/components/mala/MalaStrand.vue';
 import { useLiveQuery } from '@/composables/useLiveQuery';
 import { useMala } from '@/composables/useMala';
 import { usePracticeSync } from '@/composables/usePracticeSync';
+import { deleteToday } from '@/lib/practice/api';
 import { db } from '@/lib/practice/db';
 import { getLocalDate } from '@/lib/practice/localDate';
 import { SessionRecorder } from '@/lib/practice/recorder';
-import { deleteToday } from '@/lib/practice/api';
 import { refreshBootstrap, syncAll } from '@/lib/practice/sync';
 import type {
     ActiveSessionState,
@@ -196,7 +196,11 @@ async function startSession(
         mala.setMode(defaultMode);
     }
 
-    await recorder.begin({ mantraId, mode: resume?.mode ?? defaultMode, resume });
+    await recorder.begin({
+        mantraId,
+        mode: resume?.mode ?? defaultMode,
+        resume,
+    });
     await db.meta.put({ key: 'lastMantraId', value: mantraId });
 }
 
@@ -487,7 +491,9 @@ onUnmounted(() => {
             :pool="mala.pool"
             :material="preset.material"
             :texture-url="preset.texture_url"
-            :aria-label="t('Mala: deslizá verticalmente para avanzar una cuenta')"
+            :aria-label="
+                t('Mala: deslizá verticalmente para avanzar una cuenta')
+            "
             :set-container="mala.setContainer"
             :set-column="mala.setColumn"
             :set-surface="mala.setSurface"
@@ -580,7 +586,11 @@ onUnmounted(() => {
                     v-if="outboxCount > 0"
                     class="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-xs text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
                 >
-                    {{ t(':count sin sincronizar', { count: String(outboxCount) }) }}
+                    {{
+                        t(':count sin sincronizar', {
+                            count: String(outboxCount),
+                        })
+                    }}
                 </span>
             </div>
 

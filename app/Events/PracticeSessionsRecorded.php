@@ -12,8 +12,8 @@ class PracticeSessionsRecorded
 
     /**
      * @param  Collection<int, PracticeSession>  $sessions  Solo sesiones NUEVAS
-     *         (los duplicados por uuid nunca llegan acá — de ahí la idempotencia
-     *         de los agregados).
+     *                                                      (los duplicados por uuid nunca llegan acá — de ahí la idempotencia
+     *                                                      de los agregados).
      */
     public function __construct(
         public Collection $sessions,

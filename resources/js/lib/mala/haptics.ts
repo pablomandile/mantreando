@@ -13,7 +13,9 @@ interface CapacitorGlobal {
     isNativePlatform?: () => boolean;
     Plugins?: {
         Haptics?: {
-            impact(options: { style: 'HEAVY' | 'MEDIUM' | 'LIGHT' }): Promise<void>;
+            impact(options: {
+                style: 'HEAVY' | 'MEDIUM' | 'LIGHT';
+            }): Promise<void>;
             vibrate(options: { duration: number }): Promise<void>;
         };
     };
@@ -22,7 +24,9 @@ interface CapacitorGlobal {
 function capacitorHaptics() {
     const capacitor = (globalThis as { Capacitor?: CapacitorGlobal }).Capacitor;
 
-    return capacitor?.isNativePlatform?.() ? capacitor.Plugins?.Haptics : undefined;
+    return capacitor?.isNativePlatform?.()
+        ? capacitor.Plugins?.Haptics
+        : undefined;
 }
 
 export const hapticsSupported =

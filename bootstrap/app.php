@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,10 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
 
         // El bootstrap del API también localiza contenido (mantras del sistema).
-        $middleware->api(append: [\App\Http\Middleware\SetLocale::class]);
+        $middleware->api(append: [SetLocale::class]);
 
         $middleware->web(append: [
-            \App\Http\Middleware\SetLocale::class,
+            SetLocale::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

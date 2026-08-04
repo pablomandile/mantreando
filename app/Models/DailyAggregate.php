@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property int|null $mantra_id
  * @property int $mantra_key
- * @property string $local_date  sin cast, string 'Y-m-d'
+ * @property string $local_date sin cast, string 'Y-m-d'
  * @property int $recitations
  * @property int $malas
  * @property int $duration_seconds

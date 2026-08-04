@@ -8,6 +8,7 @@ use Illuminate\Validation\Rule;
 
 class MantraRequest extends FormRequest
 {
+    /** @return array<string, list<mixed>> */
     public function rules(): array
     {
         return [
@@ -25,6 +26,7 @@ class MantraRequest extends FormRequest
         ];
     }
 
+    /** @return array<string, string> */
     public function attributes(): array
     {
         return [

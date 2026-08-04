@@ -42,7 +42,9 @@ defineOptions({
             variant="small"
             :title="t('Cambiar contraseña')"
             :description="
-                t('Usá una contraseña larga y aleatoria para mantener tu cuenta segura')
+                t(
+                    'Usá una contraseña larga y aleatoria para mantener tu cuenta segura',
+                )
             "
         />
 

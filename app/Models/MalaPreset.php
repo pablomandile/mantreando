@@ -12,15 +12,17 @@ use Illuminate\Support\Facades\Storage;
  * @property int $id
  * @property int $user_id
  * @property string $name
- * @property string $material  wood|bodhi|red|blue
+ * @property string $material wood|bodhi|red|blue
  * @property string|null $texture_path
  * @property bool $is_active
+ * @property-read string|null $texture_url
  */
 #[Fillable(['user_id', 'name', 'material', 'texture_path', 'is_active'])]
 class MalaPreset extends Model
 {
     public const MATERIALS = ['wood', 'bodhi', 'red', 'blue'];
 
+    /** @return array<string, string> */
     protected function casts(): array
     {
         return [
@@ -34,9 +36,10 @@ class MalaPreset extends Model
         return $this->belongsTo(User::class);
     }
 
+    /** @return Attribute<string|null, mixed> */
     protected function textureUrl(): Attribute
     {
-        return Attribute::get(fn (): ?string => $this->texture_path !== null
+        return Attribute::make(get: fn (): ?string => $this->texture_path !== null
             ? Storage::disk('public')->url($this->texture_path)
             : null);
     }

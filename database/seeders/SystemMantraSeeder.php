@@ -208,12 +208,10 @@ class SystemMantraSeeder extends Seeder
                     'category_id' => $categories[$data['category']],
                     'text' => $data['text'],
                     'translations' => ['en' => ['name' => $data['en']]],
-                    'image_path' => isset($data['image'])
-                        ? self::IMAGE_DIR.'/'.$data['image'].'.jpg'
-                        : null,
+                    'image_path' => self::IMAGE_DIR.'/'.$data['image'].'.jpg',
                     // Color tradicional de la deidad: es el default del
                     // sistema, igual para todos los usuarios.
-                    'color' => $data['color'] ?? null,
+                    'color' => $data['color'],
                 ],
             );
         }

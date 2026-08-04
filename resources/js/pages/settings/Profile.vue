@@ -192,7 +192,10 @@ function removeAvatar(): void {
                  deshabilitada en config/fortify.php hasta configurar mail. -->
 
             <div class="flex items-center gap-4">
-                <Button :disabled="processing" data-test="update-profile-button">
+                <Button
+                    :disabled="processing"
+                    data-test="update-profile-button"
+                >
                     {{ t('Guardar') }}
                 </Button>
             </div>

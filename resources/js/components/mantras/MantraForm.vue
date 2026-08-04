@@ -78,7 +78,12 @@ const textareaClass =
     <form class="space-y-5" @submit.prevent="submit">
         <div class="grid gap-2">
             <Label for="name">{{ t('Nombre') }} *</Label>
-            <Input id="name" v-model="form.name" required placeholder="Om Mani Padme Hum" />
+            <Input
+                id="name"
+                v-model="form.name"
+                required
+                placeholder="Om Mani Padme Hum"
+            />
             <InputError :message="form.errors.name" />
         </div>
 

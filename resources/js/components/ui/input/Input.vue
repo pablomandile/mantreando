@@ -3,14 +3,16 @@ import type { HTMLAttributes } from "vue"
 import { useVModel } from "@vueuse/core"
 import { cn } from "@/lib/utils"
 
+// null además de undefined: los campos opcionales del backend (un objetivo
+// sin definir, por ejemplo) viajan como null y se atan directo con v-model.
 const props = defineProps<{
-  defaultValue?: string | number
-  modelValue?: string | number
+  defaultValue?: string | number | null
+  modelValue?: string | number | null
   class?: HTMLAttributes["class"]
 }>()
 
 const emits = defineEmits<{
-  (e: "update:modelValue", payload: string | number): void
+  (e: "update:modelValue", payload: string | number | null): void
 }>()
 
 const modelValue = useVModel(props, "modelValue", emits, {

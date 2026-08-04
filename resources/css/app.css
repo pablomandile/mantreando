@@ -95,6 +95,25 @@
        aunque la app esté en oscuro: la lista de opciones salía blanca. */
     color-scheme: light;
 
+    /* Fondo de la app: dos manchas muy suaves en las esquinas opuestas, del
+       mismo palo que las cuentas del mala (arena cálida arriba a la derecha,
+       donde cuelga la hebra; una sombra fría abajo a la izquierda). El
+       centro queda limpio para que el texto nunca pierda contraste.
+       En claro el tinte es más tenue a propósito: sobre blanco, cualquier
+       mancha le come contraste al texto atenuado (que ya venía justo en
+       4.74:1) y lo bajaba por debajo del mínimo AA. */
+    --app-backdrop:
+        radial-gradient(
+            ellipse 72% 58% at 95% -12%,
+            rgba(211, 168, 120, 0.13),
+            transparent 60%
+        ),
+        radial-gradient(
+            ellipse 85% 62% at -8% 108%,
+            rgba(138, 148, 178, 0.09),
+            transparent 60%
+        );
+
     --background: hsl(0 0% 100%);
     --foreground: hsl(0 0% 3.9%);
     --card: hsl(0 0% 100%);
@@ -133,6 +152,20 @@
 
 .dark {
     color-scheme: dark;
+
+    /* En oscuro las manchas son más marcadas: sobre negro casi no se notan.
+       Ámbar de madera arriba, índigo profundo abajo. */
+    --app-backdrop:
+        radial-gradient(
+            ellipse 72% 58% at 95% -12%,
+            rgba(154, 107, 66, 0.24),
+            transparent 60%
+        ),
+        radial-gradient(
+            ellipse 85% 62% at -8% 108%,
+            rgba(72, 84, 130, 0.24),
+            transparent 60%
+        );
 
     --background: hsl(0 0% 3.9%);
     --foreground: hsl(0 0% 98%);
@@ -175,6 +208,19 @@
     }
     body {
         @apply bg-background text-foreground;
+    }
+
+    /* El panel de contenido y la pantalla de login son opacos (bg-background)
+       y taparían el fondo del body, así que llevan el degradado ellos mismos.
+       attachment: fixed lo ancla al viewport, así las tres superficies se leen
+       como UNA sola mancha continua. Es una imagen estática: no repinta al
+       hacer scroll ni le compite al mala, que corre a 60fps. */
+    body,
+    [data-slot='sidebar-inset'],
+    [data-slot='auth-backdrop'] {
+        background-image: var(--app-backdrop);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
     }
 }
 

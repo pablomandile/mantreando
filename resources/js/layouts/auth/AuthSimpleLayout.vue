@@ -10,7 +10,10 @@ defineProps<{
 </script>
 
 <template>
+    <!-- data-slot: este div ocupa toda la pantalla y es opaco, así que tapa
+         el fondo del body; el degradado se le aplica a él (ver app.css). -->
     <div
+        data-slot="auth-backdrop"
         class="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10"
     >
         <div class="w-full max-w-sm">

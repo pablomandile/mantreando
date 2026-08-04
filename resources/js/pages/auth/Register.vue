@@ -43,6 +43,9 @@ onMounted(() => {
     >
         <div class="grid gap-6">
             <input type="hidden" name="timezone" :value="timezone" />
+            <!-- Red de seguridad: un error en el campo oculto jamás debe
+                 dejar el formulario mudo. -->
+            <InputError :message="errors.timezone" />
 
             <div class="grid gap-2">
                 <Label for="name">Nombre</Label>

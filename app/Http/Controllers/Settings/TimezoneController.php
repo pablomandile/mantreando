@@ -19,7 +19,8 @@ class TimezoneController extends Controller
     public function __invoke(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'timezone' => ['required', 'string', 'timezone:all'],
+            // all_with_bc: acepta los IDs legacy que reportan Chrome/Edge
+            'timezone' => ['required', 'string', 'timezone:all_with_bc'],
         ]);
 
         $request->user()->update(['timezone' => $validated['timezone']]);

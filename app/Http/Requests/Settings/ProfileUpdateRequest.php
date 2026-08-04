@@ -19,7 +19,7 @@ class ProfileUpdateRequest extends FormRequest
     {
         return [
             ...$this->profileRules($this->user()->id),
-            'timezone' => ['nullable', 'string', 'timezone:all'],
+            'timezone' => ['nullable', 'string', 'timezone:all_with_bc'],
             'locale' => ['nullable', 'string', 'in:es,en'],
         ];
     }

@@ -22,7 +22,11 @@ class CreateNewUser implements CreatesNewUsers
         Validator::make($input, [
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
-            'timezone' => ['nullable', 'string', 'timezone:all'],
+            // all_with_bc: Chrome/Edge reportan IDs legacy (p. ej.
+            // 'America/Buenos_Aires', el canónico de CLDR para Argentina)
+            // que 'timezone:all' rechaza — y el campo es oculto, así que
+            // el registro fallaba en silencio.
+            'timezone' => ['nullable', 'string', 'timezone:all_with_bc'],
         ])->validate();
 
         return User::create([

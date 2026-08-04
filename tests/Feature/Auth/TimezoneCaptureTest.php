@@ -17,6 +17,23 @@ test('el registro guarda la timezone del dispositivo', function () {
         ->toBe('America/Argentina/Buenos_Aires');
 });
 
+test('el registro acepta el ID legacy que reportan Chrome/Edge', function () {
+    // CLDR usa 'America/Buenos_Aires' (sin /Argentina/) como canónico:
+    // es lo que Intl devuelve en Chrome/Edge en Argentina. Con timezone:all
+    // el registro fallaba EN SILENCIO (campo oculto sin error visible).
+    $response = $this->post('/register', [
+        'name' => 'Practicante',
+        'email' => 'legacy@example.com',
+        'password' => 'password-segura-1',
+        'password_confirmation' => 'password-segura-1',
+        'timezone' => 'America/Buenos_Aires',
+    ]);
+
+    $response->assertSessionHasNoErrors();
+    expect(User::where('email', 'legacy@example.com')->first()->timezone)
+        ->toBe('America/Buenos_Aires');
+});
+
 test('el registro rechaza una timezone inválida', function () {
     $response = $this->post('/register', [
         'name' => 'Practicante',

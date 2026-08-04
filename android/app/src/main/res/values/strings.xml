@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">malaflow</string>
-    <string name="title_activity_main">malaflow</string>
-    <string name="package_name">ar.com.malaflow.app</string>
-    <string name="custom_url_scheme">ar.com.malaflow.app</string>
+    <string name="app_name">mantreando</string>
+    <string name="title_activity_main">mantreando</string>
+    <string name="package_name">ar.com.mantreando.app</string>
+    <string name="custom_url_scheme">ar.com.mantreando.app</string>
 </resources>

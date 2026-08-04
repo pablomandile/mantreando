@@ -13,7 +13,7 @@ import { register } from '@/routes';
     <Head title="Tu mala virtual">
         <meta
             name="description"
-            content="malaflow es un mala virtual para tu práctica diaria de mantras: 108 cuentas, dos modos de práctica, funciona sin conexión y guarda tu progreso."
+            content="mantreando es un mala virtual para tu práctica diaria de mantras: 108 cuentas, dos modos de práctica, funciona sin conexión y guarda tu progreso."
         />
     </Head>
 
@@ -28,7 +28,9 @@ import { register } from '@/routes';
             />
 
             <div class="space-y-2">
-                <h1 class="text-3xl font-semibold tracking-tight">malaflow</h1>
+                <h1 class="text-3xl font-semibold tracking-tight">
+                    mantreando
+                </h1>
                 <p class="text-muted-foreground">
                     Tu mala de 108 cuentas, siempre con vos. Practicá tus
                     mantras, mantené tu compromiso diario y seguí tu progreso —

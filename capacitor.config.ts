@@ -9,12 +9,12 @@ import type { CapacitorConfig } from '@capacitor/cli';
  * real con HTTPS y quitar cleartext.
  */
 const config: CapacitorConfig = {
-    appId: 'ar.com.malaflow.app',
-    appName: 'malaflow',
+    appId: 'ar.com.mantreando.app',
+    appName: 'mantreando',
     webDir: 'public/build', // no se usa con server.url, pero el CLI lo exige
     server: {
         // DEV: la IP de tu máquina en la LAN (php artisan serve --host=0.0.0.0)
-        // PROD: 'https://malaflow.tu-dominio.com'
+        // PROD: 'https://mantreando.tu-dominio.com'
         url: 'http://10.0.2.2:8000', // 10.0.2.2 = localhost del host en el emulador Android
         cleartext: true, // solo para dev sin HTTPS — QUITAR en producción
     },

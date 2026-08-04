@@ -6,7 +6,7 @@ test('el manifest existe, es JSON válido y apunta a íconos existentes', functi
 
     $manifest = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
 
-    expect($manifest['name'])->toBe('malaflow')
+    expect($manifest['name'])->toBe('mantreando')
         ->and($manifest['start_url'])->toBe('/practice')
         ->and($manifest['display'])->toBe('standalone');
 

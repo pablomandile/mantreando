@@ -15,14 +15,14 @@ import type {
  * - sessionState: fila única 'active' con la práctica en curso.
  * - meta: lastBootstrapAt, userId, etc.
  */
-class MalaflowDB extends Dexie {
+class MantreandoDB extends Dexie {
     mantras!: EntityTable<CachedMantra, 'id'>;
     outbox!: EntityTable<OutboxItem, 'uuid'>;
     sessionState!: EntityTable<ActiveSessionState, 'key'>;
     meta!: EntityTable<MetaEntry, 'key'>;
 
     constructor() {
-        super('malaflow');
+        super('mantreando');
 
         this.version(1).stores({
             mantras: 'id, name', // name indexado: la lista ordena por nombre
@@ -33,4 +33,4 @@ class MalaflowDB extends Dexie {
     }
 }
 
-export const db = new MalaflowDB();
+export const db = new MantreandoDB();

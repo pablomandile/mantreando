@@ -1,5 +1,5 @@
 /**
- * Service worker de malaflow (Etapa 10). Escrito a mano — sin Workbox:
+ * Service worker de mantreando (Etapa 10). Escrito a mano — sin Workbox:
  * menos magia, cero riesgo de incompatibilidad con Vite 8/rolldown.
  *
  * Estrategias:
@@ -17,9 +17,12 @@
  */
 
 const VERSION = 'v1';
-const ASSET_CACHE = `malaflow-assets-${VERSION}`;
-const PAGE_CACHE = `malaflow-pages-${VERSION}`;
+const ASSET_CACHE = `mantreando-assets-${VERSION}`;
+const PAGE_CACHE = `mantreando-pages-${VERSION}`;
 const KNOWN_CACHES = [ASSET_CACHE, PAGE_CACHE];
+// Prefijos propios (incluye el nombre anterior de la app, para limpiar
+// caches huérfanas en clientes que ya la tenían instalada).
+const OWN_PREFIXES = ['mantreando-', 'malaflow-'];
 
 self.addEventListener('install', () => {
     self.skipWaiting();
@@ -31,7 +34,11 @@ self.addEventListener('activate', (event) => {
             const names = await caches.keys();
             await Promise.all(
                 names
-                    .filter((name) => name.startsWith('malaflow-') && !KNOWN_CACHES.includes(name))
+                    .filter(
+                        (name) =>
+                            OWN_PREFIXES.some((prefix) => name.startsWith(prefix)) &&
+                            !KNOWN_CACHES.includes(name),
+                    )
                     .map((name) => caches.delete(name)),
             );
             await self.clients.claim();

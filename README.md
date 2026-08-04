@@ -1,4 +1,4 @@
-# malaflow
+# mantreando
 
 Mala virtual para la práctica diaria de mantras budistas. PWA con Laravel 13 +
 Inertia 3 + Vue 3 (TypeScript) que funciona **offline durante la práctica**:
@@ -11,6 +11,8 @@ idempotente cuando hay conexión.
 composer install && npm install
 cp .env.example .env && php artisan key:generate
 # crear la base MySQL `malaflow` (Laragon: root sin password)
+# (la carpeta, la base y el vhost conservan el nombre interno "malaflow";
+#  el nombre visible de la app es "mantreando" via APP_NAME)
 php artisan migrate --seed
 php artisan storage:link
 composer run dev   # server + queue + vite

@@ -1,4 +1,4 @@
-package ar.com.malaflow.app;
+package ar.com.mantreando.app;
 
 import com.getcapacitor.BridgeActivity;
 

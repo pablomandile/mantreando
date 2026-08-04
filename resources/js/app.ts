@@ -27,11 +27,19 @@ createInertiaApp({
                 // clave (español fuente) es el texto final.
                 fallbackLang: 'es',
                 resolve: (lang: string) => {
-                    const langs = import.meta.glob('../../lang/*.json', {
+                    // Solo se carga en.json: en español las claves YA son el
+                    // texto final. lang/es.json existe pero es de backend
+                    // (páginas de error y mails de Laravel) y no debe entrar
+                    // al bundle.
+                    if (lang !== 'en') {
+                        return {};
+                    }
+
+                    const langs = import.meta.glob('../../lang/en.json', {
                         eager: true,
                     }) as Record<string, { default: Record<string, string> }>;
 
-                    return langs[`../../lang/${lang}.json`]?.default ?? {};
+                    return langs['../../lang/en.json']?.default ?? {};
                 },
             })
             .mount(el);

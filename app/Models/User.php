@@ -47,6 +47,16 @@ class User extends Authenticatable implements PasskeyUser
     protected $appends = ['avatar_url'];
 
     /**
+     * Español por default (espeja el default de la columna): una instancia
+     * recién creada ya reporta 'es' antes de tocar la base.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'locale' => 'es',
+    ];
+
+    /**
      * URL del avatar: puede ser externa (Google) o un path local subido.
      */
     protected function avatarUrl(): \Illuminate\Database\Eloquent\Casts\Attribute

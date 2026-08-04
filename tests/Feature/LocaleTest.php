@@ -72,6 +72,53 @@ test('las categorías se localizan por locale', function () {
     expect($categories)->toContain('Wisdom')->toContain('Healing');
 });
 
+test('el español es el default de la app y también su fallback', function () {
+    // Sin el .env, la app igual arranca en español: una clave sin traducir
+    // debe quedar en español, nunca caer al inglés.
+    expect(config('app.locale'))->toBe('es')
+        ->and(config('app.fallback_locale'))->toBe('es');
+});
+
+test('un usuario nuevo nace en español', function () {
+    expect((new User)->locale)->toBe('es');
+
+    $user = User::factory()->create();
+    expect($user->fresh()->locale)->toBe('es');
+});
+
+test('un visitante sin sesión ve la app en español', function () {
+    $this->get('/login')->assertOk()->assertSee('<html lang="es"', false);
+});
+
+test('los mensajes de validación del framework llegan en español', function () {
+    $this->post('/register', [
+        'name' => '',
+        'email' => 'no-es-un-email',
+        'password' => 'x',
+        'password_confirmation' => 'y',
+    ])->assertSessionHasErrors([
+        'name' => 'El campo nombre es obligatorio.',
+        'email' => 'El campo email no es un correo válido.',
+    ]);
+});
+
+test('las credenciales inválidas responden en español', function () {
+    User::factory()->create(['email' => 'alguien@example.com']);
+
+    $this->post('/login', [
+        'email' => 'alguien@example.com',
+        'password' => 'contrasena-incorrecta',
+    ])->assertSessionHasErrors([
+        'email' => 'Estas credenciales no coinciden con nuestros registros.',
+    ]);
+});
+
+test('las páginas de error del framework están en español', function () {
+    expect(__('Page Expired'))->toBe('La página expiró')
+        ->and(__('Not Found'))->toBe('Página no encontrada')
+        ->and(__('Server Error'))->toBe('Error del servidor');
+});
+
 test('en.json es JSON válido y cubre las claves con placeholders', function () {
     $lang = json_decode(file_get_contents(base_path('lang/en.json')), true, 512, JSON_THROW_ON_ERROR);
 

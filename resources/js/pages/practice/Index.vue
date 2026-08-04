@@ -55,14 +55,17 @@ const mantra = computed(
 const mantraLength = computed(() => {
     const length = mantra.value?.text.length ?? 0;
 
-    return length > 300 ? 'long' : length > 150 ? 'medium' : 'short';
+    return length > 250 ? 'long' : length > 120 ? 'medium' : 'short';
 });
 
+// Umbrales y tamaños medidos contra los 19 mantras del sistema en 412x915:
+// con estos valores ninguno estira la pantalla. Los dos casos que la
+// forzaban son Amitayus (296 caracteres) y Vajrasatva largo (318).
 const mantraTextClass = computed(
     () =>
         ({
-            long: 'text-sm leading-snug sm:text-base',
-            medium: 'text-base leading-relaxed sm:text-lg',
+            long: 'text-[0.8rem] leading-snug sm:text-sm',
+            medium: 'text-base leading-snug sm:text-lg',
             short: 'text-lg leading-relaxed sm:text-xl',
         })[mantraLength.value],
 );

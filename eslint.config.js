@@ -96,9 +96,11 @@ export default defineConfigWithVueTs(
             'vendor',
             'node_modules',
             'public',
+            'android', // proyecto Capacitor generado
             'bootstrap/ssr',
             'tailwind.config.js',
             'vite.config.ts',
+            'capacitor.config.ts',
             'resources/js/actions/**',
             'resources/js/components/ui/*',
             'resources/js/routes/**',

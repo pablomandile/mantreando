@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, ChartColumn, Flower, Target } from '@lucide/vue';
+import {
+    BookOpen,
+    ChartColumn,
+    CircleDashed,
+    Flower,
+    Palette,
+    Target,
+} from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -41,6 +48,21 @@ const mainNavItems = computed<NavItem[]>(() => [
     },
 ]);
 
+// Atajos a los dos ajustes que se tocan seguido; siguen estando dentro de
+// Ajustes, esto solo evita entrar ahí para cambiar el mala o el tema.
+const customizationNavItems = computed<NavItem[]>(() => [
+    {
+        title: trans('Mi mala'),
+        href: '/settings/mala',
+        icon: CircleDashed,
+    },
+    {
+        title: trans('Apariencia'),
+        href: '/settings/appearance',
+        icon: Palette,
+    },
+]);
+
 const footerNavItems: NavItem[] = [];
 </script>
 
@@ -60,6 +82,11 @@ const footerNavItems: NavItem[] = [];
 
         <SidebarContent>
             <NavMain :items="mainNavItems" />
+            <NavMain
+                class="mt-4"
+                :items="customizationNavItems"
+                :label="trans('Personalización')"
+            />
         </SidebarContent>
 
         <SidebarFooter>

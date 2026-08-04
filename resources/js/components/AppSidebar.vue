@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, ChartColumn, Flower } from '@lucide/vue';
+import { BookOpen, ChartColumn, Flower, Target } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -28,6 +28,11 @@ const mainNavItems = computed<NavItem[]>(() => [
         title: trans('Mantras'),
         href: '/mantras',
         icon: BookOpen,
+    },
+    {
+        title: trans('Objetivo'),
+        href: '/goal',
+        icon: Target,
     },
     {
         title: trans('Estadísticas'),

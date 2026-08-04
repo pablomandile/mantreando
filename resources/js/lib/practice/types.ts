@@ -11,6 +11,7 @@ export type PracticeMode = 'traditional' | 'assisted';
 /** Mantra tal como lo devuelve GET /api/v1/practice/bootstrap y se cachea. */
 export interface CachedMantra {
     id: number;
+    sort: number; // orden personal (pivot.position del servidor)
     is_system: boolean;
     name: string;
     original_name: string | null;

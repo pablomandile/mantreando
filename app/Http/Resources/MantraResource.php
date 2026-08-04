@@ -18,6 +18,7 @@ class MantraResource extends JsonResource
 
         return [
             'id' => $this->id,
+            'sort' => $this->resource->sortIndex ?? 0,
             'is_system' => $this->isSystem(),
             'name' => $this->resource->localized('name'),
             'original_name' => $this->original_name,

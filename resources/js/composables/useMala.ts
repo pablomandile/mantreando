@@ -49,6 +49,7 @@ export function useMala(initialMode: MalaMode = 'assisted') {
     let activeY = 0;
     let containerEl: HTMLElement | null = null;
     let columnEl: HTMLElement | null = null;
+    let surfaceEl: HTMLElement | null = null;
 
     const physics = new StrandPhysics({
         pitch,
@@ -189,10 +190,14 @@ export function useMala(initialMode: MalaMode = 'assisted') {
     // ── medidas y resize ────────────────────────────────────────────────────
 
     function measure(): void {
-        const viewportHeight =
-            window.visualViewport?.height ?? window.innerHeight;
-        pitch = viewportHeight / VISIBLE_BEADS;
-        activeY = viewportHeight * 0.62; // arco natural del pulgar derecho
+        // La hebra vive dentro de su superficie (que puede ser la página
+        // completa o el área de contenido bajo el header del panel).
+        const height =
+            surfaceEl?.clientHeight ||
+            window.visualViewport?.height ||
+            window.innerHeight;
+        pitch = height / VISIBLE_BEADS;
+        activeY = height * 0.62; // arco natural del pulgar derecho
 
         physics.setPitch(pitch);
 
@@ -248,6 +253,11 @@ export function useMala(initialMode: MalaMode = 'assisted') {
         if (el !== null) {
             el.style.setProperty('--pitch', `${pitch}px`);
         }
+    }
+
+    function setSurface(el: HTMLElement | null): void {
+        surfaceEl = el;
+        measure();
     }
 
     function setMode(next: MalaMode): void {
@@ -365,6 +375,7 @@ export function useMala(initialMode: MalaMode = 'assisted') {
         droppedFrames,
         setContainer,
         setColumn,
+        setSurface,
         setMode,
         reset,
         restore,

@@ -67,7 +67,7 @@ class Mantra extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
-            ->withPivot(['is_favorite', 'daily_commitment', 'total_goal'])
+            ->withPivot(['is_favorite', 'daily_commitment', 'total_goal', 'position'])
             ->withTimestamps();
     }
 
@@ -80,14 +80,18 @@ class Mantra extends Model
     /** Mantras del sistema (compartidos, sin dueño). */
     public function scopeSystem(Builder $query): Builder
     {
-        return $query->whereNull('user_id');
+        return $query->whereNull('mantras.user_id');
     }
 
-    /** Mantras visibles para un usuario: los del sistema más los propios. */
+    /**
+     * Mantras visibles para un usuario: los del sistema más los propios.
+     * Columnas calificadas: el índice y el bootstrap joinean mantra_user
+     * (orden personal) y user_id sería ambiguo.
+     */
     public function scopeAccessibleBy(Builder $query, User $user): Builder
     {
         return $query->where(function (Builder $q) use ($user) {
-            $q->whereNull('user_id')->orWhere('user_id', $user->id);
+            $q->whereNull('mantras.user_id')->orWhere('mantras.user_id', $user->id);
         });
     }
 

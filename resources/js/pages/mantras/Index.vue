@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus, Search, Star } from '@lucide/vue';
+import { ChevronDown, ChevronUp, Plus, Search, Star } from '@lucide/vue';
 import { trans as t } from 'laravel-vue-i18n';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -59,6 +59,37 @@ function toggleFavorite(mantra: MantraItem): void {
     router.post(
         `/mantras/${mantra.id}/favorite`,
         {},
+        { preserveState: true, preserveScroll: true },
+    );
+}
+
+// ── Orden personal (flechas subir/bajar) ────────────────────────────────────
+// Solo tiene sentido sin búsqueda ni filtro activos: ahí se ve la lista real.
+const canReorder = computed(
+    () => search.value === '' && activeCategory.value === null,
+);
+
+const localOrder = ref<MantraItem[]>([...props.mantras]);
+
+watch(
+    () => props.mantras,
+    (value) => (localOrder.value = [...value]),
+);
+
+function move(index: number, direction: -1 | 1): void {
+    const target = index + direction;
+
+    if (target < 0 || target >= localOrder.value.length) {
+        return;
+    }
+
+    const list = [...localOrder.value];
+    [list[index], list[target]] = [list[target], list[index]];
+    localOrder.value = list; // optimista: la tarjeta se mueve al instante
+
+    router.post(
+        '/mantras/reorder',
+        { ids: list.map((m) => m.id) },
         { preserveState: true, preserveScroll: true },
     );
 }
@@ -121,7 +152,7 @@ function toggleFavorite(mantra: MantraItem): void {
 
         <div class="flex flex-col gap-3">
             <div
-                v-for="mantra in mantras"
+                v-for="(mantra, index) in localOrder"
                 :key="mantra.id"
                 class="group relative rounded-xl border border-sidebar-border/70 p-4 transition-colors hover:bg-accent/50 dark:border-sidebar-border"
             >
@@ -150,25 +181,47 @@ function toggleFavorite(mantra: MantraItem): void {
                             </span>
                         </div>
                     </div>
-                    <button
-                        type="button"
-                        class="relative z-10 rounded-md p-2 hover:bg-accent"
-                        :aria-label="
-                            mantra.is_favorite
-                                ? t('Quitar de favoritos')
-                                : t('Agregar a favoritos')
-                        "
-                        @click.stop="toggleFavorite(mantra)"
-                    >
-                        <Star
-                            class="size-5"
-                            :class="
+                    <div class="flex items-center gap-0.5">
+                        <div v-if="canReorder" class="flex flex-col">
+                            <button
+                                type="button"
+                                class="relative z-10 rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30"
+                                :disabled="index === 0"
+                                :aria-label="t('Subir')"
+                                @click.stop="move(index, -1)"
+                            >
+                                <ChevronUp class="size-4" />
+                            </button>
+                            <button
+                                type="button"
+                                class="relative z-10 rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30"
+                                :disabled="index === localOrder.length - 1"
+                                :aria-label="t('Bajar')"
+                                @click.stop="move(index, 1)"
+                            >
+                                <ChevronDown class="size-4" />
+                            </button>
+                        </div>
+                        <button
+                            type="button"
+                            class="relative z-10 rounded-md p-2 hover:bg-accent"
+                            :aria-label="
                                 mantra.is_favorite
-                                    ? 'fill-amber-400 text-amber-400'
-                                    : 'text-muted-foreground'
+                                    ? t('Quitar de favoritos')
+                                    : t('Agregar a favoritos')
                             "
-                        />
-                    </button>
+                            @click.stop="toggleFavorite(mantra)"
+                        >
+                            <Star
+                                class="size-5"
+                                :class="
+                                    mantra.is_favorite
+                                        ? 'fill-amber-400 text-amber-400'
+                                        : 'text-muted-foreground'
+                                "
+                            />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

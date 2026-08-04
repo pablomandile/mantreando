@@ -240,7 +240,7 @@ function toggleFavorite(): void {
         </section>
 
         <Button as-child variant="outline">
-            <Link :href="`/practice/session/${mantra.id}`">
+            <Link :href="`/practice?mantra=${mantra.id}`">
                 {{ t('Practicar con este mantra') }}
             </Link>
         </Button>

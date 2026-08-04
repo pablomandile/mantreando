@@ -20,17 +20,15 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    // La práctica ES el mala: la isla toma todo de IndexedDB (el mantra
+    // seleccionado viaja opcionalmente como ?mantra=ID).
     Route::inertia('practice', 'practice/Index')->name('practice.index');
     Route::inertia('practice/spike', 'practice/Spike')->name('practice.spike');
 
-    // La pantalla de práctica solo recibe el ID: el contenido del mantra
-    // sale de IndexedDB (isla offline).
-    Route::get('practice/session/{mantra}', function (App\Models\Mantra $mantra) {
-        Illuminate\Support\Facades\Gate::authorize('view', $mantra);
+    Route::get('goal', [App\Http\Controllers\SessionGoalController::class, 'edit'])->name('goal.edit');
+    Route::patch('goal', [App\Http\Controllers\SessionGoalController::class, 'update'])->name('goal.update');
 
-        return Inertia::render('practice/Session', ['mantraId' => $mantra->id]);
-    })->name('practice.session')->whereNumber('mantra');
-
+    Route::post('mantras/reorder', App\Http\Controllers\MantraReorderController::class)->name('mantras.reorder');
     Route::resource('mantras', MantraController::class)->except(['show'])->parameters(['mantras' => 'mantra']);
     Route::get('mantras/{mantra}', [MantraController::class, 'show'])->name('mantras.show')->whereNumber('mantra');
     Route::post('mantras/{mantra}/favorite', MantraFavoriteController::class)->name('mantras.favorite');

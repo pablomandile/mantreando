@@ -21,6 +21,7 @@ const props = defineProps<{
     ariaLabel?: string;
     setContainer: (el: HTMLElement | null) => void;
     setColumn: (el: HTMLElement | null) => void;
+    setSurface?: (el: HTMLElement | null) => void;
     onPointerDown: (event: PointerEvent) => void;
     onPointerMove: (event: PointerEvent) => void;
     onPointerUp: (event: PointerEvent) => void;
@@ -32,6 +33,7 @@ const columnStyle = () =>
 
 <template>
     <div
+        :ref="(el) => setSurface?.(el as HTMLElement | null)"
         class="mala-surface"
         role="application"
         :aria-label="ariaLabel"
@@ -66,7 +68,9 @@ const columnStyle = () =>
 
 <style scoped>
 .mala-surface {
-    position: fixed;
+    /* Llena a su contenedor (que decide si es fullscreen o el área de
+       contenido del panel) — así los gestos no tapan la navegación. */
+    position: absolute;
     inset: 0;
     /* Sin esto el navegador se roba el gesto (scroll/pull-to-refresh). */
     touch-action: none;

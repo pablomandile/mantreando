@@ -27,10 +27,18 @@ class PracticeBootstrapController
         $mantras = Mantra::query()
             ->accessibleBy($user)
             ->with('category')
-            ->orderBy('name')
+            // Mismo orden personal que la biblioteca (pivot.position)
+            ->leftJoin('mantra_user', function ($join) use ($user) {
+                $join->on('mantra_user.mantra_id', '=', 'mantras.id')
+                    ->where('mantra_user.user_id', $user->id);
+            })
+            ->orderByRaw('COALESCE(mantra_user.position, 999999)')
+            ->orderBy('mantras.name')
+            ->select('mantras.*')
             ->get()
-            ->each(function (Mantra $mantra) use ($prefs) {
+            ->each(function (Mantra $mantra, int $index) use ($prefs) {
                 $mantra->userPrefs = $prefs->get($mantra->id);
+                $mantra->sortIndex = $index; // orden personal, para la isla
             });
 
         // "Hoy" del usuario para LEER agregados (compromisos diarios).

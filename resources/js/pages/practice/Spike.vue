@@ -21,6 +21,7 @@ const {
     droppedFrames,
     setContainer,
     setColumn,
+    setSurface,
     setMode,
     reset,
     toggleHaptics,
@@ -35,15 +36,18 @@ const {
     <Head title="Mala — spike" />
 
     <div class="min-h-dvh bg-background text-foreground">
-        <MalaStrand
-            :pool="pool"
-            material="wood"
-            :set-container="setContainer"
-            :set-column="setColumn"
-            :on-pointer-down="onPointerDown"
-            :on-pointer-move="onPointerMove"
-            :on-pointer-up="onPointerUp"
-        />
+        <div class="fixed inset-0">
+            <MalaStrand
+                :pool="pool"
+                material="wood"
+                :set-container="setContainer"
+                :set-column="setColumn"
+                :set-surface="setSurface"
+                :on-pointer-down="onPointerDown"
+                :on-pointer-move="onPointerMove"
+                :on-pointer-up="onPointerUp"
+            />
+        </div>
 
         <!-- HUD de debug (z-index sobre la superficie de gesto) -->
         <aside

@@ -89,7 +89,7 @@ class User extends Authenticatable implements PasskeyUser
     public function mantras(): BelongsToMany
     {
         return $this->belongsToMany(Mantra::class)
-            ->withPivot(['is_favorite', 'daily_commitment', 'total_goal'])
+            ->withPivot(['is_favorite', 'daily_commitment', 'total_goal', 'position'])
             ->withTimestamps();
     }
 

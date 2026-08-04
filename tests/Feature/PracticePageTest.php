@@ -8,6 +8,14 @@ test('la página de práctica renderiza para un usuario autenticado', function (
         ->assertOk();
 });
 
+test('la página de práctica acepta el mantra preseleccionado por query', function () {
+    $mantra = \App\Models\Mantra::factory()->create();
+
+    $this->actingAs(User::factory()->create())
+        ->get("/practice?mantra={$mantra->id}")
+        ->assertOk();
+});
+
 test('un guest es redirigido al login', function () {
     $this->get('/practice')->assertRedirect(route('login'));
 });
@@ -16,25 +24,6 @@ test('la página del spike del mala renderiza para un usuario autenticado', func
     $this->actingAs(User::factory()->create())
         ->get('/practice/spike')
         ->assertOk();
-});
-
-test('la pantalla de práctica renderiza con un mantra accesible', function () {
-    $user = User::factory()->create();
-    $mantra = \App\Models\Mantra::factory()->create();
-
-    $this->actingAs($user)
-        ->get("/practice/session/{$mantra->id}")
-        ->assertOk();
-});
-
-test('la pantalla de práctica rechaza mantras ajenos', function () {
-    $user = User::factory()->create();
-    $other = User::factory()->create();
-    $foreign = \App\Models\Mantra::factory()->ownedBy($other)->create();
-
-    $this->actingAs($user)
-        ->get("/practice/session/{$foreign->id}")
-        ->assertForbidden();
 });
 
 test('el bootstrap incluye el progreso de hoy', function () {

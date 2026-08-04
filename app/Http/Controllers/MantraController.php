@@ -45,7 +45,14 @@ class MantraController
                 'category',
                 fn ($q) => $q->where('slug', $category),
             ))
-            ->orderBy('name')
+            // Orden personal (pivot.position); los sin ordenar van al final
+            ->leftJoin('mantra_user', function ($join) use ($user) {
+                $join->on('mantra_user.mantra_id', '=', 'mantras.id')
+                    ->where('mantra_user.user_id', $user->id);
+            })
+            ->orderByRaw('COALESCE(mantra_user.position, 999999)')
+            ->orderBy('mantras.name')
+            ->select('mantras.*')
             ->get()
             ->map(fn (Mantra $mantra) => [
                 'id' => $mantra->id,

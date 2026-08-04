@@ -30,6 +30,11 @@ class MantreandoDB extends Dexie {
             sessionState: 'key',
             meta: 'key',
         });
+
+        // v2: índice sort (orden personal de la biblioteca)
+        this.version(2).stores({
+            mantras: 'id, name, sort',
+        });
     }
 }
 

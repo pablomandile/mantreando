@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from "vue"
-import { PanelLeftClose, PanelLeftOpen } from "@lucide/vue"
 import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
+import LotusIcon from '@/components/icons/LotusIcon.vue'
 import { useSidebar } from "./utils"
 
 const props = defineProps<{
@@ -21,8 +21,12 @@ const { isMobile, state, toggleSidebar } = useSidebar()
     :class="cn('h-7 w-7', props.class)"
     @click="toggleSidebar"
   >
-    <PanelLeftOpen v-if="isMobile || state === 'collapsed'" />
-    <PanelLeftClose v-else />
+    <!-- Loto en vez del ícono genérico de panel: es el botón de marca.
+         Cerrado a plena tinta; abierto, apenas atenuado como única seña. -->
+    <LotusIcon
+      class="size-5 transition-opacity"
+      :class="isMobile || state === 'collapsed' ? '' : 'opacity-60'"
+    />
     <span class="sr-only">Mostrar u ocultar el panel lateral</span>
   </Button>
 </template>

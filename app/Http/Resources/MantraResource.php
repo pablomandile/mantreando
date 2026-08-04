@@ -28,6 +28,7 @@ class MantraResource extends JsonResource
             'description' => $this->resource->localized('description'),
             'benefits' => $this->resource->localized('benefits'),
             'image_url' => $this->image_url,
+            'color' => $this->color?->value,
             'category' => $this->whenLoaded('category', fn () => [
                 'id' => $this->category->id,
                 'name' => $this->category->localized_name,

@@ -21,6 +21,7 @@ export interface CachedMantra {
     description: string | null;
     benefits: string | null;
     image_url: string | null;
+    color: string | null;
     category: {
         id: number;
         name: string;

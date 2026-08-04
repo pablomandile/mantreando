@@ -99,19 +99,20 @@
        mismo palo que las cuentas del mala (arena cálida arriba a la derecha,
        donde cuelga la hebra; una sombra fría abajo a la izquierda). El
        centro queda limpio para que el texto nunca pierda contraste.
-       En claro el tinte es más tenue a propósito: sobre blanco, cualquier
-       mancha le come contraste al texto atenuado (que ya venía justo en
-       4.74:1) y lo bajaba por debajo del mínimo AA. */
+       La fuerza del tinte va de la mano de --muted-foreground: se pudo
+       subir de 13%/9% (invisible) a 24%/18% porque el gris atenuado bajó
+       a 40% y compró margen de contraste. Medido en la esquina más teñida:
+       sigue AA. Si se sube más, volver a medir. */
     --app-backdrop:
         radial-gradient(
             ellipse 72% 58% at 95% -12%,
-            rgba(211, 168, 120, 0.13),
-            transparent 60%
+            rgba(202, 152, 96, 0.24),
+            transparent 62%
         ),
         radial-gradient(
             ellipse 85% 62% at -8% 108%,
-            rgba(138, 148, 178, 0.09),
-            transparent 60%
+            rgba(122, 134, 170, 0.18),
+            transparent 62%
         );
 
     --background: hsl(0 0% 100%);
@@ -125,7 +126,10 @@
     --secondary: hsl(0 0% 92.1%);
     --secondary-foreground: hsl(0 0% 9%);
     --muted: hsl(0 0% 96.1%);
-    --muted-foreground: hsl(0 0% 45.1%);
+    /* 40% en vez del 45.1% del kit: el gris original quedaba en 4.74:1
+       sobre blanco puro — sin margen para teñir el fondo. Este da 5.7:1
+       y deja al degradado del fondo espacio real sin romper AA. */
+    --muted-foreground: hsl(0 0% 40%);
     --accent: hsl(0 0% 96.1%);
     --accent-foreground: hsl(0 0% 9%);
     --destructive: hsl(0 84.2% 60.2%);
@@ -154,17 +158,18 @@
     color-scheme: dark;
 
     /* En oscuro las manchas son más marcadas: sobre negro casi no se notan.
-       Ámbar de madera arriba, índigo profundo abajo. */
+       Ámbar de madera arriba, índigo profundo abajo. El texto claro tiene
+       margen de sobra (>5:1 medido en la esquina más teñida a 0.42). */
     --app-backdrop:
         radial-gradient(
             ellipse 72% 58% at 95% -12%,
-            rgba(154, 107, 66, 0.24),
-            transparent 60%
+            rgba(154, 107, 66, 0.42),
+            transparent 62%
         ),
         radial-gradient(
             ellipse 85% 62% at -8% 108%,
-            rgba(72, 84, 130, 0.24),
-            transparent 60%
+            rgba(72, 84, 130, 0.4),
+            transparent 62%
         );
 
     --background: hsl(0 0% 3.9%);
@@ -230,31 +235,31 @@
    que las paletas del mala con data-material. Agregar un color acá y en el
    enum es todo lo que hace falta.
    --------------------------------------------------------------------------- */
-:is(.mantra-card, .mantra-swatch)[data-color='blue'] {
+:is(.mantra-card, .mantra-swatch, .mantra-backdrop)[data-color='blue'] {
     --mantra-color: #3b6fb5;
 }
-:is(.mantra-card, .mantra-swatch)[data-color='indigo'] {
+:is(.mantra-card, .mantra-swatch, .mantra-backdrop)[data-color='indigo'] {
     --mantra-color: #4a4d8f;
 }
-:is(.mantra-card, .mantra-swatch)[data-color='violet'] {
+:is(.mantra-card, .mantra-swatch, .mantra-backdrop)[data-color='violet'] {
     --mantra-color: #7a4f96;
 }
-:is(.mantra-card, .mantra-swatch)[data-color='red'] {
+:is(.mantra-card, .mantra-swatch, .mantra-backdrop)[data-color='red'] {
     --mantra-color: #b93a2b;
 }
-:is(.mantra-card, .mantra-swatch)[data-color='amber'] {
+:is(.mantra-card, .mantra-swatch, .mantra-backdrop)[data-color='amber'] {
     --mantra-color: #c2902f;
 }
-:is(.mantra-card, .mantra-swatch)[data-color='orange'] {
+:is(.mantra-card, .mantra-swatch, .mantra-backdrop)[data-color='orange'] {
     --mantra-color: #c26a2c;
 }
-:is(.mantra-card, .mantra-swatch)[data-color='green'] {
+:is(.mantra-card, .mantra-swatch, .mantra-backdrop)[data-color='green'] {
     --mantra-color: #4f8a55;
 }
-:is(.mantra-card, .mantra-swatch)[data-color='teal'] {
+:is(.mantra-card, .mantra-swatch, .mantra-backdrop)[data-color='teal'] {
     --mantra-color: #2f8a86;
 }
-:is(.mantra-card, .mantra-swatch)[data-color='neutral'] {
+:is(.mantra-card, .mantra-swatch, .mantra-backdrop)[data-color='neutral'] {
     --mantra-color: #8d8579;
 }
 
@@ -285,5 +290,24 @@
         color-mix(in oklab, var(--mantra-color) 95%, white) 0%,
         var(--mantra-color) 55%,
         color-mix(in oklab, var(--mantra-color) 75%, black) 100%
+    );
+}
+
+/* Velo de la práctica: al elegir un mantra, su color baña la pantalla desde
+   arriba como luz ambiente y se disuelve antes de la mitad — el contador y
+   la leyenda (texto atenuado) viven abajo, sobre fondo limpio. */
+.mantra-backdrop[data-color] {
+    background-image: radial-gradient(
+        ellipse 130% 75% at 50% -25%,
+        color-mix(in oklab, var(--mantra-color) 28%, transparent),
+        transparent 68%
+    );
+}
+
+.dark .mantra-backdrop[data-color] {
+    background-image: radial-gradient(
+        ellipse 130% 75% at 50% -25%,
+        color-mix(in oklab, var(--mantra-color) 34%, transparent),
+        transparent 68%
     );
 }

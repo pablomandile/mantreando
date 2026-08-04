@@ -407,6 +407,15 @@ onUnmounted(() => {
 
     <!-- Contenedor de la práctica: llena el área bajo el header del panel -->
     <div class="relative min-h-0 flex-1 overflow-hidden">
+        <!-- Velo con el color del mantra elegido (el mismo de su tarjeta).
+             Primero en el DOM: queda detrás del mala y del texto. La opacidad
+             hace el fondido al cambiar de mantra (background-image no anima). -->
+        <div
+            class="mantra-backdrop pointer-events-none absolute inset-0 transition-opacity duration-700"
+            :data-color="mantra?.color ?? undefined"
+            :class="mantra?.color ? 'opacity-100' : 'opacity-0'"
+            aria-hidden="true"
+        />
         <MalaStrand
             :pool="mala.pool"
             :material="preset.material"

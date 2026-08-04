@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head, router, usePage } from '@inertiajs/vue3';
+import { trans as t } from 'laravel-vue-i18n';
 import { computed, ref } from 'vue';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/DeleteUser.vue';
@@ -14,7 +15,7 @@ defineOptions({
     layout: {
         breadcrumbs: [
             {
-                title: 'Profile settings',
+                title: 'Perfil',
                 href: edit(),
             },
         ],
@@ -65,15 +66,15 @@ function removeAvatar(): void {
 </script>
 
 <template>
-    <Head title="Profile settings" />
+    <Head :title="t('Perfil')" />
 
-    <h1 class="sr-only">Profile settings</h1>
+    <h1 class="sr-only">{{ t('Perfil') }}</h1>
 
     <div class="flex flex-col space-y-6">
         <Heading
             variant="small"
-            title="Perfil"
-            description="Tu nombre, email, avatar y preferencias"
+            :title="t('Perfil')"
+            :description="t('Tu nombre, email, avatar y preferencias')"
         />
 
         <!-- Avatar: form propio (upload de archivo, POST directo) -->
@@ -116,7 +117,7 @@ function removeAvatar(): void {
             v-slot="{ errors, processing }"
         >
             <div class="grid gap-2">
-                <Label for="name">Name</Label>
+                <Label for="name">{{ t('Nombre') }}</Label>
                 <Input
                     id="name"
                     class="mt-1 block w-full"
@@ -124,13 +125,13 @@ function removeAvatar(): void {
                     :default-value="user.name"
                     required
                     autocomplete="name"
-                    placeholder="Full name"
+                    :placeholder="t('Nombre completo')"
                 />
                 <InputError class="mt-2" :message="errors.name" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="email">Email address</Label>
+                <Label for="email">Email</Label>
                 <Input
                     id="email"
                     type="email"
@@ -139,7 +140,7 @@ function removeAvatar(): void {
                     :default-value="user.email"
                     required
                     autocomplete="username"
-                    placeholder="Email address"
+                    placeholder="email@ejemplo.com"
                 />
                 <InputError class="mt-2" :message="errors.email" />
             </div>
@@ -191,9 +192,9 @@ function removeAvatar(): void {
                  deshabilitada en config/fortify.php hasta configurar mail. -->
 
             <div class="flex items-center gap-4">
-                <Button :disabled="processing" data-test="update-profile-button"
-                    >Save</Button
-                >
+                <Button :disabled="processing" data-test="update-profile-button">
+                    {{ t('Guardar') }}
+                </Button>
             </div>
         </Form>
     </div>

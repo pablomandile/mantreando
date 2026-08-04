@@ -22,6 +22,10 @@ createInertiaApp({
                 // (estático) ya ve los mensajes activos — el locale solo
                 // cambia con recarga completa de página.
                 lang: document.documentElement.lang || 'es',
+                // CRÍTICO: el fallback default es 'en' — con es.json vacío,
+                // toda clave faltante en es caería al inglés. Con 'es', la
+                // clave (español fuente) es el texto final.
+                fallbackLang: 'es',
                 resolve: (lang: string) => {
                     const langs = import.meta.glob('../../lang/*.json', {
                         eager: true,
@@ -36,9 +40,8 @@ createInertiaApp({
         switch (true) {
             case name === 'Welcome':
                 return null;
-            // Pantallas de práctica inmersivas: sin chrome de layout.
+            // Spike de debug: fullscreen sin chrome de layout.
             case name === 'practice/Spike':
-            case name === 'practice/Session':
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;

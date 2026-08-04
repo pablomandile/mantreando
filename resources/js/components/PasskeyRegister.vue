@@ -29,7 +29,7 @@ const getDefaultPasskeyName = () => {
         { pattern: /Windows/, name: 'Windows' },
     ].find(({ pattern }) => pattern.test(ua))?.name;
 
-    return [browser, os].filter(Boolean).join(' on ') || '';
+    return [browser, os].filter(Boolean).join(' en ') || '';
 };
 
 const name = ref(getDefaultPasskeyName());
@@ -65,7 +65,7 @@ const handleCancel = () => {
     </div>
 
     <Button v-else-if="!showForm" variant="outline" @click="showForm = true">
-        Add passkey
+        Agregar passkey
     </Button>
 
     <form
@@ -74,7 +74,7 @@ const handleCancel = () => {
         class="space-y-4 rounded-lg border border-border bg-muted/50 p-4"
     >
         <div class="grid gap-2">
-            <Label for="passkey-name">Nombre del passkey</Label>
+            <Label for="passkey-name">Nombre de la passkey</Label>
             <Input
                 id="passkey-name"
                 type="text"
@@ -84,7 +84,7 @@ const handleCancel = () => {
                 autofocus
             />
             <p class="text-xs text-muted-foreground">
-                A name helps you identify this passkey later.
+                Un nombre te ayuda a reconocer esta passkey más adelante.
             </p>
         </div>
 

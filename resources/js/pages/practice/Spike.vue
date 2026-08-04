@@ -107,7 +107,7 @@ const {
                         :class="{ 'bg-accent': haptics }"
                         @click="toggleHaptics"
                     >
-                        Vibración {{ haptics ? 'on' : 'off' }}
+                        Vibración {{ haptics ? 'sí' : 'no' }}
                     </button>
                     <button
                         type="button"
@@ -115,14 +115,14 @@ const {
                         :class="{ 'bg-accent': sound }"
                         @click="toggleSound"
                     >
-                        Sonido {{ sound ? 'on' : 'off' }}
+                        Sonido {{ sound ? 'sí' : 'no' }}
                     </button>
                     <button
                         type="button"
                         class="rounded-md border px-3 py-1.5"
                         @click="reset"
                     >
-                        Reset
+                        Reiniciar
                     </button>
                 </div>
 

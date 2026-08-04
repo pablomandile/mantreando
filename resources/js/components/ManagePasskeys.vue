@@ -55,7 +55,7 @@ const handleRegisterSuccess = () => {
                 </div>
                 <p class="font-medium">Todavía no tenés passkeys</p>
                 <p class="mt-1 text-sm text-muted-foreground">
-                    Add a passkey to sign in without a password
+                    Agregá una passkey para entrar sin contraseña
                 </p>
             </div>
         </div>

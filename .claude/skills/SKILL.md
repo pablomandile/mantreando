@@ -1,17 +1,19 @@
 ---
 name: ci-linux-case-sensitivity
 description: >-
-  Diagnostica y corrige fallos de tests/CI que ocurren SOLO en Linux/GitHub Actions
-  pero pasan en local (Windows o macOS). Disparadores: "los tests pasan en local pero
-  fallan en CI", "passes on my machine but fails on CI", el job de tests en GitHub
-  Actions en rojo mientras local está verde, o errores de Laravel + Inertia como
-  "Inertia page component file [X] does not exist". Causa típica: CASE-SENSITIVITY del
-  filesystem (Linux distingue mayúsculas/minúsculas; Windows y macOS por defecto NO) —
-  p. ej. resources/js/pages vs el default de Inertia resources/js/Pages, o una vista
-  Blade / ruta referenciada con el case equivocado.
+  Diagnostica y corrige fallos de tests/CI en GitHub Actions que no se reproducen en
+  local (Windows o macOS). Disparadores: "los tests pasan en local pero fallan en CI",
+  "passes on my machine but fails on CI", "reparar el CI", el job en rojo mientras
+  local está verde, o errores de Laravel + Inertia como "Inertia page component file
+  [X] does not exist". Cubre dos familias: (1) fallos de ENTORNO del runner —versión
+  de PHP menor a la que exige el composer.lock, falta de servicio de base de datos
+  para `artisan migrate`— que rompen el paso de Setup antes de correr un test; y
+  (2) CASE-SENSITIVITY del filesystem (Linux distingue mayúsculas/minúsculas; Windows
+  y macOS por defecto NO), p. ej. resources/js/pages vs el default de Inertia
+  resources/js/Pages, o una vista Blade / ruta referenciada con el case equivocado.
 ---
 
-# CI falla solo en Linux / pasa en local (case-sensitivity)
+# CI en rojo y local en verde (entorno del runner o case-sensitivity)
 
 Cuando un test o build **pasa en local (Windows/macOS) pero falla en CI (Linux)** —o
 "nunca pasó" en CI desde el primer commit— el sospechoso #1 es la **sensibilidad a
@@ -22,6 +24,21 @@ no existe y algo falla.
 ## 1. Reconocer el patrón
 - Local ✅ / CI ❌, de forma **determinística** (no flaky). Si además "nunca pasó", refuerza la hipótesis.
 - Suele afectar solo a algunos tests (los que tocan la ruta con case incorrecto), no a todos.
+
+> ⚠ **Antes de asumir case-sensitivity: mirá QUÉ PASO falló.** Si el rojo es en
+> `Setup` (composer/npm install, migrate) y no en los tests, no es case: el job
+> ni llegó a correrlos. Casos vistos en este repo (2026-08-04, runs 13-15):
+> - **`php-version` del workflow menor que el del `composer.lock`** → el
+>   `composer install` corta con "requires php >=8.4.1 -> your php version
+>   (8.3.33)". Mirar el `require.php` de composer.json Y lo que exigen los
+>   paquetes lockeados (Symfony, Pest); alinear el workflow con eso.
+> - **`composer setup` corre `artisan migrate`** y el runner no tiene base →
+>   "SQLSTATE[HY000] [2002] Connection refused". Hace falta un `services:`
+>   con la base que espera `.env.example`, aunque los tests usen sqlite.
+>
+> Ojo también con el efecto muro: si el CI nunca llegó a los chequeos, todo lo
+> que hay detrás (lint, formato, análisis estático) puede estar roto hace meses
+> sin que nadie lo vea. Al destrabar el primer paso, esperá varias tandas.
 
 ## 2. Traer el log real de CI (no adivinar)
 Preferí ver el error exacto antes de tocar nada.

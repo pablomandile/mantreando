@@ -76,6 +76,12 @@ class SystemMantraSeeder extends Seeder
                 'en' => 'Green Tara',
             ],
             [
+                'name' => 'Tara Blanca',
+                'text' => 'OM TARE TUTTARE TURE MAMA AYUR PUNIE GYANA PUTRIM KURU YE SOHA',
+                'category' => 'healing',
+                'en' => 'White Tara',
+            ],
+            [
                 'name' => 'Prajnaparamita',
                 'text' => 'TAYATHA OM GATE GATE PARAGATE PARASAMGATE BODHI SOHA',
                 'category' => 'wisdom',
@@ -110,6 +116,12 @@ class SystemMantraSeeder extends Seeder
                 'text' => 'TAYATHA OM BEKHANDZSE BEKHANDZSE MAHA BEKHANDZSE BEKHANDZSE RANDZSAYA SAMUGATE SOHA',
                 'category' => 'healing',
                 'en' => 'Medicine Buddha',
+            ],
+            [
+                'name' => 'Amitayus',
+                'text' => 'OM NAMO BHAGAVATE APARIMITA AYUR GIANA SUMBINI TSITA TEDZSO RANDZSAYA TATHAGATAYA, ARJATE, SAMIAK SAMBUDAYA, TAYATHA, OM PUNIE PUNIE MAHA PUNIE APARIMITA PUNIE APARIMITA PUNIE GIANA SAMBHA ROPATSITE, OM SARVA SAMKARA PARISHUDDHA DHARMATE GAGANA SAMUGATE, SOBHAUA BISHUDDHE MAHA NAYA PARIUARE SOHA',
+                'category' => 'healing',
+                'en' => 'Amitayus',
             ],
             [
                 'name' => 'Dorje Shugden corto',

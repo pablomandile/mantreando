@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\MantraColor;
 use Database\Factories\MantraFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,10 +25,12 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $description
  * @property string|null $benefits
  * @property string|null $image_path
+ * @property MantraColor|null $color
  */
 #[Fillable([
     'user_id', 'category_id', 'name', 'original_name', 'transliteration',
     'text', 'translation', 'description', 'benefits', 'image_path', 'translations',
+    'color',
 ])]
 class Mantra extends Model
 {
@@ -38,6 +41,7 @@ class Mantra extends Model
     {
         return [
             'translations' => 'array',
+            'color' => MantraColor::class,
         ];
     }
 

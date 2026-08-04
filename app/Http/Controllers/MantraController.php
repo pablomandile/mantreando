@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MantraColor;
 use App\Http\Requests\MantraRequest;
 use App\Models\Mantra;
 use App\Models\MantraCategory;
@@ -60,6 +61,7 @@ class MantraController
                 'text' => $mantra->text,
                 'transliteration' => $mantra->transliteration,
                 'image_url' => $mantra->image_thumb_url,
+                'color' => $mantra->color?->value,
                 'is_system' => $mantra->isSystem(),
                 'category' => [
                     'name' => $mantra->category->localized_name,
@@ -104,6 +106,7 @@ class MantraController
                 'description' => $mantra->localized('description'),
                 'benefits' => $mantra->localized('benefits'),
                 'image_url' => $mantra->image_url,
+                'color' => $mantra->color?->value,
                 'is_system' => $mantra->isSystem(),
                 'category' => $mantra->category->localized_name,
                 'can_edit' => Gate::allows('update', $mantra),
@@ -125,6 +128,7 @@ class MantraController
     {
         return Inertia::render('mantras/Create', [
             'categories' => $this->categories(),
+            'colors' => MantraColor::options(),
         ]);
     }
 
@@ -153,8 +157,12 @@ class MantraController
             'mantra' => $mantra->only([
                 'id', 'name', 'original_name', 'transliteration', 'text',
                 'translation', 'description', 'benefits', 'category_id',
-            ]) + ['image_url' => $mantra->image_url],
+            ]) + [
+                'image_url' => $mantra->image_url,
+                'color' => $mantra->color?->value,
+            ],
             'categories' => $this->categories(),
+            'colors' => MantraColor::options(),
         ]);
     }
 

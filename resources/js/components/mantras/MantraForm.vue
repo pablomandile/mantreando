@@ -19,11 +19,13 @@ interface MantraData {
     benefits: string | null;
     category_id: number | null;
     image_url?: string | null;
+    color?: string | null;
 }
 
 const props = defineProps<{
     mantra?: MantraData;
     categories: { id: number; name: string }[];
+    colors: { value: string; label: string }[];
 }>();
 
 // useForm (no <Form>): el upload de imagen necesita FormData y method spoofing.
@@ -36,6 +38,7 @@ const form = useForm({
     description: props.mantra?.description ?? '',
     benefits: props.mantra?.benefits ?? '',
     category_id: props.mantra?.category_id ?? null,
+    color: props.mantra?.color ?? null,
     image: null as File | null,
     remove_image: false,
 });
@@ -128,7 +131,7 @@ const textareaClass =
                 id="category_id"
                 v-model="form.category_id"
                 required
-                class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
             >
                 <option :value="null" disabled>
                     {{ t('Elegí una categoría') }}
@@ -143,6 +146,40 @@ const textareaClass =
             </select>
             <InputError :message="form.errors.category_id" />
         </div>
+
+        <fieldset class="grid gap-2">
+            <legend class="mb-2 text-sm font-medium">
+                {{ t('Color de la tarjeta') }}
+            </legend>
+            <p class="text-xs text-muted-foreground">
+                {{ t('Elegí un color y el degradado se arma solo.') }}
+            </p>
+            <div class="flex flex-wrap gap-2">
+                <button
+                    type="button"
+                    class="size-9 rounded-full border-2 border-dashed border-input transition-transform hover:scale-105"
+                    :class="{ 'ring-2 ring-ring ring-offset-2': !form.color }"
+                    :aria-label="t('Sin color')"
+                    :aria-pressed="!form.color"
+                    @click="form.color = null"
+                />
+                <button
+                    v-for="color in colors"
+                    :key="color.value"
+                    type="button"
+                    class="mantra-swatch size-9 rounded-full border transition-transform hover:scale-105"
+                    :data-color="color.value"
+                    :class="{
+                        'ring-2 ring-ring ring-offset-2':
+                            form.color === color.value,
+                    }"
+                    :aria-label="color.label"
+                    :aria-pressed="form.color === color.value"
+                    @click="form.color = color.value"
+                />
+            </div>
+            <InputError :message="form.errors.color" />
+        </fieldset>
 
         <div class="grid gap-2">
             <Label for="description">{{ t('Descripción') }}</Label>

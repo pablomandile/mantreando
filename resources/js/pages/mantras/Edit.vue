@@ -16,8 +16,10 @@ const props = defineProps<{
         benefits: string | null;
         category_id: number;
         image_url: string | null;
+        color: string | null;
     };
     categories: { id: number; name: string; slug: string }[];
+    colors: { value: string; label: string }[];
 }>();
 
 defineOptions({
@@ -45,7 +47,7 @@ function destroy(): void {
             <p class="text-sm text-muted-foreground">{{ mantra.name }}</p>
         </div>
 
-        <MantraForm :mantra="mantra" :categories="categories">
+        <MantraForm :mantra="mantra" :categories="categories" :colors="colors">
             <template #actions>
                 <Button type="button" variant="destructive" @click="destroy">
                     {{ t('Eliminar') }}

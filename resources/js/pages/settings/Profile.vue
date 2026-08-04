@@ -150,7 +150,7 @@ function removeAvatar(): void {
                 <select
                     id="timezone"
                     name="timezone"
-                    class="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                    class="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                 >
                     <option value="" :selected="!user.timezone">
                         Detectar automáticamente
@@ -176,7 +176,7 @@ function removeAvatar(): void {
                 <select
                     id="locale"
                     name="locale"
-                    class="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                    class="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                 >
                     <option value="es" :selected="user.locale === 'es'">
                         Español

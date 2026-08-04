@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import {
     BookOpen,
     ChartColumn,
@@ -9,7 +9,7 @@ import {
     Target,
 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
-import { computed } from 'vue';
+import { computed, onUnmounted } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -22,8 +22,17 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import type { NavItem } from '@/types';
+
+// En móvil el menú es un panel superpuesto: al elegir una opción hay que
+// cerrarlo a mano. Se engancha a la navegación (y no al click de cada
+// Link) para que valga también para el logo y el menú de usuario.
+const { setOpenMobile } = useSidebar();
+const stopListening = router.on('start', () => setOpenMobile(false));
+
+onUnmounted(() => stopListening());
 
 const mainNavItems = computed<NavItem[]>(() => [
     {

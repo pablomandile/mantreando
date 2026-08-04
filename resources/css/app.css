@@ -90,6 +90,11 @@
 }
 
 :root {
+    /* Sin esto el navegador dibuja los controles NATIVOS (el desplegable de
+       un <select>, las barras de scroll, los date pickers) siempre en claro,
+       aunque la app esté en oscuro: la lista de opciones salía blanca. */
+    color-scheme: light;
+
     --background: hsl(0 0% 100%);
     --foreground: hsl(0 0% 3.9%);
     --card: hsl(0 0% 100%);
@@ -127,6 +132,8 @@
 }
 
 .dark {
+    color-scheme: dark;
+
     --background: hsl(0 0% 3.9%);
     --foreground: hsl(0 0% 98%);
     --card: hsl(0 0% 3.9%);
@@ -169,4 +176,68 @@
     body {
         @apply bg-background text-foreground;
     }
+}
+
+/* ---------------------------------------------------------------------------
+   Color de las tarjetas de mantra (App\Enums\MantraColor).
+   Se guarda UN solo color y el degradado se arma solo con color-mix, igual
+   que las paletas del mala con data-material. Agregar un color acá y en el
+   enum es todo lo que hace falta.
+   --------------------------------------------------------------------------- */
+:is(.mantra-card, .mantra-swatch)[data-color='blue'] {
+    --mantra-color: #3b6fb5;
+}
+:is(.mantra-card, .mantra-swatch)[data-color='indigo'] {
+    --mantra-color: #4a4d8f;
+}
+:is(.mantra-card, .mantra-swatch)[data-color='violet'] {
+    --mantra-color: #7a4f96;
+}
+:is(.mantra-card, .mantra-swatch)[data-color='red'] {
+    --mantra-color: #b93a2b;
+}
+:is(.mantra-card, .mantra-swatch)[data-color='amber'] {
+    --mantra-color: #c2902f;
+}
+:is(.mantra-card, .mantra-swatch)[data-color='orange'] {
+    --mantra-color: #c26a2c;
+}
+:is(.mantra-card, .mantra-swatch)[data-color='green'] {
+    --mantra-color: #4f8a55;
+}
+:is(.mantra-card, .mantra-swatch)[data-color='teal'] {
+    --mantra-color: #2f8a86;
+}
+:is(.mantra-card, .mantra-swatch)[data-color='neutral'] {
+    --mantra-color: #8d8579;
+}
+
+/* Tinte suave en diagonal: fuerte donde está la imagen y disuelto hacia el
+   texto, para no comerle contraste. Sin color, la tarjeta queda como estaba. */
+.mantra-card[data-color] {
+    background-image: linear-gradient(
+        135deg,
+        color-mix(in oklab, var(--mantra-color) 16%, transparent) 0%,
+        color-mix(in oklab, var(--mantra-color) 5%, transparent) 55%,
+        transparent 100%
+    );
+}
+
+/* En oscuro hace falta más tinte para que se note sobre el fondo negro. */
+.dark .mantra-card[data-color] {
+    background-image: linear-gradient(
+        135deg,
+        color-mix(in oklab, var(--mantra-color) 26%, transparent) 0%,
+        color-mix(in oklab, var(--mantra-color) 8%, transparent) 55%,
+        transparent 100%
+    );
+}
+
+.mantra-swatch {
+    background-image: linear-gradient(
+        135deg,
+        color-mix(in oklab, var(--mantra-color) 95%, white) 0%,
+        var(--mantra-color) 55%,
+        color-mix(in oklab, var(--mantra-color) 75%, black) 100%
+    );
 }

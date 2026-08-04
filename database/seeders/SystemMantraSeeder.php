@@ -52,6 +52,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'purification',
                 'en' => 'Enlightened body, speech and mind',
                 'image' => 'om-ah-hum',
+                'color' => 'indigo',
             ],
             [
                 'name' => 'Shakyamuni',
@@ -59,6 +60,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'wisdom',
                 'en' => 'Shakyamuni',
                 'image' => 'shakyamuni',
+                'color' => 'amber',
             ],
             [
                 'name' => 'Avalokiteshvara',
@@ -66,6 +68,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'compassion',
                 'en' => 'Avalokiteshvara',
                 'image' => 'avalokiteshvara',
+                'color' => 'neutral',
             ],
             [
                 'name' => 'Manjushri',
@@ -73,6 +76,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'wisdom',
                 'en' => 'Manjushri',
                 'image' => 'manjushri',
+                'color' => 'orange',
             ],
             [
                 'name' => 'Vajrapani',
@@ -80,6 +84,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'protection',
                 'en' => 'Vajrapani',
                 'image' => 'vajrapani',
+                'color' => 'blue',
             ],
             [
                 'name' => 'Tara Verde',
@@ -87,6 +92,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'protection',
                 'en' => 'Green Tara',
                 'image' => 'tara-verde',
+                'color' => 'green',
             ],
             [
                 'name' => 'Tara Blanca',
@@ -94,6 +100,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'healing',
                 'en' => 'White Tara',
                 'image' => 'tara-blanca',
+                'color' => 'neutral',
             ],
             [
                 'name' => 'Prajnaparamita',
@@ -101,6 +108,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'wisdom',
                 'en' => 'Prajnaparamita',
                 'image' => 'prajnaparamita',
+                'color' => 'amber',
             ],
             [
                 'name' => 'Vajrayoguini',
@@ -108,6 +116,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'tantra',
                 'en' => 'Vajrayogini',
                 'image' => 'vajrayoguini',
+                'color' => 'red',
             ],
             [
                 'name' => 'Heruka',
@@ -115,6 +124,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'tantra',
                 'en' => 'Heruka',
                 'image' => 'heruka',
+                'color' => 'blue',
             ],
             [
                 'name' => 'Vajrasatva corto',
@@ -122,6 +132,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'purification',
                 'en' => 'Vajrasattva (short)',
                 'image' => 'vajrasatva',
+                'color' => 'neutral',
             ],
             [
                 'name' => 'Vajrasatva largo',
@@ -129,6 +140,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'purification',
                 'en' => 'Vajrasattva (long)',
                 'image' => 'vajrasatva',
+                'color' => 'neutral',
             ],
             [
                 'name' => 'Buda de la medicina',
@@ -136,6 +148,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'healing',
                 'en' => 'Medicine Buddha',
                 'image' => 'buda-de-la-medicina',
+                'color' => 'teal',
             ],
             [
                 'name' => 'Amitayus',
@@ -143,6 +156,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'healing',
                 'en' => 'Amitayus',
                 'image' => 'amitayus',
+                'color' => 'red',
             ],
             [
                 'name' => 'Dorje Shugden corto',
@@ -150,6 +164,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'protection',
                 'en' => 'Dorje Shugden (short)',
                 'image' => 'dorje-shugden',
+                'color' => 'indigo',
             ],
             [
                 'name' => 'Dorje Shugden largo',
@@ -157,6 +172,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'protection',
                 'en' => 'Dorje Shugden (long)',
                 'image' => 'dorje-shugden',
+                'color' => 'indigo',
             ],
             [
                 'name' => 'Gueshe Kelsang Gyatso',
@@ -164,6 +180,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'guru-yoga',
                 'en' => 'Geshe Kelsang Gyatso',
                 'image' => 'gueshe-kelsang-gyatso',
+                'color' => 'amber',
             ],
             [
                 'name' => 'Maitreya',
@@ -171,6 +188,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'compassion',
                 'en' => 'Maitreya',
                 'image' => 'maitreya',
+                'color' => 'amber',
             ],
             [
                 'name' => 'Kandarohi',
@@ -178,6 +196,7 @@ class SystemMantraSeeder extends Seeder
                 'category' => 'tantra',
                 'en' => 'Khandarohi',
                 'image' => 'kandarohi',
+                'color' => 'red',
             ],
         ];
 
@@ -192,6 +211,9 @@ class SystemMantraSeeder extends Seeder
                     'image_path' => isset($data['image'])
                         ? self::IMAGE_DIR.'/'.$data['image'].'.jpg'
                         : null,
+                    // Color tradicional de la deidad: es el default del
+                    // sistema, igual para todos los usuarios.
+                    'color' => $data['color'] ?? null,
                 ],
             );
         }

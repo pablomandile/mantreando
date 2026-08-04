@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\MantraColor;
 use App\Models\Mantra;
+use App\Models\MantraCategory;
 use App\Models\PracticeSession;
 use App\Models\User;
 use Database\Seeders\MantraCategorySeeder;
@@ -106,6 +108,59 @@ test('una imagen subida por el usuario sigue sirviendose desde el disco public',
         ->and($mantra->image_url)->toContain('/storage/mantras/7/foto.jpg')
         // Sin miniatura propia, la tarjeta reusa la original
         ->and($mantra->image_thumb_url)->toBe($mantra->image_url);
+});
+
+test('cada mantra del sistema trae el color tradicional de su deidad', function () {
+    $this->seed(MantraCategorySeeder::class);
+    $this->seed(SystemMantraSeeder::class);
+
+    $byName = Mantra::whereNull('user_id')->get()->keyBy('name');
+
+    expect($byName->filter(fn ($m) => $m->color === null))->toBeEmpty();
+
+    expect($byName['Tara Verde']->color)->toBe(MantraColor::Green)
+        ->and($byName['Tara Blanca']->color)->toBe(MantraColor::Neutral)
+        ->and($byName['Vajrapani']->color)->toBe(MantraColor::Blue)
+        ->and($byName['Buda de la medicina']->color)->toBe(MantraColor::Teal)
+        ->and($byName['Amitayus']->color)->toBe(MantraColor::Red)
+        ->and($byName['Manjushri']->color)->toBe(MantraColor::Orange);
+});
+
+test('el color del mantra se puede elegir y borrar', function () {
+    $user = User::factory()->create();
+    $category = MantraCategory::factory()->create();
+
+    $this->actingAs($user)->post('/mantras', [
+        'name' => 'Mi mantra',
+        'text' => 'OM',
+        'category_id' => $category->id,
+        'color' => 'violet',
+    ])->assertRedirect();
+
+    $mantra = Mantra::where('name', 'Mi mantra')->first();
+    expect($mantra->color)->toBe(MantraColor::Violet);
+
+    // Volver a "sin color"
+    $this->actingAs($user)->put("/mantras/{$mantra->id}", [
+        'name' => 'Mi mantra',
+        'text' => 'OM',
+        'category_id' => $category->id,
+        'color' => null,
+    ])->assertRedirect();
+
+    expect($mantra->fresh()->color)->toBeNull();
+});
+
+test('un color inventado se rechaza', function () {
+    $user = User::factory()->create();
+    $category = MantraCategory::factory()->create();
+
+    $this->actingAs($user)->post('/mantras', [
+        'name' => 'Mi mantra',
+        'text' => 'OM',
+        'category_id' => $category->id,
+        'color' => 'fucsia-flúor',
+    ])->assertSessionHasErrors('color');
 });
 
 test('los mantras del sistema traducen el nombre al inglés', function () {

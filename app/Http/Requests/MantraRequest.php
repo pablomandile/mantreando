@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\MantraColor;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class MantraRequest extends FormRequest
 {
@@ -19,6 +21,7 @@ class MantraRequest extends FormRequest
             'category_id' => ['required', 'integer', 'exists:mantra_categories,id'],
             'image' => ['nullable', 'image', 'max:2048'], // 2 MB
             'remove_image' => ['nullable', 'boolean'],
+            'color' => ['nullable', Rule::enum(MantraColor::class)],
         ];
     }
 
@@ -29,6 +32,7 @@ class MantraRequest extends FormRequest
             'text' => 'texto',
             'category_id' => 'categoría',
             'image' => 'imagen',
+            'color' => 'color',
         ];
     }
 }

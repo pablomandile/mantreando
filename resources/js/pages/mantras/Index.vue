@@ -12,6 +12,7 @@ interface MantraItem {
     text: string;
     transliteration: string | null;
     image_url: string | null;
+    color: string | null;
     is_system: boolean;
     category: { name: string; slug: string };
     is_favorite: boolean;
@@ -154,7 +155,8 @@ function move(index: number, direction: -1 | 1): void {
             <div
                 v-for="(mantra, index) in localOrder"
                 :key="mantra.id"
-                class="group relative rounded-xl border border-sidebar-border/70 p-4 transition-colors hover:bg-accent/50 dark:border-sidebar-border"
+                :data-color="mantra.color ?? undefined"
+                class="mantra-card group relative rounded-xl border border-sidebar-border/70 p-4 transition-colors hover:bg-accent/50 dark:border-sidebar-border"
             >
                 <Link
                     :href="`/mantras/${mantra.id}`"

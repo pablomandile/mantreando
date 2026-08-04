@@ -97,7 +97,7 @@ const maxByMantra = computed(() =>
             </div>
 
             <select
-                class="h-8 rounded-md border border-input bg-transparent px-2 text-xs focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                class="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                 :aria-label="t('Filtrar por mantra')"
                 @change="onMantraChange"
             >

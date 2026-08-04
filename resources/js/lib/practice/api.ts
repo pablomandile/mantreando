@@ -55,13 +55,18 @@ export function fetchBootstrap(): Promise<BootstrapPayload> {
 /**
  * Borra la práctica del día en el servidor. Sin esto el reinicio sería
  * cosmético: el siguiente bootstrap traería de vuelta el total.
+ * Con mantraId borra solo ese mantra; sin él, el día entero.
  */
 export function deleteToday(
     localDate: string,
+    mantraId?: number,
 ): Promise<{ local_date: string }> {
     return request<{ local_date: string }>(ENDPOINTS.today, {
         method: 'DELETE',
-        body: JSON.stringify({ local_date: localDate }),
+        body: JSON.stringify({
+            local_date: localDate,
+            mantra_id: mantraId ?? null,
+        }),
     });
 }
 

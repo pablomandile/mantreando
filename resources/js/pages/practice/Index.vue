@@ -46,6 +46,12 @@ const mantra = computed(
     () => mantras.value.find((m) => m.id === selectedId.value) ?? null,
 );
 
+/** Compromiso propio del mantra (ficha): pisa al objetivo genérico. */
+const dailyCommitment = computed(
+    () => mantra.value?.pivot.daily_commitment ?? null,
+);
+const totalGoal = computed(() => mantra.value?.pivot.total_goal ?? null);
+
 /**
  * La columna de la práctica tiene que entrar entera en pantalla: imagen,
  * texto y contador. Los mantras largos (Amitayus, Vajrasatva largo) la
@@ -82,7 +88,8 @@ const liveSettings = computed(
         ((userMetaLive.value?.value as CachedUser | undefined)?.settings ??
             {}) as Record<string, unknown>,
 );
-const dailyGoalValue = computed(() =>
+/** Objetivo genérico del panel: vale para CADA mantra, no para su suma. */
+const genericDailyGoal = computed(() =>
     Number(liveSettings.value.daily_goal) > 0
         ? Number(liveSettings.value.daily_goal)
         : DEFAULT_DAILY_GOAL,
@@ -96,20 +103,31 @@ const globalGoalValue = computed(() =>
 /** true = "Seguir objetivo" (default SIEMPRE al entrar); false = cuenta libre */
 const followGoal = ref(true);
 
-/** Progreso de HOY (todos los mantras) hacia la meta diaria. */
+/**
+ * Meta diaria de ESTE mantra. El objetivo del panel es genérico y aplica a
+ * cada mantra por separado; si el mantra tiene compromiso propio en su ficha,
+ * ese manda. Son el mismo concepto a distinta escala, por eso hay una sola
+ * meta y una sola celebración.
+ */
+const dailyGoalValue = computed(
+    () => dailyCommitment.value ?? genericDailyGoal.value,
+);
+
+/** Progreso de HOY con ESTE mantra hacia su meta diaria. */
 const dailyProgressToday = computed(() =>
     Math.min(
-        todayTotalBaseReactive.value + mala.snapshot.value.totalCount,
+        todayBase.value + mala.snapshot.value.totalCount,
         dailyGoalValue.value,
     ),
 );
 
 // ── Celebraciones sobrias ───────────────────────────────────────────────────
-const celebration = ref<
-    'mala' | 'commitment' | 'goal' | 'daily-goal' | 'global-goal' | null
->(null);
+// 'commitment' se fusionó con 'daily-goal': el compromiso del mantra ES su
+// meta diaria, así que una sola celebración (antes disparaban las dos).
+const celebration = ref<'mala' | 'goal' | 'daily-goal' | 'global-goal' | null>(
+    null,
+);
 let celebrationTimer: ReturnType<typeof setTimeout> | undefined;
-let commitmentCelebrated = false;
 let totalGoalCelebrated = false;
 let dailyGoalCelebrated = false;
 let globalGoalCelebrated = false;
@@ -118,8 +136,6 @@ const celebrationText = computed(() => {
     switch (celebration.value) {
         case 'mala':
             return t('Completaste un mala');
-        case 'commitment':
-            return t('Alcanzaste tu compromiso diario');
         case 'goal':
             return t('Alcanzaste tu objetivo total');
         case 'daily-goal':
@@ -152,20 +168,15 @@ let defaultMode: PracticeMode = 'traditional';
 let todayByMantra: Record<string, number> = {};
 let todayLocalDate = '';
 let totalsByMantra: Record<string, number> = {};
-let todayBase = 0;
+// Recitaciones de HOY con ESTE mantra, previas a la sesión en curso.
+// Reactiva: es la base de la leyenda del objetivo.
+const todayBase = ref(0);
 let totalBase = 0;
 
-// Bases acumuladas de las metas globales (panel Objetivo)
-const todayTotalBaseReactive = ref(0); // recitaciones de HOY (todos los mantras) previas
-let allTimeBase = 0; // recitaciones históricas (todos los mantras) previas
-
-const dailyCommitment = computed(
-    () => mantra.value?.pivot.daily_commitment ?? null,
-);
-const totalGoal = computed(() => mantra.value?.pivot.total_goal ?? null);
+// Base del objetivo global (panel Objetivo): histórico de TODOS los mantras.
+let allTimeBase = 0;
 
 function resetPerSessionFlags(): void {
-    commitmentCelebrated = false;
     followGoal.value = true; // objetivo por default, siempre
 }
 
@@ -175,11 +186,13 @@ async function startSession(
 ): Promise<void> {
     resetPerSessionFlags();
 
-    todayBase =
+    todayBase.value =
         todayLocalDate === getLocalDate(timezone)
             ? (todayByMantra[String(mantraId)] ?? 0)
             : 0;
     totalBase = totalsByMantra[String(mantraId)] ?? 0;
+    // La meta de este mantra puede estar ya cumplida hoy: no se recelebra.
+    dailyGoalCelebrated = todayBase.value >= dailyGoalValue.value;
     totalGoalCelebrated =
         totalGoal.value !== null && totalBase >= (totalGoal.value ?? 0);
 
@@ -209,9 +222,8 @@ async function switchMantra(mantraId: number): Promise<void> {
     const state = recorder.getState();
 
     if (state !== null) {
-        // Lo contado pasa a las bases: las metas diaria/global siguen
-        // acumulando a través de los cambios de mantra.
-        todayTotalBaseReactive.value += state.totalCount;
+        // Lo contado se acredita al mantra que se estaba practicando (de ahí
+        // sale su meta diaria) y al histórico global.
         allTimeBase += state.totalCount;
         todayByMantra[String(state.mantra_id)] =
             (todayByMantra[String(state.mantra_id)] ?? 0) + state.totalCount;
@@ -233,7 +245,9 @@ function onMantraChange(event: Event): void {
 
 // ── Reinicio del día ────────────────────────────────────────────────────────
 // Pone en cero la sesión Y el total del día. Es destructivo: borra la
-// práctica de hoy en el servidor (sesiones y agregados) y recalcula rachas.
+// práctica de hoy CON ESTE MANTRA en el servidor (sesiones y agregados) y
+// recalcula rachas. Acotado al mantra porque la meta diaria es por mantra:
+// reiniciar no puede llevarse por delante lo recitado con los otros.
 // Tiene que ser en el servidor o sería cosmético — el siguiente bootstrap
 // traería el total de vuelta.
 const confirmingReset = ref(false);
@@ -242,31 +256,31 @@ const resetError = ref(false);
 let resetConfirmTimer: ReturnType<typeof setTimeout> | undefined;
 
 async function resetToday(): Promise<void> {
+    const mantraId = selectedId.value;
+
+    if (mantraId === null) {
+        return;
+    }
+
     resetting.value = true;
     resetError.value = false;
 
     try {
         // La sesión en curso se descarta sin encolar: si se encolara,
-        // volvería a sumar al día en el próximo sync.
+        // volvería a sumar en el próximo sync.
         await recorder.discard();
-        // Lo pendiente de hoy también: si no, resucita el total.
-        await db.outbox.clear();
+        // Lo pendiente de este mantra también: si no, resucita la cuenta.
+        await db.outbox.where('mantra_id').equals(mantraId).delete();
 
-        await deleteToday(getLocalDate(timezone));
+        await deleteToday(getLocalDate(timezone), mantraId);
         await refreshBootstrap();
 
-        // Bases del día en cero (el bootstrap ya las trae así, pero la
-        // pantalla no debe esperar al fetch para reflejarlo).
-        todayTotalBaseReactive.value = 0;
-        todayByMantra = {};
-        todayBase = 0;
-        allTimeBase = Object.values(totalsByMantra).reduce((a, b) => a + b, 0);
+        // Base de HOY de este mantra en cero (el bootstrap ya la trae así,
+        // pero la pantalla no debe esperar al fetch para reflejarlo).
+        todayByMantra[String(mantraId)] = 0;
 
         mala.reset();
-
-        if (selectedId.value !== null) {
-            await startSession(selectedId.value, null);
-        }
+        await startSession(mantraId, null);
     } catch {
         // Sin conexión no hay forma de borrarlo en el servidor: mejor no
         // tocar nada local que dejar los dos lados en desacuerdo.
@@ -320,7 +334,6 @@ async function resolveResume(action: 'continue' | 'finish-and-restart') {
     todayByMantra[String(candidate.mantra_id)] =
         (todayByMantra[String(candidate.mantra_id)] ?? 0) +
         candidate.totalCount;
-    todayTotalBaseReactive.value += candidate.totalCount;
     allTimeBase += candidate.totalCount;
     void syncAll();
     await startSession(candidate.mantra_id, null);
@@ -359,11 +372,8 @@ onMounted(async () => {
         (totalsMeta?.value as { by_mantra: Record<string, number> })
             ?.by_mantra ?? {};
 
-    // Bases de las metas globales
-    todayTotalBaseReactive.value =
-        today && today.local_date === getLocalDate(timezone) ? today.total : 0;
+    // Base del objetivo global (la diaria la fija startSession, por mantra)
     allTimeBase = Object.values(totalsByMantra).reduce((a, b) => a + b, 0);
-    dailyGoalCelebrated = todayTotalBaseReactive.value >= dailyGoalValue.value;
     globalGoalCelebrated =
         globalGoalValue.value !== null && allTimeBase >= globalGoalValue.value;
 
@@ -402,12 +412,12 @@ onMounted(async () => {
         const total = mala.snapshot.value.totalCount;
 
         if (event.type === 'bead' || event.type === 'completed') {
-            // La meta diaria del panel Objetivo manda (si el switch
-            // "Seguir objetivo" está activo)
+            // Meta diaria DE ESTE MANTRA (su compromiso propio, o el
+            // objetivo genérico del panel), si el switch está activo.
             if (
                 followGoal.value &&
                 !dailyGoalCelebrated &&
-                todayTotalBaseReactive.value + total >= dailyGoalValue.value
+                todayBase.value + total >= dailyGoalValue.value
             ) {
                 dailyGoalCelebrated = true;
                 celebrate('daily-goal');
@@ -421,18 +431,6 @@ onMounted(async () => {
         }
 
         if (event.type === 'bead') {
-            if (
-                !commitmentCelebrated &&
-                dailyCommitment.value !== null &&
-                todayBase + total >= dailyCommitment.value
-            ) {
-                commitmentCelebrated = true;
-
-                if (celebration.value === null) {
-                    celebrate('commitment');
-                }
-            }
-
             if (
                 !totalGoalCelebrated &&
                 totalGoal.value !== null &&

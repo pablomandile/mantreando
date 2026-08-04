@@ -35,6 +35,13 @@ class MantreandoDB extends Dexie {
         this.version(2).stores({
             mantras: 'id, name, sort',
         });
+
+        // v3: índice mantra_id en la outbox — el reinicio descarta lo
+        // pendiente de UN mantra y where() exige que el campo esté indexado
+        // (si no, SchemaError).
+        this.version(3).stores({
+            outbox: 'uuid, createdAt, mantra_id',
+        });
     }
 }
 

@@ -44,7 +44,7 @@ function submit(): void {
             <p class="text-sm text-muted-foreground">
                 {{
                     t(
-                        'Cuántas recitaciones querés contar por día. Al alcanzarlas, la práctica te lo celebra.',
+                        'Cuántas recitaciones querés contar por día de CADA mantra. Al alcanzarlas, la práctica te lo celebra. Si un mantra tiene su propio compromiso diario en su ficha, ese manda.',
                     )
                 }}
             </p>

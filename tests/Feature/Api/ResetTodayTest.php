@@ -23,13 +23,16 @@ function seedDay(User $user, Mantra $mantra, string $date, int $recitations): vo
         'sessions_count' => 1,
     ]);
 
-    DailyAggregate::create([
+    // El total del día es una sola fila (unique por user+mantra_key+fecha):
+    // si ya hay práctica de otro mantra ese día, acumula.
+    $dayTotal = DailyAggregate::firstOrCreate([
         'user_id' => $user->id,
         'mantra_id' => null,
         'local_date' => $date,
-        'recitations' => $recitations,
-        'sessions_count' => 1,
     ]);
+
+    $dayTotal->increment('recitations', $recitations);
+    $dayTotal->increment('sessions_count');
 }
 
 test('un invitado no puede reiniciar el dia', function () {
@@ -118,6 +121,55 @@ test('la racha se recalcula tras reiniciar', function () {
     // ayer cuenta), no 2.
     $global = Streak::where('user_id', $user->id)->whereNull('mantra_id')->first();
     expect($global->current_count)->toBe(1);
+});
+
+test('con mantra_id solo borra ese mantra y deja los demas del dia', function () {
+    $user = User::factory()->create(['timezone' => 'America/Argentina/Buenos_Aires']);
+    $tara = Mantra::factory()->create();
+    $manjushri = Mantra::factory()->create();
+    $hoy = now($user->timezone)->toDateString();
+
+    seedDay($user, $tara, $hoy, 21);
+    seedDay($user, $manjushri, $hoy, 54);
+
+    $this->actingAs($user)
+        ->deleteJson('/api/v1/practice/today', [
+            'local_date' => $hoy,
+            'mantra_id' => $tara->id,
+        ])
+        ->assertOk();
+
+    // Tara borrado, Manjushri intacto
+    expect(PracticeSession::where('mantra_id', $tara->id)->count())->toBe(0)
+        ->and(PracticeSession::where('mantra_id', $manjushri->id)->count())->toBe(1)
+        ->and(DailyAggregate::where('mantra_id', $tara->id)->count())->toBe(0)
+        ->and(DailyAggregate::where('mantra_id', $manjushri->id)->count())->toBe(1);
+
+    // El total del día se rehace con lo que quedó, no se borra
+    $dayTotal = DailyAggregate::where('user_id', $user->id)
+        ->whereNull('mantra_id')
+        ->where('local_date', $hoy)
+        ->first();
+
+    expect($dayTotal)->not->toBeNull()
+        ->and($dayTotal->recitations)->toBe(54);
+});
+
+test('borrar el ultimo mantra del dia deja el total del dia en nada', function () {
+    $user = User::factory()->create(['timezone' => 'America/Argentina/Buenos_Aires']);
+    $mantra = Mantra::factory()->create();
+    $hoy = now($user->timezone)->toDateString();
+
+    seedDay($user, $mantra, $hoy, 21);
+
+    $this->actingAs($user)
+        ->deleteJson('/api/v1/practice/today', [
+            'local_date' => $hoy,
+            'mantra_id' => $mantra->id,
+        ])
+        ->assertOk();
+
+    expect(DailyAggregate::where('user_id', $user->id)->count())->toBe(0);
 });
 
 test('la fecha es obligatoria y con formato', function () {

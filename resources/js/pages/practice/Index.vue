@@ -9,7 +9,8 @@ import { usePracticeSync } from '@/composables/usePracticeSync';
 import { db } from '@/lib/practice/db';
 import { getLocalDate } from '@/lib/practice/localDate';
 import { SessionRecorder } from '@/lib/practice/recorder';
-import { syncAll } from '@/lib/practice/sync';
+import { deleteToday } from '@/lib/practice/api';
+import { refreshBootstrap, syncAll } from '@/lib/practice/sync';
 import type {
     ActiveSessionState,
     CachedMalaPreset,
@@ -226,29 +227,69 @@ function onMantraChange(event: Event): void {
     }
 }
 
-// ── Reinicio de la cuenta ───────────────────────────────────────────────────
-// Mismo camino que cambiar de mantra, quedándose en el mismo: la sesión en
-// curso se cierra (lo recitado queda en el historial y en el total del día)
-// y arranca una nueva en cero. Nunca se descarta práctica.
+// ── Reinicio del día ────────────────────────────────────────────────────────
+// Pone en cero la sesión Y el total del día. Es destructivo: borra la
+// práctica de hoy en el servidor (sesiones y agregados) y recalcula rachas.
+// Tiene que ser en el servidor o sería cosmético — el siguiente bootstrap
+// traería el total de vuelta.
 const confirmingReset = ref(false);
+const resetting = ref(false);
+const resetError = ref(false);
 let resetConfirmTimer: ReturnType<typeof setTimeout> | undefined;
 
+async function resetToday(): Promise<void> {
+    resetting.value = true;
+    resetError.value = false;
+
+    try {
+        // La sesión en curso se descarta sin encolar: si se encolara,
+        // volvería a sumar al día en el próximo sync.
+        await recorder.discard();
+        // Lo pendiente de hoy también: si no, resucita el total.
+        await db.outbox.clear();
+
+        await deleteToday(getLocalDate(timezone));
+        await refreshBootstrap();
+
+        // Bases del día en cero (el bootstrap ya las trae así, pero la
+        // pantalla no debe esperar al fetch para reflejarlo).
+        todayTotalBaseReactive.value = 0;
+        todayByMantra = {};
+        todayBase = 0;
+        allTimeBase = Object.values(totalsByMantra).reduce((a, b) => a + b, 0);
+
+        mala.reset();
+
+        if (selectedId.value !== null) {
+            await startSession(selectedId.value, null);
+        }
+    } catch {
+        // Sin conexión no hay forma de borrarlo en el servidor: mejor no
+        // tocar nada local que dejar los dos lados en desacuerdo.
+        resetError.value = true;
+    } finally {
+        resetting.value = false;
+    }
+}
+
 function onResetClick(): void {
+    if (resetting.value) {
+        return;
+    }
+
     if (!confirmingReset.value) {
         confirmingReset.value = true;
+        resetError.value = false;
         resetConfirmTimer = setTimeout(() => {
             confirmingReset.value = false;
-        }, 3000);
+        }, 4000);
 
         return;
     }
 
     clearTimeout(resetConfirmTimer);
     confirmingReset.value = false;
-
-    if (selectedId.value !== null) {
-        void switchMantra(selectedId.value);
-    }
+    void resetToday();
 }
 
 async function resolveResume(action: 'continue' | 'finish-and-restart') {
@@ -508,19 +549,32 @@ onUnmounted(() => {
                     </span>
                 </div>
 
-                <!-- Reinicia la cuenta a la vista. Pide confirmación en el
-                     mismo botón: un toque al descuido en la cuenta 87
-                     rompe la práctica. Lo recitado NO se pierde: la sesión
-                     se cierra y sigue sumando al total del día. -->
-                <button
-                    v-if="mantra"
-                    type="button"
-                    class="rounded-md border border-input px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                    :class="{ 'border-foreground text-foreground': confirmingReset }"
-                    @click="onResetClick"
-                >
-                    {{ confirmingReset ? t('¿Seguro?') : t('Reiniciar cuenta') }}
-                </button>
+                <!-- Pone en cero la sesión Y el total del día. Es
+                     destructivo (borra la práctica de hoy), así que
+                     confirma en el mismo botón y dice qué va a borrar. -->
+                <div v-if="mantra" class="space-y-1">
+                    <button
+                        type="button"
+                        :disabled="resetting"
+                        class="rounded-md border border-input px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+                        :class="{
+                            'border-destructive text-destructive':
+                                confirmingReset,
+                        }"
+                        @click="onResetClick"
+                    >
+                        {{
+                            resetting
+                                ? t('Reiniciando…')
+                                : confirmingReset
+                                  ? t('¿Borrar la práctica de hoy?')
+                                  : t('Reiniciar')
+                        }}
+                    </button>
+                    <p v-if="resetError" class="text-xs text-destructive">
+                        {{ t('No se pudo reiniciar. Necesitás conexión.') }}
+                    </p>
+                </div>
 
                 <span
                     v-if="outboxCount > 0"

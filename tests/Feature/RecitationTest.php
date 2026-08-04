@@ -8,10 +8,10 @@ test('la pagina de recitaciones pide sesion', function () {
     $this->get('/recitations')->assertRedirect('/login');
 });
 
-test('el seed carga las 9 recitaciones en orden', function () {
+test('el seed carga las 10 recitaciones en orden', function () {
     $this->seed(SystemRecitationSeeder::class);
 
-    expect(Recitation::count())->toBe(9);
+    expect(Recitation::count())->toBe(10);
 
     $titles = Recitation::orderBy('position')->pluck('title')->all();
 
@@ -25,7 +25,7 @@ test('el seed es idempotente: correrlo dos veces no duplica', function () {
     $this->seed(SystemRecitationSeeder::class);
     $this->seed(SystemRecitationSeeder::class);
 
-    expect(Recitation::count())->toBe(9);
+    expect(Recitation::count())->toBe(10);
 });
 
 test('los textos conservan su estructura de versos y no traen erratas', function () {
@@ -39,6 +39,11 @@ test('los textos conservan su estructura de versos y no traen erratas', function
     expect($dormir->text)->toContain('luz clara del gozo')
         ->and($dormir->text)->not->toContain('ciara')
         ->and($dormir->text)->not->toContain('tos fenomenos');
+
+    // El del despertar va junto al del dormir, que es su par
+    $orden = Recitation::orderBy('position')->pluck('slug')->all();
+    expect(array_search('yoga-del-despertar', $orden, true))
+        ->toBe(array_search('yoga-del-dormir', $orden, true) + 1);
 
     $nectar = Recitation::where('slug', 'yoga-experimentar-nectar')->first();
     expect($nectar->text)->toContain('Néctar que cura las enfermedades')
@@ -61,6 +66,7 @@ test('un usuario autenticado ve las recitaciones', function () {
     $titles = collect($response->viewData('page')['props']['recitations'])
         ->pluck('title');
 
-    expect($titles)->toHaveCount(9)
-        ->and($titles)->toContain('Promesa');
+    expect($titles)->toHaveCount(10)
+        ->and($titles)->toContain('Promesa')
+        ->and($titles)->toContain('El yoga del despertar');
 });

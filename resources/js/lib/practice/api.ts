@@ -8,6 +8,7 @@ import type { BootstrapPayload, OutboxItem, SyncResult } from './types';
 const ENDPOINTS = {
     bootstrap: '/api/v1/practice/bootstrap',
     sessions: '/api/v1/practice-sessions',
+    today: '/api/v1/practice/today',
 } as const;
 
 function xsrfToken(): string {
@@ -49,6 +50,17 @@ export class ApiError extends Error {
 
 export function fetchBootstrap(): Promise<BootstrapPayload> {
     return request<BootstrapPayload>(ENDPOINTS.bootstrap);
+}
+
+/**
+ * Borra la práctica del día en el servidor. Sin esto el reinicio sería
+ * cosmético: el siguiente bootstrap traería de vuelta el total.
+ */
+export function deleteToday(localDate: string): Promise<{ local_date: string }> {
+    return request<{ local_date: string }>(ENDPOINTS.today, {
+        method: 'DELETE',
+        body: JSON.stringify({ local_date: localDate }),
+    });
 }
 
 export function postSessions(

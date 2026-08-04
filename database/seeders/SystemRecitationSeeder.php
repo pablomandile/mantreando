@@ -56,6 +56,11 @@ class SystemRecitationSeeder extends Seeder
                 'text' => "«Para beneficiar a todos los seres sintientes\nvoy a convertirme en el Buda Vajrayoguini.\nPara ello voy a alcanzar la realización de la luz clara del gozo.»\n\nNuestro cuerpo, nuestro yo y todos los demás fenómenos que normalmente percibimos no existen. Intentamos percibir la mera ausencia de todos los fenómenos que normalmente percibimos, la vacuidad de todos los fenómenos.\n\nEn el vasto espacio de la vacuidad de todos los fenómenos —la tierra pura de Keajra—, aparezco como Vajrayoguini rodeada por los Héroes y Heroínas iluminados. Aunque muestro esta apariencia, no es otra que la vacuidad de todos los fenómenos.",
             ],
             [
+                'slug' => 'yoga-del-despertar',
+                'title' => 'El yoga del despertar',
+                'text' => 'En el vasto espacio de la vacuidad de todos los fenómenos —la tierra pura de Keajra—, aparezco como Vajrayoguini, rodeada por los Héroes y Heroínas iluminados. Aunque muestro esta apariencia, no es otra que la vacuidad de todos los fenómenos.',
+            ],
+            [
                 'slug' => 'ocho-versos-madre-sanscrito',
                 'title' => 'Los ocho versos de alabanza a la Madre (sánscrito)',
                 'text' => "OM NAMO BHAGAVATI VAJRA VARAHI\nBAM HUM HUM PHET\n\nOM NAMO ARYA APARADZSITE TRE LOKIA\nMATI BIYE SHORI HUM HUM PHET\n\nOM NAMA SARVA BUTA BHAYA VAHI\nMAHA VAJRE HUM HUM PHET\n\nOM NAMO VAJRA SANI ADZSITE\nAPARADZSITE VASHAM KARANITRA\nHUM HUM PHET\n\nOM NAMO BHRAMANI SHOKANI ROKANI\nKROTE KARALINI HUM HUM PHET\n\nOM NAMA DRASANI MARANI PRABHE\nDANI PARADZSAYE HUM HUM PHET\n\nOM NAMO BIDZSAYE DZSAMBHANI\nTAMBHANI MOHANI HUM HUM PHET\n\nOM NAMO VAJRA VARAHI MAHA YOGUINI\nKAME SHORI KHAGE HUM HUM PHET",

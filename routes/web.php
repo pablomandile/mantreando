@@ -28,6 +28,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('goal', [App\Http\Controllers\SessionGoalController::class, 'edit'])->name('goal.edit');
     Route::patch('goal', [App\Http\Controllers\SessionGoalController::class, 'update'])->name('goal.update');
 
+    Route::get('recitations', [App\Http\Controllers\RecitationController::class, 'index'])->name('recitations.index');
+
     Route::post('mantras/reorder', App\Http\Controllers\MantraReorderController::class)->name('mantras.reorder');
     Route::resource('mantras', MantraController::class)->except(['show'])->parameters(['mantras' => 'mantra']);
     Route::get('mantras/{mantra}', [MantraController::class, 'show'])->name('mantras.show')->whereNumber('mantra');

@@ -6,6 +6,7 @@ import {
     CircleDashed,
     Flower,
     Palette,
+    ScrollText,
     Target,
 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
@@ -49,6 +50,11 @@ const mainNavItems = computed<NavItem[]>(() => [
         title: trans('Objetivo'),
         href: '/goal',
         icon: Target,
+    },
+    {
+        title: trans('Otras recitaciones'),
+        href: '/recitations',
+        icon: ScrollText,
     },
     {
         title: trans('Estadísticas'),

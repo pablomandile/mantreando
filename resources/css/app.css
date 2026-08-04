@@ -99,20 +99,20 @@
        mismo palo que las cuentas del mala (arena cálida arriba a la derecha,
        donde cuelga la hebra; una sombra fría abajo a la izquierda). El
        centro queda limpio para que el texto nunca pierda contraste.
-       La fuerza del tinte va de la mano de --muted-foreground: se pudo
-       subir de 13%/9% (invisible) a 24%/18% porque el gris atenuado bajó
-       a 40% y compró margen de contraste. Medido en la esquina más teñida:
-       sigue AA. Si se sube más, volver a medir. */
+       La fuerza del tinte va de la mano de --muted-foreground: está en
+       36%/28% porque el gris atenuado bajó a 38% y compró margen de
+       contraste. Medido en la esquina más teñida: sigue AA. Si se sube
+       más, volver a medir. */
     --app-backdrop:
         radial-gradient(
             ellipse 72% 58% at 95% -12%,
-            rgba(202, 152, 96, 0.24),
-            transparent 62%
+            rgba(202, 152, 96, 0.36),
+            transparent 64%
         ),
         radial-gradient(
             ellipse 85% 62% at -8% 108%,
-            rgba(122, 134, 170, 0.18),
-            transparent 62%
+            rgba(122, 134, 170, 0.28),
+            transparent 64%
         );
 
     --background: hsl(0 0% 100%);
@@ -126,10 +126,10 @@
     --secondary: hsl(0 0% 92.1%);
     --secondary-foreground: hsl(0 0% 9%);
     --muted: hsl(0 0% 96.1%);
-    /* 40% en vez del 45.1% del kit: el gris original quedaba en 4.74:1
-       sobre blanco puro — sin margen para teñir el fondo. Este da 5.7:1
-       y deja al degradado del fondo espacio real sin romper AA. */
-    --muted-foreground: hsl(0 0% 40%);
+    /* 38% en vez del 45.1% del kit: el gris original quedaba en 4.74:1
+       sobre blanco puro — sin margen para teñir el fondo. Este da 6.2:1
+       y banca un degradado de fondo con presencia sin romper AA. */
+    --muted-foreground: hsl(0 0% 38%);
     --accent: hsl(0 0% 96.1%);
     --accent-foreground: hsl(0 0% 9%);
     --destructive: hsl(0 84.2% 60.2%);
@@ -158,18 +158,18 @@
     color-scheme: dark;
 
     /* En oscuro las manchas son más marcadas: sobre negro casi no se notan.
-       Ámbar de madera arriba, índigo profundo abajo. El texto claro tiene
-       margen de sobra (>5:1 medido en la esquina más teñida a 0.42). */
+       Ámbar de madera arriba, índigo profundo abajo. Medido en la esquina
+       más teñida a 0.6: el texto claro sigue arriba de AA. */
     --app-backdrop:
         radial-gradient(
             ellipse 72% 58% at 95% -12%,
-            rgba(154, 107, 66, 0.42),
-            transparent 62%
+            rgba(154, 107, 66, 0.6),
+            transparent 64%
         ),
         radial-gradient(
             ellipse 85% 62% at -8% 108%,
-            rgba(72, 84, 130, 0.4),
-            transparent 62%
+            rgba(72, 84, 130, 0.56),
+            transparent 64%
         );
 
     --background: hsl(0 0% 3.9%);
@@ -299,7 +299,7 @@
 .mantra-backdrop[data-color] {
     background-image: radial-gradient(
         ellipse 130% 75% at 50% -25%,
-        color-mix(in oklab, var(--mantra-color) 28%, transparent),
+        color-mix(in oklab, var(--mantra-color) 38%, transparent),
         transparent 68%
     );
 }
@@ -307,7 +307,7 @@
 .dark .mantra-backdrop[data-color] {
     background-image: radial-gradient(
         ellipse 130% 75% at 50% -25%,
-        color-mix(in oklab, var(--mantra-color) 34%, transparent),
+        color-mix(in oklab, var(--mantra-color) 48%, transparent),
         transparent 68%
     );
 }

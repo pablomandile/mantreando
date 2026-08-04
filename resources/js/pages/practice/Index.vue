@@ -45,6 +45,28 @@ const mantra = computed(
     () => mantras.value.find((m) => m.id === selectedId.value) ?? null,
 );
 
+/**
+ * La columna de la práctica tiene que entrar entera en pantalla: imagen,
+ * texto y contador. Los mantras largos (Amitayus, Vajrasatva largo) la
+ * llenan ellos solos y empujaban el contador fuera de la vista, así que
+ * bajan un escalón de letra, interlineado e imagen. Los cortos, que son la
+ * mayoría, se ven igual que antes.
+ */
+const mantraLength = computed(() => {
+    const length = mantra.value?.text.length ?? 0;
+
+    return length > 300 ? 'long' : length > 150 ? 'medium' : 'short';
+});
+
+const mantraTextClass = computed(
+    () =>
+        ({
+            long: 'text-sm leading-snug sm:text-base',
+            medium: 'text-base leading-relaxed sm:text-lg',
+            short: 'text-lg leading-relaxed sm:text-xl',
+        })[mantraLength.value],
+);
+
 // ── Objetivo diario (panel Objetivo) ────────────────────────────────────────
 const DEFAULT_DAILY_GOAL = 108;
 
@@ -456,6 +478,21 @@ onUnmounted(() => {
                 </span>
             </div>
 
+            <!-- Imagen del buda: mismo ancho que el select (ambos son w-full
+                 de esta misma columna). Cuadrada y recortada un poco hacia
+                 arriba, como las miniaturas de la biblioteca: los thangkas
+                 son verticales y la cara está en el tercio superior.
+                 El tope en vh la achica en pantallas bajas y en apaisado: al
+                 recortarse queda una franja centrada en la cara, no una
+                 imagen aplastada, y el contador no se va de la pantalla. -->
+            <img
+                v-if="mantra?.image_url"
+                :src="mantra.image_url"
+                alt=""
+                class="max-h-[30vh] w-full shrink-0 rounded-xl object-cover object-[50%_20%]"
+                style="aspect-ratio: 1 / 1"
+            />
+
             <!-- Mantra + contador -->
             <div
                 v-if="mantra"
@@ -468,7 +505,8 @@ onUnmounted(() => {
                         {{ mantra.name }}
                     </p>
                     <p
-                        class="mt-2 text-lg leading-relaxed font-light whitespace-pre-line sm:text-xl"
+                        class="mt-2 font-light whitespace-pre-line"
+                        :class="mantraTextClass"
                     >
                         {{ mantra.text }}
                     </p>

@@ -162,23 +162,37 @@ function move(index: number, direction: -1 | 1): void {
                     :aria-label="mantra.name"
                 />
                 <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <p class="font-medium">{{ mantra.name }}</p>
-                        <p class="truncate text-sm text-muted-foreground">
-                            {{ mantra.text }}
-                        </p>
-                        <div class="mt-2 flex items-center gap-2">
-                            <span
-                                class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-                            >
-                                {{ mantra.category.name }}
-                            </span>
-                            <span
-                                v-if="!mantra.is_system"
-                                class="rounded-full border px-2 py-0.5 text-xs text-muted-foreground"
-                            >
-                                {{ t('propio') }}
-                            </span>
+                    <div class="flex min-w-0 items-start gap-3">
+                        <!-- Decorativa: el nombre va al lado y el Link ya
+                             lleva aria-label, así no se anuncia dos veces. -->
+                        <img
+                            v-if="mantra.image_url"
+                            :src="mantra.image_url"
+                            alt=""
+                            loading="lazy"
+                            class="size-14 shrink-0 rounded-lg object-cover"
+                        />
+                        <div class="min-w-0">
+                            <!-- truncate: con la miniatura al lado, un nombre
+                                 largo pasaría a dos líneas y estiraría la
+                                 tarjeta respecto de las demás. -->
+                            <p class="truncate font-medium">{{ mantra.name }}</p>
+                            <p class="truncate text-sm text-muted-foreground">
+                                {{ mantra.text }}
+                            </p>
+                            <div class="mt-2 flex items-center gap-2">
+                                <span
+                                    class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                                >
+                                    {{ mantra.category.name }}
+                                </span>
+                                <span
+                                    v-if="!mantra.is_system"
+                                    class="rounded-full border px-2 py-0.5 text-xs text-muted-foreground"
+                                >
+                                    {{ t('propio') }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div class="flex items-center gap-0.5">

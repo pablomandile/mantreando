@@ -65,6 +65,49 @@ test('los nombres legacy se renombran preservando el historial de práctica', fu
         ->and(Mantra::whereNull('user_id')->count())->toBe(19);
 });
 
+test('cada mantra del sistema queda vinculado a una imagen que existe', function () {
+    $this->seed(MantraCategorySeeder::class);
+    $this->seed(SystemMantraSeeder::class);
+
+    $mantras = Mantra::whereNull('user_id')->get();
+
+    expect($mantras->whereNull('image_path'))->toBeEmpty();
+
+    foreach ($mantras as $mantra) {
+        $full = public_path($mantra->image_path);
+        $thumb = public_path(dirname($mantra->image_path).'/thumb/'.basename($mantra->image_path));
+
+        expect(file_exists($full))->toBeTrue("Falta la imagen {$mantra->image_path} ({$mantra->name})")
+            ->and(file_exists($thumb))->toBeTrue("Falta la miniatura de {$mantra->name}");
+    }
+
+    // Las variantes corta y larga comparten la imagen del mismo buda
+    $byName = $mantras->keyBy('name');
+    expect($byName['Vajrasatva corto']->image_path)->toBe($byName['Vajrasatva largo']->image_path)
+        ->and($byName['Dorje Shugden corto']->image_path)->toBe($byName['Dorje Shugden largo']->image_path);
+});
+
+test('la url de una imagen de la app no apunta al disco de subidas', function () {
+    $this->seed(MantraCategorySeeder::class);
+    $this->seed(SystemMantraSeeder::class);
+
+    $mantra = Mantra::whereNull('user_id')->where('name', 'Amitayus')->first();
+
+    expect($mantra->hasAppImage())->toBeTrue()
+        ->and($mantra->image_url)->toEndWith('/img/budas/amitayus.jpg')
+        ->and($mantra->image_url)->not->toContain('/storage/')
+        ->and($mantra->image_thumb_url)->toEndWith('/img/budas/thumb/amitayus.jpg');
+});
+
+test('una imagen subida por el usuario sigue sirviendose desde el disco public', function () {
+    $mantra = Mantra::factory()->create(['image_path' => 'mantras/7/foto.jpg']);
+
+    expect($mantra->hasAppImage())->toBeFalse()
+        ->and($mantra->image_url)->toContain('/storage/mantras/7/foto.jpg')
+        // Sin miniatura propia, la tarjeta reusa la original
+        ->and($mantra->image_thumb_url)->toBe($mantra->image_url);
+});
+
 test('los mantras del sistema traducen el nombre al inglés', function () {
     $this->seed(MantraCategorySeeder::class);
     $this->seed(SystemMantraSeeder::class);

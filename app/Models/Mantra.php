@@ -100,10 +100,45 @@ class Mantra extends Model
         return $this->user_id === null;
     }
 
+    /**
+     * Prefijo de las imágenes que viajan con la app (public/img), usadas por
+     * los mantras del sistema. Todo lo demás es una subida del usuario y vive
+     * en el disco public (storage/app/public), que no está en el repo.
+     */
+    private const APP_IMAGE_PREFIX = 'img/';
+
+    public function hasAppImage(): bool
+    {
+        return $this->image_path !== null
+            && str_starts_with($this->image_path, self::APP_IMAGE_PREFIX);
+    }
+
     protected function imageUrl(): Attribute
     {
-        return Attribute::get(fn (): ?string => $this->image_path !== null
-            ? Storage::disk('public')->url($this->image_path)
-            : null);
+        return Attribute::get(function (): ?string {
+            if ($this->image_path === null) {
+                return null;
+            }
+
+            return $this->hasAppImage()
+                ? asset($this->image_path)
+                : Storage::disk('public')->url($this->image_path);
+        });
+    }
+
+    /**
+     * Miniatura para las tarjetas de la lista. Las imágenes de la app traen
+     * una versión cuadrada de 128 px al lado (img/budas/thumb/x.jpg); las que
+     * sube el usuario no, y reusan la original.
+     */
+    protected function imageThumbUrl(): Attribute
+    {
+        return Attribute::get(function (): ?string {
+            if (! $this->hasAppImage()) {
+                return $this->image_url;
+            }
+
+            return asset(dirname($this->image_path).'/thumb/'.basename($this->image_path));
+        });
     }
 }

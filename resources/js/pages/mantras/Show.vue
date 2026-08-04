@@ -108,11 +108,13 @@ function toggleFavorite(): void {
             </div>
         </header>
 
+        <!-- Los thangkas son verticales: object-contain los muestra enteros
+             (con w-full + object-cover quedaban recortados en una franja). -->
         <img
             v-if="mantra.image_url"
             :src="mantra.image_url"
             :alt="mantra.name"
-            class="max-h-64 w-full rounded-xl object-cover"
+            class="mx-auto max-h-96 rounded-xl object-contain"
         />
 
         <section class="rounded-xl border p-4">

@@ -59,7 +59,7 @@ class MantraController
                 'name' => $mantra->localized('name'),
                 'text' => $mantra->text,
                 'transliteration' => $mantra->transliteration,
-                'image_url' => $mantra->image_url,
+                'image_url' => $mantra->image_thumb_url,
                 'is_system' => $mantra->isSystem(),
                 'category' => [
                     'name' => $mantra->category->localized_name,
@@ -213,7 +213,9 @@ class MantraController
 
     private function deleteImage(Mantra $mantra): void
     {
-        if ($mantra->image_path !== null) {
+        // Las imágenes de la app son compartidas (dos mantras pueden usar la
+        // misma) y viven en el repo: borrarlas rompería a los demás.
+        if ($mantra->image_path !== null && ! $mantra->hasAppImage()) {
             Storage::disk('public')->delete($mantra->image_path);
         }
     }

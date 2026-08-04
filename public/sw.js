@@ -121,7 +121,14 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    if (url.pathname.startsWith('/storage/') || url.pathname.startsWith('/icons/')) {
+    // /img: imágenes que vienen con la app (los budas de los mantras del
+    // sistema); /storage: las que sube el usuario. Se cachean al vuelo, no
+    // en el install, así la primera visita no descarga la biblioteca entera.
+    if (
+        url.pathname.startsWith('/storage/') ||
+        url.pathname.startsWith('/icons/') ||
+        url.pathname.startsWith('/img/')
+    ) {
         event.respondWith(staleWhileRevalidate(request));
 
         return;

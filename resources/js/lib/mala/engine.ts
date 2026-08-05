@@ -21,13 +21,13 @@ import {
  * (bead/guru/reverse/completed) a los que se suscriben la UI, el feedback
  * háptico/sonoro y — en la Etapa 5 — el registrador de sesiones.
  *
- * Modo TRADICIONAL — segmento acotado [0, 107]:
- *   Por la periodicidad 109 el gurú queda en ambos extremos
- *   (slot(-1) = slot(108) = gurú). Cuenta al LLEGAR a cada cuenta en la
- *   dirección actual (1..107); el gesto 108 empuja contra el gurú
- *   (overshoot ≥ GURU_TRIGGER) → cuenta 108 + completed + reverse.
- *   El gurú nunca se cruza; la dirección se invierte, como en la práctica
- *   tradicional. Exactamente 108 por vuelta, sin off-by-one.
+ * Modo TRADICIONAL — segmento acotado [0, 107], SIEMPRE hacia abajo:
+ *   Cuenta al LLEGAR a cada cuenta (1..107); el gesto 108 empuja contra el
+ *   gurú (overshoot ≥ GURU_TRIGGER) → cuenta 108 + completed.
+ *   La dirección NO se invierte: al completar la vuelta la hebra vuelve al
+ *   arranque (rewindToStart, que dispara useMala junto con la física) y la
+ *   vuelta siguiente se cuenta bajando otra vez. Exactamente 108 por vuelta,
+ *   sin off-by-one.
  *
  * Modo ASISTIDO — posición sin límites, render mod-109 (hebra infinita):
  *   Conteo por HIGH-WATER MARK: la cuenta k se cuenta cuando el máximo
@@ -41,14 +41,14 @@ export class MalaEngine {
     private count = 0;
     private round = 0;
     private totalCount = 0;
+    /**
+     * Siempre 1: el conteo va en un solo sentido en ambos modos. Se conserva
+     * en el snapshot porque las sesiones lo persisten (practice_sessions).
+     */
     private direction: Direction = 1;
     private position = 0;
 
-    /**
-     * Extremo de la posición en la dirección de conteo:
-     * asistido → máximo histórico; tradicional → máximo desde el último
-     * reverse (dir +1) o mínimo desde el último reverse (dir −1).
-     */
+    /** Máximo histórico de la posición: el extremo ya contado. */
     private extremum = 0;
 
     /** true mientras el empuje actual contra el gurú ya disparó la 108. */
@@ -145,7 +145,10 @@ export class MalaEngine {
         this.count = state.count;
         this.round = state.round;
         this.totalCount = state.totalCount;
-        this.direction = state.direction;
+        // La dirección persistida se ignora: una sesión guardada antes de que
+        // el mala fuera de un solo sentido puede traer −1, y restaurarla
+        // dejaría el conteo esperando un gesto hacia arriba que ya no existe.
+        this.direction = 1;
         this.position = state.position;
         this.extremum = state.position;
         this.guruLatched = false;
@@ -154,6 +157,19 @@ export class MalaEngine {
     reset(): void {
         this.resetState();
         this.emit({ type: 'reset' });
+    }
+
+    /**
+     * Vuelve la hebra al arranque para la vuelta siguiente, SIN tocar la
+     * contabilidad (count ya volvió a 0 al completar; round y totalCount son
+     * acumulados). Lo llama useMala al recibir 'completed' en tradicional,
+     * en el mismo tick que physics.jumpTo(0): el extremum tiene que volver a
+     * 0 junto con la posición, o la vuelta siguiente no contaría nada.
+     */
+    rewindToStart(): void {
+        this.position = 0;
+        this.extremum = 0;
+        this.guruLatched = false;
     }
 
     // ── internos ────────────────────────────────────────────────────────────
@@ -224,54 +240,32 @@ export class MalaEngine {
     }
 
     /**
-     * Tradicional: llegada a cada cuenta del segmento [0, 107] en la
-     * dirección actual; el empuje contra el gurú (overshoot ≥ GURU_TRIGGER)
-     * dispara la cuenta 108 + completed + reverse. Latch hasta volver a
-     * territorio normal para que el rebote no re-dispare.
+     * Tradicional: llegada a cada cuenta del segmento [0, 107] bajando; el
+     * empuje contra el gurú (overshoot ≥ GURU_TRIGGER) dispara la cuenta 108
+     * + completed. Latch hasta volver a territorio normal para que el rebote
+     * no re-dispare.
      */
     private trackTraditional(position: number): void {
         const max = BEAD_COUNT - 1; // 107
 
-        if (this.direction === 1) {
-            if (position > this.extremum) {
-                // Semiabierto (extremum, position] — ver trackAssisted.
-                const firstBead = Math.floor(this.extremum + 0.5) + 1;
-                const lastBead = Math.min(Math.floor(position + 0.5), max);
+        if (position > this.extremum) {
+            // Semiabierto (extremum, position] — ver trackAssisted.
+            const firstBead = Math.floor(this.extremum + 0.5) + 1;
+            const lastBead = Math.min(Math.floor(position + 0.5), max);
 
-                for (let k = firstBead; k <= lastBead; k++) {
-                    this.registerCount();
-                }
-
-                this.extremum = position;
+            for (let k = firstBead; k <= lastBead; k++) {
+                this.registerCount();
             }
 
-            if (!this.guruLatched && position >= max + GURU_TRIGGER) {
-                this.touchGuru();
-            }
-        } else {
-            if (position < this.extremum) {
-                // Espejo del ascenso: semiabierto [position, extremum).
-                const firstBead = Math.ceil(this.extremum - 0.5) - 1;
-                const lastBead = Math.max(Math.ceil(position - 0.5), 0);
+            this.extremum = position;
+        }
 
-                for (let k = firstBead; k >= lastBead; k--) {
-                    this.registerCount();
-                }
-
-                this.extremum = position;
-            }
-
-            if (!this.guruLatched && position <= -GURU_TRIGGER) {
-                this.touchGuru();
-            }
+        if (!this.guruLatched && position >= max + GURU_TRIGGER) {
+            this.touchGuru();
         }
 
         // El latch se libera cuando la física asentó de vuelta en el segmento.
-        if (
-            this.guruLatched &&
-            position > -GURU_TRIGGER &&
-            position < max + GURU_TRIGGER
-        ) {
+        if (this.guruLatched && position < max + GURU_TRIGGER) {
             this.guruLatched = false;
         }
     }
@@ -280,9 +274,5 @@ export class MalaEngine {
         this.guruLatched = true;
         this.emit({ type: 'guru' });
         this.registerCount(); // la 108 → dispara completed adentro
-
-        this.direction = (this.direction === 1 ? -1 : 1) as Direction;
-        this.extremum = this.position;
-        this.emit({ type: 'reverse', direction: this.direction });
     }
 }

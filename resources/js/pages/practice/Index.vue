@@ -124,6 +124,13 @@ const dailyProgressToday = computed(() =>
 );
 
 // ── Celebraciones sobrias ───────────────────────────────────────────────────
+/**
+ * Loto de las felicitaciones (las cuatro comparten el mismo overlay).
+ * Se precarga al montar: la práctica funciona sin conexión, y una imagen que
+ * recién se pide cuando aparece la felicitación no estaría en la cache del
+ * service worker justo cuando hace falta.
+ */
+const LOTUS_SRC = '/img/decoratios/loto.webp';
 // 'commitment' se fusionó con 'daily-goal': el compromiso del mantra ES su
 // meta diaria, así que una sola celebración (antes disparaban las dos).
 const celebration = ref<'mala' | 'goal' | 'daily-goal' | 'global-goal' | null>(
@@ -342,6 +349,8 @@ async function resolveResume(action: 'continue' | 'finish-and-restart') {
 }
 
 onMounted(async () => {
+    new Image().src = LOTUS_SRC;
+
     const [userMeta, todayMeta, totalsMeta, presetMeta, lastMeta] =
         await Promise.all([
             db.meta.get('user'),
@@ -734,6 +743,11 @@ onUnmounted(() => {
                 class="absolute inset-0 z-20 flex cursor-default flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-[2px]"
                 @click="celebration = null"
             >
+                <img
+                    :src="LOTUS_SRC"
+                    alt=""
+                    class="mb-2 w-36 max-w-[45%] object-contain"
+                />
                 <span class="h-px w-10 bg-foreground/30" />
                 <p class="px-6 text-center text-lg font-light">
                     {{ celebrationText }}

@@ -8,10 +8,15 @@ import type { MalaMode, PositionBounds } from './types';
  * Unidades: internamente TODO en px (natural para el dedo); la conversión a
  * unidades de cuenta ocurre en una sola frontera (onChange → px / pitch).
  *
+ * El mala se desliza SOLO hacia abajo: el tramo de un gesto que vuelve hacia
+ * arriba no mueve la hebra y un flick hacia arriba no lanza momentum. Subir
+ * nunca descontaba, así que solo lograba que la cuenta bajo el dedo dejara de
+ * coincidir con el número en pantalla.
+ *
  * Máquina de estados: idle → dragging → momentum → snapping → idle
- *  - dragging: la hebra sigue al dedo 1:1. En tradicional, clamp duro a
- *    ±1 pitch del reposo inicial (máx. una cuenta por gesto) y rubber-band
- *    contra los límites del segmento (el empuje al gurú).
+ *  - dragging: la hebra sigue al dedo 1:1 hacia abajo. En tradicional, clamp
+ *    duro a +1 pitch del reposo inicial (máx. una cuenta por gesto) y
+ *    rubber-band contra los límites del segmento (el empuje al gurú).
  *  - momentum: solo asistido; fricción exponencial frame-rate-independiente.
  *  - snapping: easing exponencial interrumpible al reposo más cercano.
  */
@@ -119,7 +124,11 @@ export class StrandPhysics {
     jumpTo(positionBeads: number): void {
         this.state = 'idle';
         this.velocity = 0;
-        this.offset = this.constrain(positionBeads * this.pitch);
+        this.offset = this.clampToBounds(positionBeads * this.pitch);
+        // El gesto anterior queda cerrado: si no, el clamp de una cuenta del
+        // próximo pointerMove se mediría contra el reposo de ANTES del salto.
+        this.dragStartOffset = this.offset;
+        this.dragStartRest = this.offset;
         this.onChange?.(this.offset / this.pitch);
     }
 
@@ -158,7 +167,10 @@ export class StrandPhysics {
 
         const raw =
             this.dragStartOffset + DIRECTION_SIGN * (y - this.dragStartY);
-        this.offset = this.constrain(raw);
+        // El mala solo se desliza hacia abajo: el tramo del gesto que vuelve
+        // hacia arriba no mueve la hebra. Antes la subía sin descontar, así
+        // que la cuenta que tenías en el dedo dejaba de ser la del número.
+        this.offset = this.constrainDrag(Math.max(raw, this.dragStartOffset));
         this.notify();
     }
 
@@ -188,7 +200,9 @@ export class StrandPhysics {
         if (
             this.mode === 'assisted' &&
             !this.reducedMotion &&
-            Math.abs(releaseVelocity) >= FLICK_MIN_VELOCITY
+            // Solo hacia abajo: un flick hacia arriba (velocidad negativa) no
+            // lanza momentum, igual que el arrastre no sube la hebra.
+            releaseVelocity >= FLICK_MIN_VELOCITY
         ) {
             this.state = 'momentum';
             this.velocity = releaseVelocity;
@@ -218,7 +232,9 @@ export class StrandPhysics {
 
             if (dt > 0) {
                 this.velocity *= Math.pow(FRICTION, dt / 16.67);
-                this.offset = this.constrain(this.offset + this.velocity * dt);
+                this.offset = this.clampToBounds(
+                    this.offset + this.velocity * dt,
+                );
                 this.notify();
             }
 
@@ -305,15 +321,20 @@ export class StrandPhysics {
     }
 
     /**
-     * Restricciones del modo tradicional: máx. ±1 pitch por gesto y
-     * rubber-band contra los límites del segmento. El asistido es libre.
+     * Restricciones del GESTO en modo tradicional: máx. una cuenta por gesto
+     * (el ritmo del ritual) y rubber-band contra los límites del segmento —
+     * el overshoot contra el máximo ES el empuje al gurú. El asistido es
+     * libre.
+     *
+     * Solo para el arrastre: un teletransporte usa clampToBounds, porque el
+     * clamp de una cuenta se mide contra el reposo del último gesto y
+     * atraparía al jumpTo cerca de donde quedó el dedo.
      */
-    private constrain(raw: number): number {
+    private constrainDrag(raw: number): number {
         if (this.mode !== 'traditional') {
             return raw;
         }
 
-        // Máximo una cuenta por gesto (el ritmo del ritual).
         let constrained = Math.min(
             Math.max(raw, this.dragStartRest - this.pitch),
             this.dragStartRest + this.pitch,
@@ -333,6 +354,18 @@ export class StrandPhysics {
         }
 
         return constrained;
+    }
+
+    /** Clamp duro al segmento, sin gesto ni rubber-band. */
+    private clampToBounds(offset: number): number {
+        if (this.bounds === null) {
+            return offset;
+        }
+
+        return Math.min(
+            Math.max(offset, this.bounds.min * this.pitch),
+            this.bounds.max * this.pitch,
+        );
     }
 
     /** Fórmula iOS: overshoot mostrado, asintótico a 0.5·pitch. */

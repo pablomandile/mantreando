@@ -36,49 +36,62 @@ function sweep(engine: MalaEngine, from: number, to: number, step = 0.2): void {
 }
 
 describe('MalaEngine — modo tradicional', () => {
-    it('cuenta exactamente 108 por vuelta durante 3 vueltas con dirección alternante', () => {
+    it('cuenta exactamente 108 por vuelta durante 3 vueltas, siempre bajando', () => {
         const engine = new MalaEngine({ mode: 'traditional' });
         const events = collectEvents(engine);
 
-        // Vuelta 1: ascenso 0 → 107 (107 llegadas)
-        sweep(engine, 0, 107);
-        expect(engine.getSnapshot().count).toBe(107);
-        expect(engine.getSnapshot().direction).toBe(1);
+        // Tres vueltas idénticas: 0 → 107 (107 llegadas) + empuje al gurú
+        // (la 108) + rewind al arranque. La dirección nunca se invierte.
+        for (let round = 1; round <= 3; round++) {
+            sweep(engine, 0, 107);
+            expect(engine.getSnapshot().count).toBe(107);
+            expect(engine.getSnapshot().direction).toBe(1);
 
-        // Empuje contra el gurú: 108 + completed + reverse
-        engine.setPosition(107.4);
-        expect(engine.getSnapshot().round).toBe(1);
-        expect(engine.getSnapshot().direction).toBe(-1);
-        expect(engine.getSnapshot().count).toBe(0);
+            engine.setPosition(107.4);
+            expect(engine.getSnapshot().round).toBe(round);
+            expect(engine.getSnapshot().count).toBe(0);
+            expect(engine.getSnapshot().direction).toBe(1);
 
-        // La física rebota y asienta en 107 sin contar nada
-        sweep(engine, 107.4, 107, 0.05);
-        expect(engine.getSnapshot().count).toBe(0);
+            // Lo que hace useMala junto con physics.jumpTo(0).
+            engine.rewindToStart();
+            expect(engine.getSnapshot().position).toBe(0);
+        }
 
-        // Vuelta 2: descenso 107 → 0
-        sweep(engine, 107, 0);
-        expect(engine.getSnapshot().count).toBe(107);
-
-        engine.setPosition(-0.4); // gurú del otro extremo
-        expect(engine.getSnapshot().round).toBe(2);
-        expect(engine.getSnapshot().direction).toBe(1);
-
-        sweep(engine, -0.4, 0, 0.05);
-        expect(engine.getSnapshot().count).toBe(0);
-
-        // Vuelta 3: ascenso de nuevo
-        sweep(engine, 0, 107);
-        engine.setPosition(107.4);
-        expect(engine.getSnapshot().round).toBe(3);
         expect(engine.getSnapshot().totalCount).toBe(3 * BEAD_COUNT);
 
-        // Cada vuelta emitió: 107 beads + 1 guru + 1 bead(108) + completed + reverse
-        const completed = events.filter((e) => e.type === 'completed');
-        const gurus = events.filter((e) => e.type === 'guru');
-        const reverses = events.filter((e) => e.type === 'reverse');
-        expect(completed).toHaveLength(3);
-        expect(gurus).toHaveLength(3);
-        expect(reverses).toHaveLength(3);
+        // Cada vuelta emitió: 107 beads + 1 guru + 1 bead(108) + completed
+        expect(events.filter((e) => e.type === 'completed')).toHaveLength(3);
+        expect(events.filter((e) => e.type === 'guru')).toHaveLength(3);
+        expect(events.filter((e) => e.type === 'bead')).toHaveLength(
+            3 * BEAD_COUNT,
+        );
+    });
+
+    it('tras el rewind la vuelta siguiente cuenta desde la primera cuenta', () => {
+        const engine = new MalaEngine({ mode: 'traditional' });
+
+        sweep(engine, 0, 107);
+        engine.setPosition(107.4); // 108 + completed
+        engine.rewindToStart();
+
+        // El extremum volvió a 0 con la posición: sin eso, bajar de nuevo no
+        // contaría nada (el máximo histórico seguiría en 107).
+        sweep(engine, 0, 3);
+        expect(engine.getSnapshot().count).toBe(3);
+        expect(engine.getSnapshot().totalCount).toBe(BEAD_COUNT + 3);
+    });
+
+    it('el rewind no toca la contabilidad acumulada', () => {
+        const engine = new MalaEngine({ mode: 'traditional' });
+
+        sweep(engine, 0, 107);
+        engine.setPosition(107.4);
+        engine.rewindToStart();
+
+        const snapshot = engine.getSnapshot();
+        expect(snapshot.round).toBe(1);
+        expect(snapshot.totalCount).toBe(BEAD_COUNT);
+        expect(snapshot.count).toBe(0);
     });
 
     it('la posición nunca necesita cruzar el gurú (segmento acotado)', () => {
@@ -101,9 +114,22 @@ describe('MalaEngine — modo tradicional', () => {
         engine.setPosition(107.3);
         engine.setPosition(107.45);
         expect(engine.getSnapshot().round).toBe(1); // sin doble disparo
+    });
 
-        // Y el descenso posterior cuenta normalmente desde 106
-        sweep(engine, 107.45, 106.4, 0.05);
+    it('sin rewind, asentar y volver a empujar el gurú suma cuentas espurias', () => {
+        // Este es el motivo por el que useMala rebobina la hebra al recibir
+        // 'completed': el latch solo cubre el rebote, no un empuje nuevo, así
+        // que quedarse en el gurú deja sumar recitaciones sin recitar.
+        const engine = new MalaEngine({ mode: 'traditional' });
+
+        sweep(engine, 0, 107);
+        engine.setPosition(107.4);
+        expect(engine.getSnapshot().totalCount).toBe(BEAD_COUNT);
+
+        engine.setPosition(107); // asienta: libera el latch
+        engine.setPosition(107.4); // empuje nuevo, sin haber avanzado nada
+
+        expect(engine.getSnapshot().totalCount).toBe(BEAD_COUNT + 1);
         expect(engine.getSnapshot().count).toBe(1);
     });
 

@@ -292,6 +292,22 @@ export function useMala(initialMode: MalaMode = 'assisted') {
         snapshot.value = engine.getSnapshot();
     }
 
+    /**
+     * Vuelta nueva: completadas las 108, la hebra vuelve al arranque para
+     * seguir bajando (el mala no se invierte). Motor y física tienen que
+     * saltar JUNTOS: si solo saltara la física, el frame siguiente
+     * alimentaría al motor con la posición vieja y le contaría el tramo
+     * entero de golpe; si solo saltara el motor, la física seguiría empujando
+     * contra el gurú y volvería a disparar la 108.
+     */
+    function rewindToStart(): void {
+        engine.rewindToStart();
+        physics.jumpTo(0);
+        snapshot.value = engine.getSnapshot();
+        poolBase = Number.NaN;
+        refreshPool(0);
+    }
+
     /** Restaura una sesión interrumpida (recuperación de práctica). */
     function restore(state: {
         mode: MalaMode;
@@ -356,6 +372,15 @@ export function useMala(initialMode: MalaMode = 'assisted') {
             } else if (event.type === 'guru' || event.type === 'completed') {
                 hapticGuru();
                 soundGuru();
+            }
+
+            // Tradicional: la vuelta terminó contra el gurú, así que la hebra
+            // arranca de nuevo desde 0 mientras se muestra la felicitación.
+            // Es lo que saca la hebra de la zona del gurú: si se quedara ahí,
+            // cada empuje siguiente contaría otra 108.
+            // El asistido no lo necesita: su hebra es un loop sin límites.
+            if (event.type === 'completed' && mode.value === 'traditional') {
+                rewindToStart();
             }
 
             snapshot.value = engine.getSnapshot();

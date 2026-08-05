@@ -32,7 +32,6 @@ export type BeadMaterial = 'wood' | 'bodhi' | 'red' | 'blue'; // el spike usa 'w
 export type MalaEvent =
     | { type: 'bead'; count: number; totalCount: number; direction: Direction }
     | { type: 'guru' } // gurú tocado (tradicional) o pasado (asistido)
-    | { type: 'reverse'; direction: Direction } // solo tradicional
     | { type: 'completed'; round: number; totalCount: number } // 108 contadas
     | { type: 'reset' };
 
@@ -41,7 +40,7 @@ export interface MalaSnapshot {
     count: number; // 0..108 dentro de la vuelta actual
     round: number; // vueltas completadas
     totalCount: number;
-    direction: Direction; // dirección de conteo (alterna en tradicional)
+    direction: Direction; // siempre 1: el mala cuenta en un solo sentido
     position: number; // continua, en unidades de cuenta
     restSlot: number; // 0..108, slot de reposo más cercano
 }

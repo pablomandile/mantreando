@@ -251,15 +251,93 @@ describe('StrandPhysics — modo tradicional', () => {
         expect(physics.getPositionBeads() - 107).toBeLessThan(0.35);
     });
 
-    it('rubber-band espejado en el límite inferior (gurú del otro extremo)', () => {
+    it('jumpTo no queda atrapado por el clamp de una cuenta del gesto', () => {
         const { physics } = traditional();
 
-        physics.pointerDown(0, 0);
-        physics.pointerMove(-PITCH, 100); // empuje por debajo de 0
+        // La vuelta termina empujando el gurú en la cuenta 107...
+        physics.animateToBead(107, 0);
+        settle(physics, 0);
+        physics.pointerDown(0, 10_000);
+        physics.pointerMove(PITCH, 10_100);
+        physics.pointerUp(PITCH, 10_116);
+        settle(physics, 10_116);
 
-        const undershoot = -physics.getPositionBeads();
-        expect(undershoot).toBeGreaterThan(0.35);
-        expect(undershoot).toBeLessThan(0.5);
+        // ...y la hebra rebobina al arranque. El clamp de ±1 pitch se mide
+        // contra el reposo del último gesto: si se aplicara al teletransporte,
+        // esto quedaría en 106 y la vuelta siguiente arrancaría torcida.
+        physics.jumpTo(0);
+        expect(physics.getPositionBeads()).toBe(0);
+
+        // Y el gesto siguiente cuenta desde el arranque, no desde el gurú.
+        physics.pointerDown(0, 20_000);
+        physics.pointerMove(PITCH, 20_100);
+        expect(physics.getPositionBeads()).toBeCloseTo(1, 5);
+    });
+});
+
+describe('StrandPhysics — solo hacia abajo', () => {
+    it('el arrastre hacia arriba no mueve la hebra (asistido)', () => {
+        const { physics } = makePhysics();
+
+        physics.animateToBead(5, 0);
+        settle(physics, 0);
+
+        physics.pointerDown(500, 10_000);
+        physics.pointerMove(500 - PITCH * 2, 10_100); // dos cuentas hacia arriba
+
+        expect(physics.getPositionBeads()).toBe(5); // clavada donde estaba
+    });
+
+    it('un gesto se puede cancelar volviendo, pero no retrocede lo contado', () => {
+        const { physics } = makePhysics();
+
+        physics.animateToBead(3, 0);
+        settle(physics, 0);
+
+        physics.pointerDown(500, 10_000);
+        physics.pointerMove(500 + PITCH * 0.8, 10_100);
+        expect(physics.getPositionBeads()).toBeCloseTo(3.8, 5);
+
+        // Volver con el dedo cancela el gesto en curso — útil para no contar
+        // sin querer — pero el piso es la cuenta donde empezó: lo ya contado
+        // no se deshace, y por eso el número nunca se despega de la hebra.
+        physics.pointerMove(500 - PITCH * 3, 10_200);
+        expect(physics.getPositionBeads()).toBe(3);
+    });
+
+    it('un flick hacia arriba no lanza momentum', () => {
+        const { physics } = makePhysics();
+
+        physics.animateToBead(20, 0);
+        settle(physics, 0);
+
+        // Mismo gesto que dispara momentum, pero en sentido contrario.
+        const { endT } = drag(physics, {
+            fromY: 1000,
+            toY: 700,
+            steps: 6,
+            msPerStep: 16,
+            startT: 10_000,
+        });
+
+        expect(physics.getState()).not.toBe('momentum');
+        settle(physics, endT);
+        expect(physics.getPositionBeads()).toBe(20); // no retrocedió
+    });
+
+    it('el arrastre hacia arriba tampoco mueve la hebra en tradicional', () => {
+        const { physics } = makePhysics({
+            mode: 'traditional',
+            bounds: { min: 0, max: 107 },
+        });
+
+        physics.animateToBead(10, 0);
+        settle(physics, 0);
+
+        physics.pointerDown(500, 10_000);
+        physics.pointerMove(500 - PITCH, 10_100);
+
+        expect(physics.getPositionBeads()).toBe(10);
     });
 });
 

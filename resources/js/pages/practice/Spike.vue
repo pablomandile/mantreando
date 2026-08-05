@@ -66,8 +66,7 @@ const {
                 </p>
                 <p class="text-xs text-muted-foreground">
                     vuelta {{ snapshot.round }} · total
-                    {{ snapshot.totalCount }} ·
-                    {{ snapshot.direction === 1 ? '↑' : '↓' }}
+                    {{ snapshot.totalCount }}
                 </p>
                 <p class="font-mono text-xs text-muted-foreground">
                     pos {{ snapshot.position.toFixed(2) }} · slot

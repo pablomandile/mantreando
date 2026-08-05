@@ -23,3 +23,10 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# El manifest se servía como text/plain (Hostinger no conoce la extensión).
+# Chrome lo tolera, pero la spec pide application/manifest+json y Firefox es
+# estricto: sin esto la PWA no se ofrece para instalar en Firefox.
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
+</IfModule>

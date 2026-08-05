@@ -12,6 +12,7 @@ import {
 import { trans } from 'laravel-vue-i18n';
 import { computed, onUnmounted } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
+import InstallAppButton from '@/components/InstallAppButton.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -106,6 +107,7 @@ const footerNavItems: NavItem[] = [];
 
         <SidebarFooter>
             <NavFooter :items="footerNavItems" />
+            <InstallAppButton />
             <NavUser />
         </SidebarFooter>
     </Sidebar>

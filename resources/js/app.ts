@@ -6,6 +6,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
+import { initializeInstallPrompt } from '@/lib/install';
 import { initializePwa } from '@/lib/pwa';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -74,3 +75,7 @@ initializeFlashToast();
 
 // PWA: service worker + Background Sync de la outbox...
 initializePwa();
+
+// Captura de `beforeinstallprompt`: tiene que quedar registrado ANTES de que
+// el navegador lo dispare, si no el botón de instalar nunca aparece.
+initializeInstallPrompt();

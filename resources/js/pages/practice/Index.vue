@@ -511,12 +511,25 @@ onUnmounted(() => {
             :on-pointer-up="mala.onPointerUp"
         />
 
-        <!-- Zona serena a la izquierda (sobre la superficie de gestos) -->
+        <!-- Zona serena a la izquierda (sobre la superficie de gestos).
+             El ancho ya no es un 60% plano: llega hasta donde empiezan las
+             cuentas. Las cuentas ocupan un pitch desde el borde derecho y el
+             pitch es alto/VISIBLE_BEADS (≈ 8.33vh), así que la reserva se
+             expresa en vh para que acompañe a la hebra en cualquier pantalla;
+             1.5rem es el aire entre el texto y las cuentas. Sobre 100vh la
+             cuenta queda holgada: el área de práctica es más baja que el
+             viewport (hay header), o sea que el pitch real es menor.
+             El texto del mantra usa TODO ese ancho — entra en menos líneas y
+             la columna deja de crecer hasta empujar el contador fuera de la
+             pantalla. Select e imagen se quedan angostos vía --serene-narrow,
+             que replica el 60% de antes. -->
         <div
-            class="pointer-events-none relative z-10 flex h-full max-w-[60%] flex-col gap-5 p-5 sm:max-w-sm"
+            class="pointer-events-none relative z-10 flex h-full max-w-[calc(100%-8.5vh-1.5rem)] flex-col gap-5 p-5 [--serene-narrow:calc(60vw-2.5rem)] sm:max-w-sm sm:[--serene-narrow:none]"
         >
             <!-- Selector de mantra -->
-            <div class="pointer-events-auto space-y-2">
+            <div
+                class="pointer-events-auto max-w-[var(--serene-narrow)] space-y-2"
+            >
                 <select
                     class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                     :aria-label="t('Elegí un mantra')"
@@ -615,7 +628,7 @@ onUnmounted(() => {
                 v-if="mantra?.image_url"
                 :src="mantra.image_url"
                 alt=""
-                class="max-h-[36vh] w-full shrink-0 rounded-xl object-cover object-[50%_20%]"
+                class="max-h-[36vh] w-full max-w-[var(--serene-narrow)] shrink-0 rounded-xl object-cover object-[50%_20%]"
                 style="aspect-ratio: 4 / 5"
             />
 

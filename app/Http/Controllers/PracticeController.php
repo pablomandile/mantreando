@@ -23,9 +23,13 @@ class PracticeController
     public function __invoke(Request $request, ListIslandMantras $listMantras): Response
     {
         return Inertia::render('practice/Index', [
+            // resolve() y no la colección tal cual: al serializarse, un
+            // JsonResource se envuelve en {"data": [...]}, y el prop tiene que
+            // ser la lista pelada para que la isla la use igual que lo que
+            // cachea en IndexedDB.
             'mantras' => MantraResource::collection(
                 $listMantras->handle($request->user())
-            ),
+            )->resolve(),
         ]);
     }
 }

@@ -23,6 +23,50 @@ test('el índice lista mantras del sistema y propios, nunca ajenos', function ()
         ->assertDontSee('Mantra ajeno');
 });
 
+test('la vista de favoritos lista solo los marcados', function () {
+    $user = User::factory()->create();
+
+    $favorite = Mantra::factory()->create(['name' => 'Tara Verde']);
+    Mantra::factory()->create(['name' => 'Buda Medicina']);
+
+    $user->mantras()->attach($favorite->id, ['is_favorite' => true]);
+
+    $this->actingAs($user)
+        ->get('/mantras/favorites')
+        ->assertOk()
+        ->assertSee('Tara Verde')
+        ->assertDontSee('Buda Medicina');
+});
+
+test('la biblioteca completa sigue mostrando los no favoritos', function () {
+    $user = User::factory()->create();
+
+    $favorite = Mantra::factory()->create(['name' => 'Tara Verde']);
+    Mantra::factory()->create(['name' => 'Buda Medicina']);
+    $user->mantras()->attach($favorite->id, ['is_favorite' => true]);
+
+    $this->actingAs($user)
+        ->get('/mantras')
+        ->assertOk()
+        ->assertSee('Tara Verde')
+        ->assertSee('Buda Medicina');
+});
+
+test('favoritos no filtra por los de otro usuario', function () {
+    $user = User::factory()->create();
+    $other = User::factory()->create();
+
+    $mantra = Mantra::factory()->create(['name' => 'Tara Verde']);
+    // Favorito del OTRO: el join está acotado por user_id, así que para este
+    // usuario no cuenta como favorito.
+    $other->mantras()->attach($mantra->id, ['is_favorite' => true]);
+
+    $this->actingAs($user)
+        ->get('/mantras/favorites')
+        ->assertOk()
+        ->assertDontSee('Tara Verde');
+});
+
 test('la búsqueda filtra por nombre, texto y transliteración', function () {
     $user = User::factory()->create();
     Mantra::factory()->create(['name' => 'Tara Verde', 'text' => 'Om Tare']);

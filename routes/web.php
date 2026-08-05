@@ -38,6 +38,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('recitations', [RecitationController::class, 'index'])->name('recitations.index');
 
     Route::post('mantras/reorder', MantraReorderController::class)->name('mantras.reorder');
+    // Misma pantalla que la biblioteca, filtrada. Con ruta propia y no
+    // ?favorites=1 para que el resaltado del menú funcione: compara pathname,
+    // así que por query "Mantras" y "Favoritos" serían el mismo item.
+    Route::get('mantras/favorites', [MantraController::class, 'index'])->name('mantras.favorites');
     Route::resource('mantras', MantraController::class)->except(['show'])->parameters(['mantras' => 'mantra']);
     Route::get('mantras/{mantra}', [MantraController::class, 'show'])->name('mantras.show')->whereNumber('mantra');
     Route::post('mantras/{mantra}/favorite', MantraFavoriteController::class)->name('mantras.favorite');

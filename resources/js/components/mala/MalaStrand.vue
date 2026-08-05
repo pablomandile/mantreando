@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import MalaBead from '@/components/mala/MalaBead.vue';
 import type { PoolBead } from '@/composables/useMala';
+import { tasselHex } from '@/lib/mala/tassel';
 import type { BeadMaterial } from '@/lib/mala/types';
 
 /**
@@ -18,6 +19,8 @@ const props = defineProps<{
     pool: PoolBead[];
     material: BeadMaterial;
     textureUrl?: string | null;
+    /** Clave de color de la borla; sin ella sigue al material. */
+    tasselColor?: string | null;
     ariaLabel?: string;
     setContainer: (el: HTMLElement | null) => void;
     setColumn: (el: HTMLElement | null) => void;
@@ -27,8 +30,23 @@ const props = defineProps<{
     onPointerUp: (event: PointerEvent) => void;
 }>();
 
-const columnStyle = () =>
-    props.textureUrl ? { '--bead-texture': `url("${props.textureUrl}")` } : {};
+// Las dos van como custom properties en la columna, que es el único hook de
+// theming del mala: la cuenta y la borla las leen por CSS.
+const columnStyle = () => {
+    const style: Record<string, string> = {};
+
+    if (props.textureUrl) {
+        style['--bead-texture'] = `url("${props.textureUrl}")`;
+    }
+
+    const hex = tasselHex(props.tasselColor);
+
+    if (hex !== null) {
+        style['--tassel-color'] = hex;
+    }
+
+    return style;
+};
 </script>
 
 <template>

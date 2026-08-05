@@ -21,7 +21,7 @@ interface MantraItem {
 const props = defineProps<{
     mantras: MantraItem[];
     categories: { id: number; name: string; slug: string }[];
-    filters: { q: string; category: string | null };
+    filters: { q: string; category: string | null; favorites: boolean };
 }>();
 
 defineOptions({
@@ -32,18 +32,26 @@ defineOptions({
 
 const search = ref(props.filters.q ?? '');
 const activeCategory = ref<string | null>(props.filters.category ?? null);
+const onlyFavorites = ref(props.filters.favorites ?? false);
 
 let searchTimeout: ReturnType<typeof setTimeout> | undefined;
 
 function applyFilters(): void {
+    // Favoritos es otra ruta, no un query param: los filtros tienen que
+    // navegar a la que corresponda o se perdería al buscar o filtrar.
     router.get(
-        '/mantras',
+        onlyFavorites.value ? '/mantras/favorites' : '/mantras',
         {
             q: search.value || undefined,
             category: activeCategory.value || undefined,
         },
         { preserveState: true, preserveScroll: true, replace: true },
     );
+}
+
+function toggleOnlyFavorites(): void {
+    onlyFavorites.value = !onlyFavorites.value;
+    applyFilters();
 }
 
 watch(search, () => {
@@ -66,8 +74,13 @@ function toggleFavorite(mantra: MantraItem): void {
 
 // ── Orden personal (flechas subir/bajar) ────────────────────────────────────
 // Solo tiene sentido sin búsqueda ni filtro activos: ahí se ve la lista real.
+// En favoritos tampoco, porque reordenar manda la lista VISIBLE al servidor y
+// dejaría a los no favoritos al final de tu orden personal.
 const canReorder = computed(
-    () => search.value === '' && activeCategory.value === null,
+    () =>
+        search.value === '' &&
+        activeCategory.value === null &&
+        !onlyFavorites.value,
 );
 
 const localOrder = ref<MantraItem[]>([...props.mantras]);
@@ -128,6 +141,25 @@ function move(index: number, direction: -1 | 1): void {
         </div>
 
         <div class="flex flex-wrap gap-2">
+            <!-- Se puede llegar acá desde el menú, así que el filtro tiene que
+                 verse y poder soltarse desde la página misma. -->
+            <button
+                type="button"
+                class="flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition-colors"
+                :class="
+                    onlyFavorites
+                        ? 'border-foreground bg-foreground text-background'
+                        : 'text-muted-foreground hover:bg-accent'
+                "
+                :aria-pressed="onlyFavorites"
+                @click="toggleOnlyFavorites"
+            >
+                <Star
+                    class="size-3"
+                    :class="onlyFavorites ? 'fill-current' : ''"
+                />
+                {{ t('Favoritos') }}
+            </button>
             <button
                 v-for="category in categories"
                 :key="category.slug"
@@ -148,7 +180,15 @@ function move(index: number, direction: -1 | 1): void {
             v-if="mantras.length === 0"
             class="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground"
         >
-            {{ t('No hay mantras que coincidan con la búsqueda.') }}
+            {{
+                // Sin búsqueda ni categoría, la lista vacía en favoritos no es
+                // "no hay coincidencias": es que todavía no marcaste ninguno.
+                onlyFavorites && search === '' && activeCategory === null
+                    ? t(
+                          'Todavía no marcaste ningún favorito. Tocá la estrella de un mantra para tenerlo a mano acá.',
+                      )
+                    : t('No hay mantras que coincidan con la búsqueda.')
+            }}
         </p>
 
         <div class="flex flex-col gap-3">

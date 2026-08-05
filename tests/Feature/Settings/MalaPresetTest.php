@@ -26,6 +26,56 @@ test('cambiar el material actualiza el mismo preset', function () {
         ->and(MalaPreset::where('user_id', $user->id)->first()->material)->toBe('blue');
 });
 
+test('elegir un color de borla lo guarda', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/settings/mala', [
+        'material' => 'wood',
+        'tassel_color' => 'jade',
+    ])->assertRedirect();
+
+    expect(MalaPreset::where('user_id', $user->id)->first()->tassel_color)->toBe('jade');
+});
+
+test('la borla vuelve a seguir al material cuando se manda vacío', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/settings/mala', [
+        'material' => 'wood',
+        'tassel_color' => 'crimson',
+    ]);
+    // '' es lo que manda "Como las cuentas": tiene que quedar null, no ''.
+    $this->actingAs($user)->post('/settings/mala', [
+        'material' => 'wood',
+        'tassel_color' => '',
+    ]);
+
+    expect(MalaPreset::where('user_id', $user->id)->first()->tassel_color)->toBeNull();
+});
+
+test('un color de borla inválido se rechaza', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/settings/mala', [
+        'material' => 'wood',
+        'tassel_color' => 'fucsia',
+    ])->assertSessionHasErrors('tassel_color');
+});
+
+test('el bootstrap le pasa el color de la borla a la isla', function () {
+    $user = User::factory()->create();
+    MalaPreset::create([
+        'user_id' => $user->id,
+        'material' => 'wood',
+        'tassel_color' => 'indigo',
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($user)->getJson('/api/v1/practice/bootstrap')
+        ->assertOk()
+        ->assertJsonPath('data.mala_preset.tassel_color', 'indigo');
+});
+
 test('un material inválido se rechaza', function () {
     $user = User::factory()->create();
 

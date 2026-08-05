@@ -7,6 +7,7 @@ import {
     Flower,
     Palette,
     ScrollText,
+    Star,
     Target,
 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
@@ -46,6 +47,11 @@ const mainNavItems = computed<NavItem[]>(() => [
         title: trans('Mantras'),
         href: '/mantras',
         icon: BookOpen,
+    },
+    {
+        title: trans('Favoritos'),
+        href: '/mantras/favorites',
+        icon: Star,
     },
     {
         title: trans('Objetivo'),

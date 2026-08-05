@@ -22,9 +22,11 @@ class MalaPresetController extends Controller
             'preset' => [
                 // Sin ?-> : dentro de ?? el acceso sobre null ya devuelve null.
                 'material' => $preset->material ?? 'wood',
+                'tassel_color' => $preset?->tassel_color,
                 'texture_url' => $preset?->texture_url,
             ],
             'materials' => MalaPreset::MATERIALS,
+            'tasselColors' => MalaPreset::TASSEL_COLORS,
         ]);
     }
 
@@ -33,15 +35,25 @@ class MalaPresetController extends Controller
     {
         $validated = $request->validate([
             'material' => ['required', Rule::in(MalaPreset::MATERIALS)],
+            // Ausente o vacío = la borla sigue al material de las cuentas.
+            'tassel_color' => ['nullable', Rule::in(MalaPreset::TASSEL_COLORS)],
             'texture' => ['nullable', 'image', 'max:2048'],
             'remove_texture' => ['nullable', 'boolean'],
-        ], [], ['material' => 'material', 'texture' => 'textura']);
+        ], [], [
+            'material' => 'material',
+            'tassel_color' => 'color de la borla',
+            'texture' => 'textura',
+        ]);
 
         $user = $request->user();
         $preset = $this->activePreset($request)
             ?? new MalaPreset(['user_id' => $user->id, 'is_active' => true]);
 
         $preset->material = $validated['material'];
+        // El select manda '' para "como las cuentas": se guarda como null.
+        $preset->tassel_color = ($validated['tassel_color'] ?? '') !== ''
+            ? $validated['tassel_color']
+            : null;
 
         if ($request->hasFile('texture')) {
             $this->deleteTexture($preset);

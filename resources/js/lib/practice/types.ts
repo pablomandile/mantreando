@@ -108,6 +108,8 @@ export interface CachedToday {
 
 export interface CachedMalaPreset {
     material: 'wood' | 'bodhi' | 'red' | 'blue';
+    /** Clave de color de la borla; null = sigue al material de las cuentas. */
+    tassel_color: string | null;
     texture_url: string | null;
 }
 

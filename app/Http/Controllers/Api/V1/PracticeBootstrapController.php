@@ -73,6 +73,7 @@ class PracticeBootstrapController
                 ],
                 'mala_preset' => [
                     'material' => $preset->material ?? 'wood',
+                    'tassel_color' => $preset?->tassel_color,
                     'texture_url' => $preset?->texture_url,
                 ],
                 'server_time' => now()->toIso8601String(),

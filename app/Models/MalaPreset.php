@@ -13,14 +13,22 @@ use Illuminate\Support\Facades\Storage;
  * @property int $user_id
  * @property string $name
  * @property string $material wood|bodhi|red|blue
+ * @property string|null $tassel_color null = sigue al material de las cuentas
  * @property string|null $texture_path
  * @property bool $is_active
  * @property-read string|null $texture_url
  */
-#[Fillable(['user_id', 'name', 'material', 'texture_path', 'is_active'])]
+#[Fillable(['user_id', 'name', 'material', 'tassel_color', 'texture_path', 'is_active'])]
 class MalaPreset extends Model
 {
     public const MATERIALS = ['wood', 'bodhi', 'red', 'blue'];
+
+    /**
+     * Colores de borla ofrecidos en Mi mala. Acá viven solo las claves: los
+     * hex están en resources/js/lib/mala/tassel.ts, que es donde se pintan
+     * (la borla y su muestra en los ajustes). Una sola fuente para el color.
+     */
+    public const TASSEL_COLORS = ['saffron', 'crimson', 'jade', 'indigo', 'rose', 'ivory'];
 
     /** @return array<string, string> */
     protected function casts(): array

@@ -219,7 +219,11 @@ function celebrate(kind: NonNullable<typeof celebration.value>): void {
 // ── Mala + recorder ─────────────────────────────────────────────────────────
 const recorder = new SessionRecorder();
 const mala = useMala('traditional');
-const preset = ref<CachedMalaPreset>({ material: 'wood', texture_url: null });
+const preset = ref<CachedMalaPreset>({
+    material: 'wood',
+    tassel_color: null,
+    texture_url: null,
+});
 const resumeCandidate = ref<ActiveSessionState | null>(null);
 
 let timezone: string | undefined;
@@ -559,6 +563,7 @@ onUnmounted(() => {
             :pool="mala.pool"
             :material="preset.material"
             :texture-url="preset.texture_url"
+            :tassel-color="preset.tassel_color"
             :aria-label="
                 t('Mala: deslizá verticalmente para avanzar una cuenta')
             "

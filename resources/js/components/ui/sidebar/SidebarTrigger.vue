@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from "vue"
+import { Menu } from '@lucide/vue'
 import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
-import LotusIcon from '@/components/icons/LotusIcon.vue'
 import { useSidebar } from "./utils"
 
 const props = defineProps<{
@@ -21,9 +21,10 @@ const { isMobile, state, toggleSidebar } = useSidebar()
     :class="cn('h-7 w-7', props.class)"
     @click="toggleSidebar"
   >
-    <!-- Loto en vez del ícono genérico de panel: es el botón de marca.
-         Cerrado a plena tinta; abierto, apenas atenuado como única seña. -->
-    <LotusIcon
+    <!-- Hamburguesa y no el loto de la marca: acá gana lo que la gente ya
+         reconoce como "abrir el menú". Cerrada a plena tinta; abierta, apenas
+         atenuada como única seña. -->
+    <Menu
       class="size-5 transition-opacity"
       :class="isMobile || state === 'collapsed' ? '' : 'opacity-60'"
     />

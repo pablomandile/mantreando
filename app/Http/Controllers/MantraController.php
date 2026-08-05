@@ -26,6 +26,9 @@ class MantraController
         $user = $request->user();
         $search = trim((string) $request->query('q', ''));
         $category = $request->query('category');
+        // La vista de favoritos es esta misma con un filtro más; la distingue
+        // la ruta, no un query param (ver el comentario en routes/web.php).
+        $onlyFavorites = $request->routeIs('mantras.favorites');
 
         $prefs = DB::table('mantra_user')
             ->where('user_id', $user->id)
@@ -51,6 +54,8 @@ class MantraController
                 $join->on('mantra_user.mantra_id', '=', 'mantras.id')
                     ->where('mantra_user.user_id', $user->id);
             })
+            // Se apoya en el join de arriba, que ya está acotado al usuario.
+            ->when($onlyFavorites, fn ($query) => $query->where('mantra_user.is_favorite', true))
             ->orderByRaw('COALESCE(mantra_user.position, 999999)')
             ->orderBy('mantras.name')
             ->select('mantras.*')
@@ -73,7 +78,11 @@ class MantraController
         return Inertia::render('mantras/Index', [
             'mantras' => $mantras,
             'categories' => $this->categories(),
-            'filters' => ['q' => $search, 'category' => $category],
+            'filters' => [
+                'q' => $search,
+                'category' => $category,
+                'favorites' => $onlyFavorites,
+            ],
         ]);
     }
 

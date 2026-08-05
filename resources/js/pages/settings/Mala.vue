@@ -3,20 +3,24 @@ import { Head, router } from '@inertiajs/vue3';
 import { trans as t } from 'laravel-vue-i18n';
 import { computed, ref } from 'vue';
 import Heading from '@/components/Heading.vue';
+import MalaTassel from '@/components/mala/MalaTassel.vue';
 import { Button } from '@/components/ui/button';
+import { TASSEL_COLORS } from '@/lib/mala/tassel';
 
 /**
- * Personalización del mala: material (4 paletas) y textura propia opcional.
- * El preset activo viaja a la isla vía el bootstrap y se aplica en la
- * pantalla de práctica.
+ * Personalización del mala: material (4 paletas), color de la borla y textura
+ * propia opcional. El preset activo viaja a la isla vía el bootstrap y se
+ * aplica en la pantalla de práctica.
  */
 
 const props = defineProps<{
     preset: {
         material: 'wood' | 'bodhi' | 'red' | 'blue';
+        tassel_color: string | null;
         texture_url: string | null;
     };
     materials: string[];
+    tasselColors: string[];
 }>();
 
 defineOptions({
@@ -39,7 +43,43 @@ const MATERIAL_SWATCHES: Record<string, string> = {
     blue: 'radial-gradient(circle at 35% 30%, #93bbe9, #3b6fb5 55%, #1c3d6b)',
 };
 
+const TASSEL_LABELS = computed<Record<string, string>>(() => ({
+    saffron: t('Azafrán'),
+    crimson: t('Granate'),
+    jade: t('Jade'),
+    indigo: t('Índigo'),
+    rose: t('Rosa'),
+    ivory: t('Marfil'),
+}));
+
+/**
+ * El --bead-lo de cada material (mismos valores que MalaStrand.vue). La vista
+ * previa lo necesita para mostrar cómo queda la borla SIN color propio, que es
+ * justo el caso "como las cuentas".
+ */
+const MATERIAL_INK: Record<string, string> = {
+    wood: '#5e3a21',
+    bodhi: '#8a6f47',
+    red: '#711b10',
+    blue: '#1c3d6b',
+};
+
 const material = ref(props.preset.material);
+const tasselColor = ref<string | null>(props.preset.tassel_color);
+
+/** Lo que va a pintar la borla: el color elegido, o el del material. */
+const tasselPreviewStyle = computed(() => ({
+    '--bead-lo': MATERIAL_INK[material.value] ?? MATERIAL_INK.wood,
+    ...(tasselColor.value !== null
+        ? {
+              '--tassel-color':
+                  TASSEL_COLORS[
+                      tasselColor.value as keyof typeof TASSEL_COLORS
+                  ],
+          }
+        : {}),
+}));
+
 const texturePreview = ref<string | null>(props.preset.texture_url);
 const textureFile = ref<File | null>(null);
 const removeTexture = ref(false);
@@ -64,6 +104,8 @@ function save(): void {
         '/settings/mala',
         {
             material: material.value,
+            // '' y no null: en multipart un null viaja como la cadena "null".
+            tassel_color: tasselColor.value ?? '',
             texture: textureFile.value,
             remove_texture: removeTexture.value,
         },
@@ -114,6 +156,77 @@ function save(): void {
             </div>
         </div>
 
+        <div class="grid gap-3">
+            <p class="text-sm font-medium">{{ t('Borla') }}</p>
+            <p class="text-xs text-muted-foreground">
+                {{
+                    t(
+                        'La borla cuelga de la cuenta gurú, al cerrar cada vuelta.',
+                    )
+                }}
+            </p>
+
+            <div class="flex items-start gap-5">
+                <!-- Vista previa con la borla de verdad, no una muestra de
+                     color: así se ve el color sobre la borla y no hay sorpresa
+                     al volver a la práctica. -->
+                <div
+                    class="tassel-preview shrink-0 rounded-xl border bg-muted/40"
+                    :style="tasselPreviewStyle"
+                    aria-hidden="true"
+                >
+                    <MalaTassel />
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors"
+                        :class="
+                            tasselColor === null
+                                ? 'border-foreground'
+                                : 'text-muted-foreground hover:bg-accent'
+                        "
+                        :aria-pressed="tasselColor === null"
+                        @click="tasselColor = null"
+                    >
+                        <span
+                            class="size-4 rounded-full border"
+                            :style="{
+                                background:
+                                    MATERIAL_INK[material] ?? MATERIAL_INK.wood,
+                            }"
+                        />
+                        {{ t('Como las cuentas') }}
+                    </button>
+                    <button
+                        v-for="key in tasselColors"
+                        :key="key"
+                        type="button"
+                        class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors"
+                        :class="
+                            tasselColor === key
+                                ? 'border-foreground'
+                                : 'text-muted-foreground hover:bg-accent'
+                        "
+                        :aria-pressed="tasselColor === key"
+                        @click="tasselColor = key"
+                    >
+                        <span
+                            class="size-4 rounded-full border"
+                            :style="{
+                                background:
+                                    TASSEL_COLORS[
+                                        key as keyof typeof TASSEL_COLORS
+                                    ],
+                            }"
+                        />
+                        {{ TASSEL_LABELS[key] ?? key }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="grid gap-2">
             <p class="text-sm font-medium">{{ t('Textura propia') }}</p>
             <p class="text-xs text-muted-foreground">
@@ -150,3 +263,20 @@ function save(): void {
         <Button :disabled="saving" @click="save">{{ t('Guardar') }}</Button>
     </div>
 </template>
+
+<style scoped>
+/* La borla vive colgada de una cuenta y rotada. Acá se muestra derecha y
+   quieta, que es como se mira un color. */
+.tassel-preview {
+    position: relative;
+    width: 4.5rem;
+    height: 6.5rem;
+    --pitch: 62px;
+}
+
+.tassel-preview :deep(.mala-tassel) {
+    top: 4%;
+    transform: translateX(-50%);
+    animation: none;
+}
+</style>

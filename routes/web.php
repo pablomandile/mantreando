@@ -24,6 +24,10 @@ Route::middleware('guest')->group(function () {
     Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
 });
 
+// Texto fijo, sin props: no necesita controlador. Fuera del grupo 'verified'
+// porque saber quién hizo la app no depende de confirmar el mail.
+Route::inertia('about', 'about/Index')->middleware('auth')->name('about');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     // La práctica ES el mala: la isla toma todo de IndexedDB (el mantra
     // seleccionado viaja opcionalmente como ?mantra=ID). Lo único que manda

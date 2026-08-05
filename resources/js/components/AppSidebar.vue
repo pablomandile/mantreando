@@ -5,6 +5,7 @@ import {
     ChartColumn,
     CircleDashed,
     Flower,
+    Info,
     Palette,
     ScrollText,
     Star,
@@ -85,6 +86,14 @@ const customizationNavItems = computed<NavItem[]>(() => [
     },
 ]);
 
+const aboutNavItems = computed<NavItem[]>(() => [
+    {
+        title: trans('Acerca de'),
+        href: '/about',
+        icon: Info,
+    },
+]);
+
 const footerNavItems: NavItem[] = [];
 </script>
 
@@ -109,6 +118,7 @@ const footerNavItems: NavItem[] = [];
                 :items="customizationNavItems"
                 :label="trans('Personalización')"
             />
+            <NavMain class="mt-2" :items="aboutNavItems" label="" />
         </SidebarContent>
 
         <SidebarFooter>

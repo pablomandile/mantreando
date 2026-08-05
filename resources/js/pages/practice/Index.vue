@@ -68,10 +68,12 @@ const mantraLength = computed(() => {
 // Umbrales y tamaños medidos contra los 19 mantras del sistema en 412x915:
 // con estos valores ninguno estira la pantalla. Los dos casos que la
 // forzaban son Amitayus (296 caracteres) y Vajrasatva largo (318).
+// El escalón `long` bajó de 0.8rem a 0.72rem cuando la imagen pasó a 4/5
+// con tope de 36vh: come ~6vh más de alto y el contador volvía a irse.
 const mantraTextClass = computed(
     () =>
         ({
-            long: 'text-[0.8rem] leading-snug sm:text-sm',
+            long: 'text-[0.72rem] leading-snug sm:text-sm',
             medium: 'text-base leading-snug sm:text-lg',
             short: 'text-lg leading-relaxed sm:text-xl',
         })[mantraLength.value],
@@ -593,9 +595,10 @@ onUnmounted(() => {
             </div>
 
             <!-- Imagen del buda: mismo ancho que el select (ambos son w-full
-                 de esta misma columna). Cuadrada y recortada un poco hacia
-                 arriba, como las miniaturas de la biblioteca: los thangkas
-                 son verticales y la cara está en el tercio superior.
+                 de esta misma columna). Levemente vertical (4/5) y recortada
+                 un poco hacia arriba, como las miniaturas de la biblioteca:
+                 los thangkas son verticales y la cara está en el tercio
+                 superior, así que un ratio alto recorta menos el original.
                  El tope en vh la achica en pantallas bajas y en apaisado: al
                  recortarse queda una franja centrada en la cara, no una
                  imagen aplastada, y el contador no se va de la pantalla. -->
@@ -603,8 +606,8 @@ onUnmounted(() => {
                 v-if="mantra?.image_url"
                 :src="mantra.image_url"
                 alt=""
-                class="max-h-[30vh] w-full shrink-0 rounded-xl object-cover object-[50%_20%]"
-                style="aspect-ratio: 1 / 1"
+                class="max-h-[36vh] w-full shrink-0 rounded-xl object-cover object-[50%_20%]"
+                style="aspect-ratio: 4 / 5"
             />
 
             <!-- Mantra + contador -->

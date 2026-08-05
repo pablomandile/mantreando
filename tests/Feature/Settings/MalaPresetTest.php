@@ -4,6 +4,7 @@ use App\Models\MalaPreset;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('elegir un material crea el preset activo', function () {
     $user = User::factory()->create();
@@ -135,8 +136,38 @@ test('el bootstrap incluye el preset activo (o wood por defecto)', function () {
         ->assertJsonPath('data.mala_preset.material', 'blue');
 });
 
-test('la página de personalización renderiza', function () {
+test('la página de personalización renderiza con los props que usa', function () {
+    // assertOk() sola no alcanza: el HTML se sirve igual con un prop de la
+    // forma equivocada, y el que rompe es el render del cliente.
+    $user = User::factory()->create();
+    MalaPreset::create([
+        'user_id' => $user->id,
+        'material' => 'bodhi',
+        'tassel_color' => 'rose',
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($user)
+        ->get('/settings/mala')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('settings/Mala')
+            ->where('preset.material', 'bodhi')
+            ->where('preset.tassel_color', 'rose')
+            ->where('preset.texture_url', null)
+            // Listas planas: la UI las recorre con v-for.
+            ->has('materials', 4)
+            ->has('tasselColors', 6)
+            ->where('tasselColors.0', 'saffron')
+        );
+});
+
+test('sin preset guardado la página cae en los defaults', function () {
     $this->actingAs(User::factory()->create())
         ->get('/settings/mala')
-        ->assertOk();
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('preset.material', 'wood')
+            ->where('preset.tassel_color', null)
+        );
 });

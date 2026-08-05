@@ -11,6 +11,18 @@ const ENDPOINTS = {
     today: '/api/v1/practice/today',
 } as const;
 
+/**
+ * Sin esto un fetch puede quedar pendiente para siempre: en móvil pasa que la
+ * conexión "existe" pero no transmite (y la PWA que vuelve de estar suspendida
+ * es el caso típico), y entonces la promesa nunca resuelve ni rechaza. El
+ * síntoma era el botón de reinicio clavado en "Reiniciando…", porque su
+ * finally no llegaba a correr nunca.
+ *
+ * La isla es offline-first: es preferible fallar y quedarse con la cache local
+ * antes que esperar a la red indefinidamente.
+ */
+const REQUEST_TIMEOUT_MS = 15_000;
+
 function xsrfToken(): string {
     const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
 
@@ -21,6 +33,9 @@ async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
     const response = await fetch(url, {
         credentials: 'same-origin',
         ...init,
+        // Después de ...init: el corte por tiempo no es negociable para el
+        // caller (hoy ninguno pasa su propio signal).
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',

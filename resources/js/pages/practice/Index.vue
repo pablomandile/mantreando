@@ -33,13 +33,63 @@ defineOptions({
     },
 });
 
+/**
+ * Biblioteca que manda el servidor en el primer render. La isla sigue viviendo
+ * de IndexedDB; esto solo evita que el select arranque vacío mientras Dexie
+ * abre la base (con la PWA en frío se notaba). El service worker cachea este
+ * HTML, así que offline llega la lista de la última visita.
+ */
+const props = defineProps<{ mantras?: CachedMantra[] }>();
+
 usePracticeSync();
 
-const mantras = useLiveQuery<CachedMantra[]>(
+/**
+ * `undefined` mientras el liveQuery no emitió: distinguirlo de la lista vacía
+ * evita anunciar "no hay mantras en la memoria local" durante el arranque.
+ * Cuando IndexedDB responde, manda ella — es la fuente de verdad de la isla y
+ * puede tener cambios que el HTML cacheado no traiga.
+ */
+const mantrasRaw = useLiveQuery<CachedMantra[] | undefined>(
     () => db.mantras.orderBy('sort').toArray(),
-    [],
+    undefined,
 );
-const outboxCount = useLiveQuery(() => db.outbox.count(), 0);
+const mantras = computed<CachedMantra[]>(() => {
+    const cached = mantrasRaw.value;
+
+    // La cache vacía también cede ante el servidor: en la primera visita
+    // IndexedDB emite [] antes de que el sync la llene, y sin esto el select
+    // se pintaría lleno y se vaciaría un instante después.
+    return cached !== undefined && cached.length > 0
+        ? cached
+        : (props.mantras ?? cached ?? []);
+});
+
+/**
+ * Red de seguridad: si IndexedDB no está disponible (modo privado) el
+ * liveQuery no emite nunca. Sin esto la pantalla se quedaría "cargando" para
+ * siempre en vez de explicar que no hay biblioteca local.
+ */
+const libraryLoadTimedOut = ref(false);
+const libraryTimer = setTimeout(() => (libraryLoadTimedOut.value = true), 6000);
+const libraryReady = computed(
+    () =>
+        mantrasRaw.value !== undefined ||
+        props.mantras !== undefined ||
+        libraryLoadTimedOut.value,
+);
+
+onUnmounted(() => clearTimeout(libraryTimer));
+
+/**
+ * Solo lo que de verdad está esperando subir: una sesión que el servidor
+ * rechazó queda marcada `invalid` y no se reintenta nunca, así que contarla
+ * dejaba el cartel "sin sincronizar" encendido para siempre prometiendo un
+ * sync que no iba a pasar.
+ */
+const outboxCount = useLiveQuery(
+    () => db.outbox.filter((item) => !item.invalid).count(),
+    0,
+);
 
 const selectedId = ref<number | null>(null);
 const mantra = computed(
@@ -268,6 +318,15 @@ async function resetToday(): Promise<void> {
     const mantraId = selectedId.value;
 
     if (mantraId === null) {
+        return;
+    }
+
+    // El reinicio tiene que llegar al servidor, así que sin red se avisa en el
+    // acto en vez de dejar el botón en "Reiniciando…" hasta que corte el
+    // timeout del fetch.
+    if (!navigator.onLine) {
+        resetError.value = true;
+
         return;
     }
 
@@ -536,7 +595,9 @@ onUnmounted(() => {
                     @change="onMantraChange"
                 >
                     <option value="" disabled :selected="selectedId === null">
-                        {{ t('Elegí un mantra') }}
+                        {{
+                            libraryReady ? t('Elegí un mantra') : t('Cargando…')
+                        }}
                     </option>
                     <option
                         v-for="item in mantras"
@@ -690,6 +751,12 @@ onUnmounted(() => {
                 </div>
             </div>
 
+            <p
+                v-else-if="!libraryReady"
+                class="flex flex-1 items-center text-sm text-muted-foreground"
+            >
+                {{ t('Cargando tu biblioteca…') }}
+            </p>
             <p
                 v-else-if="mantras.length > 0"
                 class="flex flex-1 items-center text-sm text-muted-foreground"

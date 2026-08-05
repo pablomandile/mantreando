@@ -5,6 +5,7 @@ use App\Http\Controllers\MantraController;
 use App\Http\Controllers\MantraFavoriteController;
 use App\Http\Controllers\MantraPracticeSettingsController;
 use App\Http\Controllers\MantraReorderController;
+use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\RecitationController;
 use App\Http\Controllers\SessionGoalController;
 use App\Http\Controllers\StatsController;
@@ -25,8 +26,10 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // La práctica ES el mala: la isla toma todo de IndexedDB (el mantra
-    // seleccionado viaja opcionalmente como ?mantra=ID).
-    Route::inertia('practice', 'practice/Index')->name('practice.index');
+    // seleccionado viaja opcionalmente como ?mantra=ID). Lo único que manda
+    // el servidor es la biblioteca, para que el select no arranque vacío
+    // mientras IndexedDB abre.
+    Route::get('practice', PracticeController::class)->name('practice.index');
     Route::inertia('practice/spike', 'practice/Spike')->name('practice.spike');
 
     Route::get('goal', [SessionGoalController::class, 'edit'])->name('goal.edit');

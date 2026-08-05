@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\Practice\ListIslandMantras;
 use App\Http\Resources\MantraResource;
 use App\Models\MalaPreset;
-use App\Models\Mantra;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PracticeBootstrapController
 {
@@ -16,31 +15,11 @@ class PracticeBootstrapController
      * offline: mantras accesibles (sistema + propios) con las preferencias
      * del usuario, y sus datos de configuración.
      */
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, ListIslandMantras $listMantras): JsonResponse
     {
         $user = $request->user();
 
-        $prefs = DB::table('mantra_user')
-            ->where('user_id', $user->id)
-            ->get()
-            ->keyBy('mantra_id');
-
-        $mantras = Mantra::query()
-            ->accessibleBy($user)
-            ->with('category')
-            // Mismo orden personal que la biblioteca (pivot.position)
-            ->leftJoin('mantra_user', function ($join) use ($user) {
-                $join->on('mantra_user.mantra_id', '=', 'mantras.id')
-                    ->where('mantra_user.user_id', $user->id);
-            })
-            ->orderByRaw('COALESCE(mantra_user.position, 999999)')
-            ->orderBy('mantras.name')
-            ->select('mantras.*')
-            ->get()
-            ->each(function (Mantra $mantra, int $index) use ($prefs) {
-                $mantra->userPrefs = $prefs->get($mantra->id);
-                $mantra->sortIndex = $index; // orden personal, para la isla
-            });
+        $mantras = $listMantras->handle($user);
 
         // "Hoy" del usuario para LEER agregados (compromisos diarios).
         // Esto no viola la regla de oro: las local_date de las SESIONES

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Recitation;
+use App\Models\RecitationLog;
 use App\Models\User;
 use Database\Seeders\SystemRecitationSeeder;
 
@@ -53,6 +54,110 @@ test('los textos conservan su estructura de versos y no traen erratas', function
     foreach (Recitation::all() as $recitation) {
         expect($recitation->text)->not->toContain('jOh');
     }
+});
+
+test('el compromiso se fija, se cambia y se quita', function () {
+    $this->seed(SystemRecitationSeeder::class);
+    $user = User::factory()->create();
+    $recitation = Recitation::first();
+
+    $this->actingAs($user)
+        ->patch("/recitations/{$recitation->id}/commitment", ['daily_commitment' => 3])
+        ->assertRedirect();
+
+    expect($user->recitations()->first()->pivot->daily_commitment)->toBe(3);
+
+    $this->actingAs($user)
+        ->patch("/recitations/{$recitation->id}/commitment", ['daily_commitment' => 6])
+        ->assertRedirect();
+
+    expect($user->recitations()->first()->pivot->daily_commitment)->toBe(6);
+
+    $this->actingAs($user)
+        ->patch("/recitations/{$recitation->id}/commitment", ['daily_commitment' => null])
+        ->assertRedirect();
+
+    expect($user->recitations()->first()->pivot->daily_commitment)->toBeNull();
+});
+
+test('registrar suma a lo que ya hay ese dia', function () {
+    $this->seed(SystemRecitationSeeder::class);
+    $user = User::factory()->create();
+    $recitation = Recitation::first();
+
+    $this->actingAs($user)
+        ->post("/recitations/{$recitation->id}/log", ['count' => 2, 'local_date' => '2026-08-04'])
+        ->assertRedirect();
+
+    $this->actingAs($user)
+        ->post("/recitations/{$recitation->id}/log", ['count' => 3, 'local_date' => '2026-08-04'])
+        ->assertRedirect();
+
+    $log = RecitationLog::where('user_id', $user->id)
+        ->where('recitation_id', $recitation->id)
+        ->where('local_date', '2026-08-04')
+        ->first();
+
+    expect($log->count)->toBe(5)
+        ->and(RecitationLog::count())->toBe(1); // una fila por dia, no una por registro
+});
+
+test('cada dia lleva su propia cuenta', function () {
+    $this->seed(SystemRecitationSeeder::class);
+    $user = User::factory()->create();
+    $recitation = Recitation::first();
+
+    $this->actingAs($user)->post("/recitations/{$recitation->id}/log", ['count' => 4, 'local_date' => '2026-08-03']);
+    $this->actingAs($user)->post("/recitations/{$recitation->id}/log", ['count' => 1, 'local_date' => '2026-08-04']);
+
+    expect(RecitationLog::where('local_date', '2026-08-03')->first()->count)->toBe(4)
+        ->and(RecitationLog::where('local_date', '2026-08-04')->first()->count)->toBe(1);
+});
+
+test('la cuenta de recitaciones no toca la de los mantras', function () {
+    $this->seed(SystemRecitationSeeder::class);
+    $user = User::factory()->create();
+    $recitation = Recitation::first();
+
+    $this->actingAs($user)->post("/recitations/{$recitation->id}/log", ['count' => 9]);
+
+    // Nada en las tablas de la practica del mala
+    expect($user->practiceSessions()->count())->toBe(0)
+        ->and($user->dailyAggregates()->count())->toBe(0)
+        ->and($user->mantras()->count())->toBe(0);
+});
+
+test('la pagina trae el compromiso y lo recitado hoy', function () {
+    $this->seed(SystemRecitationSeeder::class);
+    $user = User::factory()->create(['timezone' => 'America/Argentina/Buenos_Aires']);
+    $recitation = Recitation::first();
+    $hoy = now($user->timezone)->toDateString();
+
+    $this->actingAs($user)->patch("/recitations/{$recitation->id}/commitment", ['daily_commitment' => 3]);
+    $this->actingAs($user)->post("/recitations/{$recitation->id}/log", ['count' => 2, 'local_date' => $hoy]);
+
+    $response = $this->actingAs($user)->get("/recitations?local_date={$hoy}");
+    $props = collect($response->viewData('page')['props']['recitations'])
+        ->firstWhere('id', $recitation->id);
+
+    expect($props['daily_commitment'])->toBe(3)
+        ->and($props['today_count'])->toBe(2);
+});
+
+test('registrar con cantidad invalida se rechaza', function () {
+    $this->seed(SystemRecitationSeeder::class);
+    $user = User::factory()->create();
+    $recitation = Recitation::first();
+
+    $this->actingAs($user)
+        ->post("/recitations/{$recitation->id}/log", ['count' => 0])
+        ->assertSessionHasErrors('count');
+
+    $this->actingAs($user)
+        ->post("/recitations/{$recitation->id}/log", ['count' => -5])
+        ->assertSessionHasErrors('count');
+
+    expect(RecitationLog::count())->toBe(0);
 });
 
 test('un usuario autenticado ve las recitaciones', function () {

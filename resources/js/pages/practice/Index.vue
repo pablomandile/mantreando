@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { trans as t } from 'laravel-vue-i18n';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import MalaStrand from '@/components/mala/MalaStrand.vue';
 import { useLiveQuery } from '@/composables/useLiveQuery';
 import { useMala } from '@/composables/useMala';
 import { usePracticeSync } from '@/composables/usePracticeSync';
 import { deleteToday } from '@/lib/practice/api';
 import { db } from '@/lib/practice/db';
-import { getLocalDate } from '@/lib/practice/localDate';
+import { getLocalDate, newSessionUuid } from '@/lib/practice/localDate';
 import { SessionRecorder } from '@/lib/practice/recorder';
-import { refreshBootstrap, syncAll } from '@/lib/practice/sync';
+import { enqueueSession, refreshBootstrap, syncAll } from '@/lib/practice/sync';
 import type {
     ActiveSessionState,
     CachedMalaPreset,
@@ -303,6 +303,88 @@ function onMantraChange(event: Event): void {
 
     if (value) {
         void switchMantra(Number(value));
+    }
+}
+
+// ── Registrar recitaciones hechas fuera de la app ───────────────────────────
+// Se encola como una sesión más (duración 0): así entra por el mismo camino
+// que la práctica en pantalla — agregados, rachas, estadísticas y sync
+// offline — en vez de ser un contador aparte.
+const registerOpen = ref(false);
+const registerAmount = ref<number | null>(null);
+const registerSaving = ref(false);
+const registerInput = ref<HTMLInputElement | null>(null);
+
+const registerIsValid = computed(
+    () =>
+        registerAmount.value !== null &&
+        Number.isInteger(registerAmount.value) &&
+        registerAmount.value > 0 &&
+        registerAmount.value <= 1000000,
+);
+
+async function openRegister(): Promise<void> {
+    registerAmount.value = null;
+    registerOpen.value = true;
+    await nextTick();
+    registerInput.value?.focus();
+}
+
+async function saveRegister(): Promise<void> {
+    const mantraId = selectedId.value;
+    const amount = registerAmount.value;
+
+    if (mantraId === null || !registerIsValid.value || amount === null) {
+        return;
+    }
+
+    registerSaving.value = true;
+
+    try {
+        const now = new Date();
+        const localDate = getLocalDate(timezone);
+
+        await enqueueSession({
+            uuid: newSessionUuid(),
+            mantra_id: mantraId,
+            mode: defaultMode,
+            recitations: amount,
+            completed_malas: Math.floor(amount / 108),
+            started_at: now.toISOString(),
+            ended_at: now.toISOString(),
+            duration_seconds: 0,
+            local_date: localDate,
+        });
+
+        // Se acredita en el acto: la leyenda no espera al sync. La fecha
+        // recién calculada ES hoy, así que también se adopta como la del día
+        // en curso: si la cache venía de ayer (o vacía, en la primera
+        // práctica), las bases quedaban desfasadas y el registro no se veía
+        // hasta recargar.
+        todayLocalDate = localDate;
+        todayByMantra[String(mantraId)] =
+            (todayByMantra[String(mantraId)] ?? 0) + amount;
+        todayBase.value += amount;
+
+        totalsByMantra[String(mantraId)] =
+            (totalsByMantra[String(mantraId)] ?? 0) + amount;
+        totalBase += amount;
+        allTimeBase += amount;
+
+        registerOpen.value = false;
+        void syncAll();
+
+        if (
+            followGoal.value &&
+            !dailyGoalCelebrated &&
+            todayBase.value + mala.snapshot.value.totalCount >=
+                dailyGoalValue.value
+        ) {
+            dailyGoalCelebrated = true;
+            celebrate('daily-goal');
+        }
+    } finally {
+        registerSaving.value = false;
     }
 }
 
@@ -647,24 +729,34 @@ onUnmounted(() => {
                      destructivo (borra la práctica de hoy), así que
                      confirma en el mismo botón y dice qué va a borrar. -->
                 <div v-if="mantra" class="space-y-1">
-                    <button
-                        type="button"
-                        :disabled="resetting"
-                        class="rounded-md border border-input px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-                        :class="{
-                            'border-destructive text-destructive':
-                                confirmingReset,
-                        }"
-                        @click="onResetClick"
-                    >
-                        {{
-                            resetting
-                                ? t('Reiniciando…')
-                                : confirmingReset
-                                  ? t('¿Borrar la práctica de hoy?')
-                                  : t('Reiniciar')
-                        }}
-                    </button>
+                    <div class="flex flex-wrap gap-1.5">
+                        <!-- Recitaciones hechas fuera de la app (mala físico) -->
+                        <button
+                            type="button"
+                            class="rounded-md border border-input px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                            @click="openRegister"
+                        >
+                            {{ t('Registrar') }}
+                        </button>
+                        <button
+                            type="button"
+                            :disabled="resetting"
+                            class="rounded-md border border-input px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+                            :class="{
+                                'border-destructive text-destructive':
+                                    confirmingReset,
+                            }"
+                            @click="onResetClick"
+                        >
+                            {{
+                                resetting
+                                    ? t('Reiniciando…')
+                                    : confirmingReset
+                                      ? t('¿Borrar la práctica de hoy?')
+                                      : t('Reiniciar')
+                            }}
+                        </button>
+                    </div>
                     <p v-if="resetError" class="text-xs text-destructive">
                         {{ t('No se pudo reiniciar. Necesitás conexión.') }}
                     </p>
@@ -778,6 +870,65 @@ onUnmounted(() => {
                     )
                 }}
             </p>
+        </div>
+
+        <!-- Registrar recitaciones hechas fuera de la app -->
+        <div
+            v-if="registerOpen"
+            class="absolute inset-0 z-20 flex items-center justify-center bg-background/85 p-6 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="register-title"
+            @keydown.esc="registerOpen = false"
+        >
+            <form
+                class="w-full max-w-sm space-y-4"
+                @submit.prevent="saveRegister"
+            >
+                <div>
+                    <h2 id="register-title" class="font-medium">
+                        {{ t('Registrar recitaciones') }}
+                    </h2>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        {{
+                            t(
+                                'Las que hiciste fuera de la app, por ejemplo con un mala físico. Se suman a :mantra.',
+                                { mantra: mantra?.name ?? '' },
+                            )
+                        }}
+                    </p>
+                </div>
+
+                <input
+                    ref="registerInput"
+                    v-model.number="registerAmount"
+                    type="number"
+                    inputmode="numeric"
+                    min="1"
+                    max="1000000"
+                    required
+                    :aria-label="t('Cantidad de recitaciones')"
+                    placeholder="108"
+                    class="w-full rounded-md border border-input bg-background px-3 py-2 text-center font-mono text-2xl text-foreground tabular-nums focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                />
+
+                <div class="flex flex-col gap-2">
+                    <button
+                        type="submit"
+                        :disabled="!registerIsValid || registerSaving"
+                        class="rounded-md border bg-foreground px-4 py-2.5 text-sm font-medium text-background disabled:opacity-50"
+                    >
+                        {{ registerSaving ? t('Guardando…') : t('Registrar') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="rounded-md border px-4 py-2.5 text-sm"
+                        @click="registerOpen = false"
+                    >
+                        {{ t('Cancelar') }}
+                    </button>
+                </div>
+            </form>
         </div>
 
         <!-- Recuperación de sesión interrumpida -->

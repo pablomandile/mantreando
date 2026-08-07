@@ -40,6 +40,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('goal', [SessionGoalController::class, 'update'])->name('goal.update');
 
     Route::get('recitations', [RecitationController::class, 'index'])->name('recitations.index');
+    Route::patch('recitations/{recitation}/commitment', [RecitationController::class, 'updateCommitment'])->name('recitations.commitment');
+    Route::post('recitations/{recitation}/log', [RecitationController::class, 'log'])->name('recitations.log');
 
     Route::post('mantras/reorder', MantraReorderController::class)->name('mantras.reorder');
     // Misma pantalla que la biblioteca, filtrada. Con ruta propia y no

@@ -108,6 +108,19 @@ class User extends Authenticatable implements PasskeyUser
             ->withTimestamps();
     }
 
+    /**
+     * Otras recitaciones con compromiso propio. Cuenta aparte de los
+     * mantras: no comparten objetivo.
+     *
+     * @return BelongsToMany<Recitation, $this>
+     */
+    public function recitations(): BelongsToMany
+    {
+        return $this->belongsToMany(Recitation::class)
+            ->withPivot('daily_commitment')
+            ->withTimestamps();
+    }
+
     /** @return HasMany<PracticeSession, $this> */
     public function practiceSessions(): HasMany
     {

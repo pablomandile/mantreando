@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\MalaPreset;
 use App\Models\Mantra;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -47,6 +48,49 @@ test('la precarga respeta el acceso: nunca mantras de otro usuario', function ()
         ->assertInertia(fn (Assert $page) => $page->has('mantras', 2));
 
     expect([$system->id, $own->id])->toHaveCount(2);
+});
+
+test('precarga el objetivo configurado, no el default', function () {
+    // Sin esto la pantalla mostraba 108 (el default del cliente) en vez del
+    // objetivo del usuario hasta que IndexedDB respondía: con la PWA en frío
+    // o sin red, toda la visita.
+    $user = User::factory()->create([
+        'settings' => ['daily_goal' => 7, 'total_goal' => 100000],
+    ]);
+
+    $this->actingAs($user)
+        ->get('/practice')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('settings.daily_goal', 7)
+            ->where('settings.total_goal', 100000)
+        );
+});
+
+test('precarga el mala del usuario, no el de fábrica', function () {
+    $user = User::factory()->create();
+    MalaPreset::create([
+        'user_id' => $user->id,
+        'name' => 'Mi mala',
+        'material' => 'red',
+        'tassel_color' => '#b3332e',
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($user)
+        ->get('/practice')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('preset.material', 'red')
+            ->where('preset.tassel_color', '#b3332e')
+        );
+});
+
+test('sin preset propio precarga el de fábrica', function () {
+    $this->actingAs(User::factory()->create())
+        ->get('/practice')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('preset.material', 'wood')
+            ->where('preset.tassel_color', null)
+        );
 });
 
 test('la página de práctica acepta el mantra preseleccionado por query', function () {

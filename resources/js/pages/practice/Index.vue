@@ -39,7 +39,11 @@ defineOptions({
  * abre la base (con la PWA en frío se notaba). El service worker cachea este
  * HTML, así que offline llega la lista de la última visita.
  */
-const props = defineProps<{ mantras?: CachedMantra[] }>();
+const props = defineProps<{
+    mantras?: CachedMantra[];
+    settings?: Record<string, unknown>;
+    preset?: CachedMalaPreset;
+}>();
 
 usePracticeSync();
 
@@ -53,15 +57,36 @@ const mantrasRaw = useLiveQuery<CachedMantra[] | undefined>(
     () => db.mantras.orderBy('sort').toArray(),
     undefined,
 );
+/**
+ * Union de las dos fuentes, no "gana la cache". La cache manda para los que
+ * están en las dos (tiene el orden personal y lo que el usuario cambió sin
+ * red), pero los que solo trae el servidor se agregan igual.
+ *
+ * Con "gana la cache" una cache vieja escondía mantras que sí existen: entrar
+ * desde la ficha de uno de ellos dejaba el select en otro y la pantalla en
+ * negro, porque el mantra elegido no estaba en la lista.
+ */
 const mantras = computed<CachedMantra[]>(() => {
     const cached = mantrasRaw.value;
+    const fromServer = props.mantras ?? [];
 
-    // La cache vacía también cede ante el servidor: en la primera visita
-    // IndexedDB emite [] antes de que el sync la llene, y sin esto el select
-    // se pintaría lleno y se vaciaría un instante después.
-    return cached !== undefined && cached.length > 0
-        ? cached
-        : (props.mantras ?? cached ?? []);
+    if (cached === undefined || cached.length === 0) {
+        return fromServer.length > 0 ? fromServer : (cached ?? []);
+    }
+
+    const merged = new Map<number, CachedMantra>();
+
+    for (const mantra of fromServer) {
+        merged.set(mantra.id, mantra);
+    }
+
+    for (const mantra of cached) {
+        merged.set(mantra.id, mantra);
+    }
+
+    return [...merged.values()].sort(
+        (a, b) => a.sort - b.sort || a.name.localeCompare(b.name),
+    );
 });
 
 /**
@@ -135,11 +160,17 @@ const DEFAULT_DAILY_GOAL = 108;
 // Settings reactivos desde la cache: si el sync trae un objetivo nuevo
 // (recién guardado en el panel), la leyenda se actualiza sola.
 const userMetaLive = useLiveQuery(() => db.meta.get('user'), undefined);
-const liveSettings = computed(
-    () =>
-        ((userMetaLive.value?.value as CachedUser | undefined)?.settings ??
-            {}) as Record<string, unknown>,
-);
+/**
+ * Los ajustes del servidor son el piso hasta que la cache emite: sin esto el
+ * objetivo diario mostraba 108 (el default) en vez del configurado con la
+ * PWA recién abierta o sin red.
+ */
+const liveSettings = computed(() => {
+    const cached = (userMetaLive.value?.value as CachedUser | undefined)
+        ?.settings;
+
+    return (cached ?? props.settings ?? {}) as Record<string, unknown>;
+});
 /** Objetivo genérico del panel: vale para CADA mantra, no para su suma. */
 const genericDailyGoal = computed(() =>
     Number(liveSettings.value.daily_goal) > 0
@@ -219,11 +250,16 @@ function celebrate(kind: NonNullable<typeof celebration.value>): void {
 // ── Mala + recorder ─────────────────────────────────────────────────────────
 const recorder = new SessionRecorder();
 const mala = useMala('traditional');
-const preset = ref<CachedMalaPreset>({
-    material: 'wood',
-    tassel_color: null,
-    texture_url: null,
-});
+// El preset del servidor arranca la pantalla con el mala del usuario; la
+// cache lo pisa al abrir. Sin esto se veía un instante (o toda la visita, sin
+// red) con las cuentas y la borla de fábrica.
+const preset = ref<CachedMalaPreset>(
+    props.preset ?? {
+        material: 'wood',
+        tassel_color: null,
+        texture_url: null,
+    },
+);
 const resumeCandidate = ref<ActiveSessionState | null>(null);
 
 let timezone: string | undefined;

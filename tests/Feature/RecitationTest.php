@@ -22,6 +22,37 @@ test('el seed carga las 10 recitaciones en orden', function () {
         ->and(end($titles))->toBe('Los ocho versos de alabanza a la Madre');
 });
 
+test('cada recitacion trae color y dos seguidas no lo repiten', function () {
+    $this->seed(SystemRecitationSeeder::class);
+
+    $recitations = Recitation::orderBy('position')->get();
+
+    expect($recitations->filter(fn ($r) => $r->color === null))->toBeEmpty();
+
+    $colors = $recitations->pluck('color')->map(fn ($c) => $c->value)->all();
+
+    for ($i = 1; $i < count($colors); $i++) {
+        // Los ocho versos (sánscrito y español) comparten color a propósito:
+        // son el mismo texto, y es la única repetición seguida permitida.
+        $pareja = str_contains($recitations[$i]->slug, 'ocho-versos');
+
+        expect($colors[$i] === $colors[$i - 1] && ! $pareja)->toBeFalse(
+            "'{$recitations[$i]->title}' repite el color de la tarjeta anterior",
+        );
+    }
+});
+
+test('la pagina manda el color de cada recitacion', function () {
+    $this->seed(SystemRecitationSeeder::class);
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/recitations');
+    $props = collect($response->viewData('page')['props']['recitations']);
+
+    expect($props->whereNull('color'))->toBeEmpty()
+        ->and($props->firstWhere('title', 'El yoga del despertar')['color'])->toBe('orange');
+});
+
 test('el seed es idempotente: correrlo dos veces no duplica', function () {
     $this->seed(SystemRecitationSeeder::class);
     $this->seed(SystemRecitationSeeder::class);

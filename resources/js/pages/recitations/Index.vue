@@ -9,6 +9,7 @@ interface Recitation {
     id: number;
     title: string;
     text: string;
+    color: string | null;
     daily_commitment: number | null;
     today_count: number;
 }
@@ -142,7 +143,8 @@ function progressLabel(recitation: Recitation): string {
             <div
                 v-for="recitation in props.recitations"
                 :key="recitation.id"
-                class="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
+                :data-color="recitation.color ?? undefined"
+                class="recitation-card rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
             >
                 <button
                     type="button"

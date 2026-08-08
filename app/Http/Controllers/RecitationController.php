@@ -32,11 +32,12 @@ class RecitationController
 
         $recitations = Recitation::orderBy('position')
             ->orderBy('title')
-            ->get(['id', 'title', 'text'])
+            ->get(['id', 'title', 'text', 'color'])
             ->map(fn (Recitation $recitation): array => [
                 'id' => $recitation->id,
                 'title' => $recitation->title,
                 'text' => $recitation->text,
+                'color' => $recitation->color?->value,
                 'daily_commitment' => $commitments[$recitation->id] ?? null,
                 'today_count' => (int) ($todayCounts[$recitation->id] ?? 0),
             ])

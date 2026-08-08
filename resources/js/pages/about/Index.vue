@@ -10,7 +10,7 @@ import { trans as t } from 'laravel-vue-i18n';
 
 const AUTHOR = 'Pablo Mandile';
 const EMAIL = 'pablo.mandile@gmail.com';
-const WEBSITE = 'https://pablo.mandile.com.ar';
+const WEBSITE = 'https://pablomandile.com.ar';
 /** El mismo loto de las pantallas de felicitación. */
 const LOTUS_SRC = '/img/decoratios/loto.webp';
 

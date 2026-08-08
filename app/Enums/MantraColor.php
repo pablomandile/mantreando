@@ -3,12 +3,14 @@
 namespace App\Enums;
 
 /**
- * Color de la tarjeta de un mantra. Solo se guarda la elección: el degradado
- * se arma solo en CSS a partir de ese color (--mantra-color en Index.vue),
- * igual que los materiales del mala con data-material.
+ * Paleta de las tarjetas de la app: la usan los mantras y las Otras
+ * recitaciones. Solo se guarda la elección; el degradado se arma solo en CSS
+ * a partir de ese color (--mantra-color), igual que los materiales del mala
+ * con data-material.
  *
- * Los mantras del sistema traen asignado el color tradicional de cada deidad
- * desde el seeder; en los propios lo elige el usuario.
+ * Los mantras del sistema traen el color tradicional de cada deidad desde el
+ * seeder y en los propios lo elige el usuario; las recitaciones, que son todas
+ * del sistema, lo traen del seeder.
  */
 enum MantraColor: string
 {

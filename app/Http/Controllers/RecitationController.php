@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MantraColor;
 use App\Http\Requests\RecitationRequest;
 use App\Models\Recitation;
 use App\Models\RecitationLog;
@@ -109,11 +110,15 @@ class RecitationController
         Gate::authorize('create', Recitation::class);
 
         $data = $request->validated();
+        $position = $data['position'] ?? (int) Recitation::max('position') + 1;
 
         Recitation::create([
             ...$data,
             'slug' => $this->uniqueSlug($data['title']),
-            'position' => $data['position'] ?? (int) Recitation::max('position') + 1,
+            'position' => $position,
+            // Sin color la tarjeta queda gris entre las demás, que sí lo traen
+            // del seeder.
+            'color' => $this->colorFor($position),
         ]);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Recitación creada.']);
@@ -171,6 +176,39 @@ class RecitationController
         } catch (\Throwable) {
             return now()->toDateString();
         }
+    }
+
+    /**
+     * Color al azar para una recitación nueva, evitando el de las vecinas por
+     * posición: es la regla que ya sigue el seeder, dos tarjetas seguidas no
+     * repiten color.
+     *
+     * Con positions empatadas la lista desempata por título, así que "vecina"
+     * es una aproximación; alcanza para que no queden dos iguales pegadas.
+     *
+     * array_rand (Mersenne Twister) y no random_int a propósito: esto es
+     * estética, no criptografía, y así los tests pueden sembrarlo con mt_srand
+     * para ser deterministas.
+     */
+    private function colorFor(int $position): MantraColor
+    {
+        $taken = array_filter([
+            Recitation::where('position', '<=', $position)
+                ->orderByDesc('position')->first()?->color?->value,
+            Recitation::where('position', '>=', $position)
+                ->orderBy('position')->first()?->color?->value,
+        ]);
+
+        $options = array_values(array_filter(
+            MantraColor::cases(),
+            fn (MantraColor $color): bool => ! in_array($color->value, $taken, true),
+        ));
+
+        // Con 9 colores y 2 vecinas nunca queda vacío; si la paleta se achicara,
+        // mejor repetir un color que tirar un error.
+        return $options === []
+            ? MantraColor::Neutral
+            : $options[array_rand($options)];
     }
 
     /**

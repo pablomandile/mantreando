@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\MantraColor;
 use App\Models\Recitation;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -78,6 +79,45 @@ test('la nueva queda al final del orden', function () {
     $this->actingAs($admin)->post('/recitations', recitationFields());
 
     expect(Recitation::where('slug', 'los-cuatro-inconmensurables')->first()->position)->toBe(8);
+});
+
+test('la nueva recitación viene con color', function () {
+    // Sin color la tarjeta queda gris entre las del seeder, que sí lo traen.
+    $this->actingAs(User::factory()->create(['is_admin' => true]))
+        ->post('/recitations', recitationFields());
+
+    expect(Recitation::first()->color)->not->toBeNull()
+        ->and(Recitation::first()->color)->toBeInstanceOf(MantraColor::class);
+});
+
+test('el color no repite el de las tarjetas vecinas', function () {
+    // mt_srand fija el azar: el test es reproducible, no sale distinto cada vez.
+    mt_srand(42);
+    $admin = User::factory()->create(['is_admin' => true]);
+    Recitation::create(['slug' => 'antes', 'title' => 'Antes', 'text' => 'x', 'position' => 5, 'color' => 'amber']);
+    Recitation::create(['slug' => 'despues', 'title' => 'Despues', 'text' => 'x', 'position' => 7, 'color' => 'green']);
+
+    $this->actingAs($admin)->post('/recitations', recitationFields(['position' => 6]));
+
+    expect(Recitation::where('slug', 'los-cuatro-inconmensurables')->first()->color->value)
+        ->not->toBe('amber')
+        ->not->toBe('green');
+});
+
+test('ninguna de una tanda de altas repite el color de la anterior', function () {
+    mt_srand(1);
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    foreach (range(1, 15) as $i) {
+        $this->actingAs($admin)->post('/recitations', recitationFields(['title' => "Recitación {$i}"]));
+    }
+
+    $colors = Recitation::orderBy('position')->pluck('color')->all();
+    expect($colors)->toHaveCount(15);
+
+    foreach (array_slice($colors, 1) as $index => $color) {
+        expect($color->value)->not->toBe($colors[$index]->value);
+    }
 });
 
 test('un admin edita el título sin que cambie el slug', function () {

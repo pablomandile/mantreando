@@ -20,6 +20,8 @@ const props = defineProps<{
     };
     categories: { id: number; name: string; slug: string }[];
     colors: { value: string; label: string }[];
+    canShare: boolean;
+    isShared: boolean;
 }>();
 
 defineOptions({
@@ -49,7 +51,13 @@ function destroy(): void {
             <p class="text-sm text-muted-foreground">{{ mantra.name }}</p>
         </div>
 
-        <MantraForm :mantra="mantra" :categories="categories" :colors="colors">
+        <MantraForm
+            :mantra="mantra"
+            :categories="categories"
+            :colors="colors"
+            :can-share="canShare"
+            :is-shared="isShared"
+        >
             <template #actions>
                 <Button type="button" variant="destructive" @click="destroy">
                     {{ t('Eliminar') }}

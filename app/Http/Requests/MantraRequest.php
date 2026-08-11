@@ -23,6 +23,10 @@ class MantraRequest extends FormRequest
             'image' => ['nullable', 'image', 'max:2048'], // 2 MB
             'remove_image' => ['nullable', 'boolean'],
             'color' => ['nullable', Rule::enum(MantraColor::class)],
+            // Publicar para todos. Se valida siempre pero el controlador solo
+            // lo mira si la policy lo permite: para un usuario común el campo
+            // se ignora, no se rechaza (no hay UI que lo mande).
+            'is_shared' => ['nullable', 'boolean'],
         ];
     }
 

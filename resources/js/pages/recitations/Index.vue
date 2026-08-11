@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { ChevronDown } from '@lucide/vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ChevronDown, Pencil, Plus } from '@lucide/vue';
 import { trans as t } from 'laravel-vue-i18n';
 import { nextTick, ref } from 'vue';
+import { Button } from '@/components/ui/button';
 import { getLocalDate } from '@/lib/practice/localDate';
 
 interface Recitation {
@@ -17,6 +18,8 @@ interface Recitation {
 const props = defineProps<{
     recitations: Recitation[];
     localDate: string;
+    /** Solo los administradores: los textos son los mismos para todas las cuentas. */
+    canManage: boolean;
 }>();
 
 defineOptions({
@@ -126,17 +129,26 @@ function progressLabel(recitation: Recitation): string {
     <Head :title="t('Otras recitaciones')" />
 
     <div class="space-y-6 px-4 py-6">
-        <header>
-            <h1 class="text-2xl font-semibold">
-                {{ t('Otras recitaciones') }}
-            </h1>
-            <p class="text-sm text-muted-foreground">
-                {{
-                    t(
-                        'Oraciones y yogas para leer. Su compromiso es propio: no comparte cuenta con los mantras.',
-                    )
-                }}
-            </p>
+        <header class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+                <h1 class="text-2xl font-semibold">
+                    {{ t('Otras recitaciones') }}
+                </h1>
+                <p class="text-sm text-muted-foreground">
+                    {{
+                        t(
+                            'Oraciones y yogas para leer. Su compromiso es propio: no comparte cuenta con los mantras.',
+                        )
+                    }}
+                </p>
+            </div>
+
+            <Button v-if="canManage" as-child size="sm">
+                <Link href="/recitations/create">
+                    <Plus class="size-4" />
+                    {{ t('Nueva recitación') }}
+                </Link>
+            </Button>
         </header>
 
         <div class="flex flex-col gap-3">
@@ -146,34 +158,49 @@ function progressLabel(recitation: Recitation): string {
                 :data-color="recitation.color ?? undefined"
                 class="recitation-card rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
             >
-                <button
-                    type="button"
-                    class="flex w-full items-center justify-between gap-3 rounded-xl p-4 text-left transition-colors hover:bg-accent/50"
-                    :aria-expanded="open.has(recitation.id)"
-                    :aria-controls="`recitation-${recitation.id}`"
-                    @click="toggle(recitation.id)"
-                >
-                    <span class="min-w-0">
-                        <span class="block font-medium">
-                            {{ recitation.title }}
+                <div class="flex items-center">
+                    <button
+                        type="button"
+                        class="flex flex-1 items-center justify-between gap-3 rounded-xl p-4 text-left transition-colors hover:bg-accent/50"
+                        :aria-expanded="open.has(recitation.id)"
+                        :aria-controls="`recitation-${recitation.id}`"
+                        @click="toggle(recitation.id)"
+                    >
+                        <span class="min-w-0">
+                            <span class="block font-medium">
+                                {{ recitation.title }}
+                            </span>
+                            <span
+                                class="mt-0.5 block text-xs text-muted-foreground tabular-nums"
+                                :class="{
+                                    'text-foreground':
+                                        recitation.daily_commitment !== null &&
+                                        recitation.today_count >=
+                                            recitation.daily_commitment,
+                                }"
+                            >
+                                {{ progressLabel(recitation) }}
+                            </span>
                         </span>
-                        <span
-                            class="mt-0.5 block text-xs text-muted-foreground tabular-nums"
-                            :class="{
-                                'text-foreground':
-                                    recitation.daily_commitment !== null &&
-                                    recitation.today_count >=
-                                        recitation.daily_commitment,
-                            }"
-                        >
-                            {{ progressLabel(recitation) }}
-                        </span>
-                    </span>
-                    <ChevronDown
-                        class="size-4 shrink-0 text-muted-foreground transition-transform"
-                        :class="{ 'rotate-180': open.has(recitation.id) }"
-                    />
-                </button>
+                        <ChevronDown
+                            class="size-4 shrink-0 text-muted-foreground transition-transform"
+                            :class="{ 'rotate-180': open.has(recitation.id) }"
+                        />
+                    </button>
+
+                    <!-- Fuera del botón que despliega: un enlace anidado en un
+                         button no es HTML válido y el click se pelearía con el
+                         toggle. -->
+                    <Link
+                        v-if="canManage"
+                        :href="`/recitations/${recitation.id}/edit`"
+                        class="mr-2 inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        :aria-label="t('Editar')"
+                        :title="t('Editar')"
+                    >
+                        <Pencil class="size-4" />
+                    </Link>
+                </div>
 
                 <div v-show="open.has(recitation.id)" class="px-4 pb-4">
                     <!-- whitespace-pre-line: el texto trae su propia estructura

@@ -7,6 +7,8 @@ export type User = {
     timezone: string | null;
     locale: string;
     theme: string;
+    /** Publica mantras para todos y mantiene las otras recitaciones. */
+    is_admin?: boolean;
     settings: Record<string, unknown> | null;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;

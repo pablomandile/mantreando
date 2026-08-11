@@ -30,6 +30,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string|null $timezone IANA; toda lógica de "día" usa local_date del dispositivo
  * @property string $locale
  * @property string $theme
+ * @property bool $is_admin publica mantras para todos y mantiene las recitaciones
  * @property array<string, mixed>|null $settings
  * @property-read string|null $avatar_url
  * @property string|null $two_factor_secret
@@ -89,7 +90,18 @@ class User extends Authenticatable implements PasskeyUser
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'settings' => 'array',
+            'is_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * Administrador: publica mantras para todos y mantiene las "otras
+     * recitaciones". Se asigna con `php artisan user:admin`, no desde la app:
+     * la columna queda fuera de Fillable a propósito.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->is_admin === true;
     }
 
     /** Mantras propios del usuario (no incluye los del sistema). */

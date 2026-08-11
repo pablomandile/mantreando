@@ -6,6 +6,7 @@ import MantraForm from '@/components/mantras/MantraForm.vue';
 defineProps<{
     categories: { id: number; name: string; slug: string }[];
     colors: { value: string; label: string }[];
+    canShare: boolean;
 }>();
 
 defineOptions({
@@ -29,6 +30,10 @@ defineOptions({
             </p>
         </div>
 
-        <MantraForm :categories="categories" :colors="colors" />
+        <MantraForm
+            :categories="categories"
+            :colors="colors"
+            :can-share="canShare"
+        />
     </div>
 </template>

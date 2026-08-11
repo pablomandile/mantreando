@@ -39,9 +39,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('goal', [SessionGoalController::class, 'edit'])->name('goal.edit');
     Route::patch('goal', [SessionGoalController::class, 'update'])->name('goal.update');
 
-    Route::get('recitations', [RecitationController::class, 'index'])->name('recitations.index');
     Route::patch('recitations/{recitation}/commitment', [RecitationController::class, 'updateCommitment'])->name('recitations.commitment');
     Route::post('recitations/{recitation}/log', [RecitationController::class, 'log'])->name('recitations.log');
+    // La lista y el registro los usa cualquiera; el alta y la edición de los
+    // textos las autoriza la policy, que pide rol de administrador. Sin 'show':
+    // el texto ya se lee completo desde la lista, plegado.
+    Route::resource('recitations', RecitationController::class)
+        ->except(['show'])
+        ->parameters(['recitations' => 'recitation']);
 
     Route::post('mantras/reorder', MantraReorderController::class)->name('mantras.reorder');
     // Misma pantalla que la biblioteca, filtrada. Con ruta propia y no

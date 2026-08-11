@@ -4,6 +4,7 @@ import { trans as t } from 'laravel-vue-i18n';
 import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
@@ -26,6 +27,9 @@ const props = defineProps<{
     mantra?: MantraData;
     categories: { id: number; name: string }[];
     colors: { value: string; label: string }[];
+    /** Solo los administradores pueden publicar para todos. */
+    canShare?: boolean;
+    isShared?: boolean;
 }>();
 
 // useForm (no <Form>): el upload de imagen necesita FormData y method spoofing.
@@ -41,6 +45,9 @@ const form = useForm({
     color: props.mantra?.color ?? null,
     image: null as File | null,
     remove_image: false,
+    // Arranca apagado a propósito: publicar a toda la base es un clic
+    // deliberado, no el default de un formulario.
+    is_shared: props.isShared ?? false,
 });
 
 const imagePreview = ref<string | null>(props.mantra?.image_url ?? null);
@@ -237,6 +244,34 @@ const textareaClass =
                 {{ t('JPG/PNG/WebP, máx. 2 MB.') }}
             </p>
             <InputError :message="form.errors.image" />
+        </div>
+
+        <!-- Solo para administradores: el resto de las cuentas no ve el campo
+             y el servidor lo ignora si llegara igual. -->
+        <div v-if="canShare" class="grid gap-2 rounded-xl border p-4">
+            <Label class="flex items-start gap-3">
+                <Checkbox
+                    :model-value="form.is_shared"
+                    class="mt-0.5"
+                    @update:model-value="
+                        (value: boolean | 'indeterminate') =>
+                            (form.is_shared = value === true)
+                    "
+                />
+                <span>
+                    {{ t('Visible para todos') }}
+                    <span
+                        class="block text-xs font-normal text-muted-foreground"
+                    >
+                        {{
+                            t(
+                                'Pasa a ser un mantra del sistema: aparece en la biblioteca de todas las cuentas. En la práctica sin conexión aparece cuando el dispositivo vuelve a sincronizar.',
+                            )
+                        }}
+                    </span>
+                </span>
+            </Label>
+            <InputError :message="form.errors.is_shared" />
         </div>
 
         <div class="flex items-center gap-3">

@@ -138,22 +138,29 @@ class MantraController
         return Inertia::render('mantras/Create', [
             'categories' => $this->categories(),
             'colors' => MantraColor::options(),
+            'canShare' => Gate::allows('share', Mantra::class),
         ]);
     }
 
     public function store(MantraRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        unset($data['image'], $data['remove_image']);
+        unset($data['image'], $data['remove_image'], $data['is_shared']);
+        $shared = $this->wantsShared($request);
 
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')
-                ->store("mantras/{$request->user()->id}", 'public');
+                ->store($this->imageDirectory($request, $shared), 'public');
         }
 
-        $mantra = $request->user()->ownMantras()->create($data);
+        // user_id null = mantra del sistema, visible para todos (scopeAccessibleBy).
+        $mantra = $shared
+            ? Mantra::create($data + ['user_id' => null])
+            : $request->user()->ownMantras()->create($data);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Mantra creado.']);
+        Inertia::flash('toast', ['type' => 'success', 'message' => $shared
+            ? 'Mantra creado y publicado para todos.'
+            : 'Mantra creado.']);
 
         return to_route('mantras.show', $mantra);
     }
@@ -172,6 +179,8 @@ class MantraController
             ],
             'categories' => $this->categories(),
             'colors' => MantraColor::options(),
+            'canShare' => Gate::allows('share', Mantra::class),
+            'isShared' => $mantra->isSystem(),
         ]);
     }
 
@@ -181,12 +190,21 @@ class MantraController
 
         $data = $request->validated();
         $removeImage = (bool) ($data['remove_image'] ?? false);
-        unset($data['image'], $data['remove_image']);
+        unset($data['image'], $data['remove_image'], $data['is_shared']);
+        $shared = $this->wantsShared($request, $mantra);
+
+        if ($shared !== $mantra->isSystem()) {
+            if ($error = $this->visibilityError($request, $mantra, $shared)) {
+                return back()->withErrors(['is_shared' => $error]);
+            }
+
+            $data['user_id'] = $shared ? null : $request->user()->id;
+        }
 
         if ($request->hasFile('image')) {
             $this->deleteImage($mantra);
             $data['image_path'] = $request->file('image')
-                ->store("mantras/{$request->user()->id}", 'public');
+                ->store($this->imageDirectory($request, $shared), 'public');
         } elseif ($removeImage) {
             $this->deleteImage($mantra);
             $data['image_path'] = null;
@@ -217,6 +235,55 @@ class MantraController
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Mantra eliminado.']);
 
         return to_route('mantras.index');
+    }
+
+    /**
+     * Si el mantra tiene que quedar visible para todos. Sin permiso el campo se
+     * ignora en silencio en vez de rechazarse: no hay UI que lo mande, así que
+     * un 422 solo aparecería ante un formulario manipulado.
+     */
+    private function wantsShared(Request $request, ?Mantra $mantra = null): bool
+    {
+        if (! Gate::allows('share', Mantra::class)) {
+            return $mantra?->isSystem() ?? false;
+        }
+
+        return $request->boolean('is_shared');
+    }
+
+    /**
+     * Las imágenes de un mantra del sistema no cuelgan de la carpeta del admin
+     * que lo subió: si mañana se borra esa cuenta, la imagen la siguen viendo
+     * todos los demás.
+     */
+    private function imageDirectory(Request $request, bool $shared): string
+    {
+        return $shared ? 'mantras/system' : "mantras/{$request->user()->id}";
+    }
+
+    /**
+     * Motivo por el que no se puede cambiar la visibilidad, o null si se puede.
+     * Publicar nunca le quita nada a nadie; despublicar sí: los demás perderían
+     * el acceso a un mantra que ya practican, con sus sesiones apuntando a algo
+     * que no pueden ver.
+     */
+    private function visibilityError(Request $request, Mantra $mantra, bool $shared): ?string
+    {
+        if ($shared) {
+            return null;
+        }
+
+        $userId = $request->user()->id;
+
+        $usedByOthers = $mantra->practiceSessions()->where('user_id', '!=', $userId)->exists()
+            || DB::table('mantra_user')
+                ->where('mantra_id', $mantra->id)
+                ->where('user_id', '!=', $userId)
+                ->exists();
+
+        return $usedByOthers
+            ? 'Otras personas ya usan este mantra: no puede dejar de ser público.'
+            : null;
     }
 
     /** @return array<int, array{id: int, name: string, slug: string}> */

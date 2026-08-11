@@ -187,5 +187,17 @@
     "Quién hizo esta app": "Who made this app",
     "Creado por :name": "Created by :name",
     "Mi sitio web": "My website",
-    "Me gusta crear aplicaciones ;)": "I like building apps ;)"
+    "Me gusta crear aplicaciones ;)": "I like building apps ;)",
+    "Visible para todos": "Visible to everyone",
+    "Pasa a ser un mantra del sistema: aparece en la biblioteca de todas las cuentas. En la práctica sin conexión aparece cuando el dispositivo vuelve a sincronizar.": "It becomes a system mantra: it shows up in every account's library. In offline practice it appears once the device syncs again.",
+    "Nueva recitación": "New recitation",
+    "Crear recitación": "Create recitation",
+    "Editar recitación": "Edit recitation",
+    "Queda disponible para todas las cuentas.": "It becomes available to every account.",
+    "Título": "Title",
+    "Texto": "Text",
+    "Orden": "Order",
+    "Los saltos de línea se respetan tal como los escribís.": "Line breaks are kept exactly as you type them.",
+    "Menor primero. Con el mismo número, ordena por título.": "Lowest first. Ties are ordered by title.",
+    "¿Eliminar esta recitación? Deja de estar disponible para todas las cuentas.": "Delete this recitation? It stops being available to every account."
 }

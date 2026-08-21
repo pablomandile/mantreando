@@ -39,5 +39,9 @@
 <IfModule mod_headers.c>
     <FilesMatch "^(sw\.js|manifest\.webmanifest)$">
         Header set Cache-Control "no-cache, must-revalidate, max-age=0"
+        # mod_expires seguia mandando un Expires a 7 dias. Ante max-age=0 la
+        # spec obliga a ignorarlo, pero justamente el problema de este CDN es
+        # que hace lo que quiere con las cabeceras: mejor no dejarlo escrito.
+        Header unset Expires
     </FilesMatch>
 </IfModule>

@@ -30,3 +30,14 @@
 <IfModule mod_mime.c>
     AddType application/manifest+json .webmanifest
 </IfModule>
+
+# El navegador se entera de que hay un service worker nuevo pegándole a /sw.js,
+# y de un manifest nuevo pegándole a /manifest.webmanifest. Hostinger los servía
+# con `public, max-age=604800` (sw.js) y sin Cache-Control (el manifest), así que
+# el CDN entregaba los viejos durante días: ninguna actualización llegaba, y como
+# el SW controla las demás caches, eso congelaba todo lo demás también.
+<IfModule mod_headers.c>
+    <FilesMatch "^(sw\.js|manifest\.webmanifest)$">
+        Header set Cache-Control "no-cache, must-revalidate, max-age=0"
+    </FilesMatch>
+</IfModule>

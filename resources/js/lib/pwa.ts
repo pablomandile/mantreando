@@ -12,7 +12,15 @@ export function initializePwa(): void {
     }
 
     window.addEventListener('load', () => {
-        void navigator.serviceWorker.register('/sw.js');
+        // El `?v=` no es decorativo. El CDN de Hostinger tenia /sw.js cacheado
+        // con `public, max-age=604800`, y el navegador se entera de que hay un
+        // service worker nuevo justamente pegandole a la URL registrada: con la
+        // copia vieja en el borde, ninguna actualizacion llegaba por dias. El
+        // `no-cache` que puso public/.htaccess solo aplica a entradas NUEVAS del
+        // borde, asi que hace falta una URL distinta para saltear la vieja.
+        // Registrar otro scriptURL con el mismo scope reemplaza la registracion
+        // anterior. Con el no-cache ya puesto, este numero no se vuelve a subir.
+        void navigator.serviceWorker.register('/sw.js?v=2');
     });
 
     navigator.serviceWorker.addEventListener('message', (event) => {

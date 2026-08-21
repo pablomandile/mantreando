@@ -80,11 +80,43 @@ async function staleWhileRevalidate(request) {
     return cached ?? network;
 }
 
+/**
+ * Red de seguridad para el JSON de Inertia servido a una navegacion.
+ *
+ * El middleware (HandleInertiaRequests) ya marca la respuesta XHR con
+ * `no-store`, pero eso solo evita entradas NUEVAS: los navegadores que ya
+ * guardaron el JSON bajo esta URL lo siguen reusando, y cuando pasa la app no
+ * arranca, asi que ningun script de la pagina puede repararlo. El unico que
+ * intercepta la navegacion es este service worker.
+ */
+async function recuperarHtml(request) {
+    return fetch(request.url, {
+        cache: 'reload',
+        headers: { Accept: 'text/html' },
+    });
+}
+
 async function pageNetworkFirst(request) {
     const cache = await caches.open(PAGE_CACHE);
 
     try {
-        const response = await fetch(request);
+        let response = await fetch(request);
+
+        // Se mira el header X-Inertia de la RESPUESTA, no el content-type: una
+        // navegacion puede legitimamente contestar JSON (una exportacion que se
+        // descarga) y no hay que pedirla dos veces. Ese header solo aparece en
+        // una respuesta armada para un XHR de Inertia.
+        if (response.headers.get('x-inertia')) {
+            response = await recuperarHtml(request);
+
+            // Si la sesion vencio, la URL redirige al login. Una respuesta ya
+            // redirigida no se le puede entregar a una navegacion —el Service
+            // Worker API lo prohibe—, asi que se le pasa el redirect y lo sigue
+            // el navegador. Tampoco se cachea.
+            if (response.redirected) {
+                return Response.redirect(response.url, 302);
+            }
+        }
 
         if (response.ok) {
             cache.put(request, response.clone());
@@ -134,6 +166,12 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
+    // `request.mode === 'navigate'` y nada mas. NO agregar el heuristico
+    // habitual de "o el Accept incluye text/html": el router de Inertia manda
+    // `Accept: text/html, application/xhtml+xml` en sus XHR, asi que ese
+    // heuristico da true para cada navegacion de la SPA y pageNetworkFirst les
+    // "arreglaria" la respuesta devolviendo el HTML de arranque en vez del JSON
+    // de la pagina. La app dejaria de navegar por completo.
     if (request.mode === 'navigate') {
         event.respondWith(pageNetworkFirst(request));
     }

@@ -5,6 +5,7 @@ import {
     ChartColumn,
     CircleDashed,
     Flower,
+    HandHeart,
     Info,
     Palette,
     ScrollText,
@@ -63,6 +64,11 @@ const mainNavItems = computed<NavItem[]>(() => [
         title: trans('Otras recitaciones'),
         href: '/recitations',
         icon: ScrollText,
+    },
+    {
+        title: trans('Lista de oración'),
+        href: '/prayers',
+        icon: HandHeart,
     },
     {
         title: trans('Estadísticas'),

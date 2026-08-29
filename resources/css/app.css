@@ -258,7 +258,9 @@
     .mantra-card,
     .mantra-swatch,
     .mantra-backdrop,
-    .recitation-card
+    .recitation-card,
+    .prayer-card,
+    .prayer-chip
 )[data-color='blue'] {
     --mantra-color: #3b6fb5;
 }
@@ -266,7 +268,9 @@
     .mantra-card,
     .mantra-swatch,
     .mantra-backdrop,
-    .recitation-card
+    .recitation-card,
+    .prayer-card,
+    .prayer-chip
 )[data-color='indigo'] {
     --mantra-color: #4a4d8f;
 }
@@ -274,7 +278,9 @@
     .mantra-card,
     .mantra-swatch,
     .mantra-backdrop,
-    .recitation-card
+    .recitation-card,
+    .prayer-card,
+    .prayer-chip
 )[data-color='violet'] {
     --mantra-color: #7a4f96;
 }
@@ -282,7 +288,9 @@
     .mantra-card,
     .mantra-swatch,
     .mantra-backdrop,
-    .recitation-card
+    .recitation-card,
+    .prayer-card,
+    .prayer-chip
 )[data-color='red'] {
     --mantra-color: #b93a2b;
 }
@@ -290,7 +298,9 @@
     .mantra-card,
     .mantra-swatch,
     .mantra-backdrop,
-    .recitation-card
+    .recitation-card,
+    .prayer-card,
+    .prayer-chip
 )[data-color='amber'] {
     --mantra-color: #c2902f;
 }
@@ -298,7 +308,9 @@
     .mantra-card,
     .mantra-swatch,
     .mantra-backdrop,
-    .recitation-card
+    .recitation-card,
+    .prayer-card,
+    .prayer-chip
 )[data-color='orange'] {
     --mantra-color: #c26a2c;
 }
@@ -306,7 +318,9 @@
     .mantra-card,
     .mantra-swatch,
     .mantra-backdrop,
-    .recitation-card
+    .recitation-card,
+    .prayer-card,
+    .prayer-chip
 )[data-color='green'] {
     --mantra-color: #4f8a55;
 }
@@ -314,7 +328,9 @@
     .mantra-card,
     .mantra-swatch,
     .mantra-backdrop,
-    .recitation-card
+    .recitation-card,
+    .prayer-card,
+    .prayer-chip
 )[data-color='teal'] {
     --mantra-color: #2f8a86;
 }
@@ -322,14 +338,16 @@
     .mantra-card,
     .mantra-swatch,
     .mantra-backdrop,
-    .recitation-card
+    .recitation-card,
+    .prayer-card,
+    .prayer-chip
 )[data-color='neutral'] {
     --mantra-color: #8d8579;
 }
 
 /* Tinte suave en diagonal: fuerte donde está la imagen y disuelto hacia el
    texto, para no comerle contraste. Sin color, la tarjeta queda como estaba. */
-:is(.mantra-card, .recitation-card)[data-color] {
+:is(.mantra-card, .recitation-card, .prayer-card)[data-color] {
     background-image: linear-gradient(
         135deg,
         color-mix(in oklab, var(--mantra-color) 16%, transparent) 0%,
@@ -339,7 +357,7 @@
 }
 
 /* En oscuro hace falta más tinte para que se note sobre el fondo negro. */
-.dark :is(.mantra-card, .recitation-card)[data-color] {
+.dark :is(.mantra-card, .recitation-card, .prayer-card)[data-color] {
     background-image: linear-gradient(
         135deg,
         color-mix(in oklab, var(--mantra-color) 26%, transparent) 0%,
@@ -355,6 +373,19 @@
         var(--mantra-color) 55%,
         color-mix(in oklab, var(--mantra-color) 75%, black) 100%
     );
+}
+
+/* Chip de motivo de la Lista de oración: es texto, no una tarjeta, así que
+   toma el color en el borde y en un fondo apenas teñido para no perder
+   contraste. Sin color queda con el borde neutro que ya trae la clase. */
+.prayer-chip[data-color] {
+    border-color: color-mix(in oklab, var(--mantra-color) 45%, transparent);
+    background-color: color-mix(in oklab, var(--mantra-color) 12%, transparent);
+}
+
+.dark .prayer-chip[data-color] {
+    border-color: color-mix(in oklab, var(--mantra-color) 55%, transparent);
+    background-color: color-mix(in oklab, var(--mantra-color) 22%, transparent);
 }
 
 /* Velo de la práctica: al elegir un mantra, su color baña la pantalla desde

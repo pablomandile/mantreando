@@ -6,6 +6,8 @@ use App\Http\Controllers\MantraFavoriteController;
 use App\Http\Controllers\MantraPracticeSettingsController;
 use App\Http\Controllers\MantraReorderController;
 use App\Http\Controllers\PracticeController;
+use App\Http\Controllers\PrayerIntentionController;
+use App\Http\Controllers\PrayerReasonController;
 use App\Http\Controllers\RecitationController;
 use App\Http\Controllers\SessionGoalController;
 use App\Http\Controllers\StatsController;
@@ -47,6 +49,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('recitations', RecitationController::class)
         ->except(['show'])
         ->parameters(['recitations' => 'recitation']);
+
+    // Catálogo de motivos: lo mantiene un administrador y queda para todas
+    // las cuentas. Va antes del resource de 'prayers' para que no lo tape.
+    Route::get('prayers/reasons', [PrayerReasonController::class, 'index'])->name('prayers.reasons.index');
+    Route::post('prayers/reasons', [PrayerReasonController::class, 'store'])->name('prayers.reasons.store');
+    Route::patch('prayers/reasons/{reason}', [PrayerReasonController::class, 'update'])->name('prayers.reasons.update');
+    Route::delete('prayers/reasons/{reason}', [PrayerReasonController::class, 'destroy'])->name('prayers.reasons.destroy');
+
+    // Archivar no borra: guarda la fecha para la línea de tiempo.
+    Route::patch('prayers/{prayer}/archive', [PrayerIntentionController::class, 'archive'])->name('prayers.archive');
+    // Sin 'show': la tarjeta de la lista ya muestra todo. Los archivados se
+    // piden con ?archived=1, no con ruta propia, para que el item del menú
+    // siga resaltado.
+    Route::resource('prayers', PrayerIntentionController::class)
+        ->except(['show'])
+        ->parameters(['prayers' => 'prayer']);
 
     Route::post('mantras/reorder', MantraReorderController::class)->name('mantras.reorder');
     // Misma pantalla que la biblioteca, filtrada. Con ruta propia y no

@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             MantraCategorySeeder::class,
             SystemMantraSeeder::class,
             SystemRecitationSeeder::class,
+            PrayerReasonSeeder::class,
         ]);
 
         if (app()->isLocal() && ! User::where('email', 'test@example.com')->exists()) {

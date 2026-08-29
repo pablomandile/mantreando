@@ -133,6 +133,17 @@ class User extends Authenticatable implements PasskeyUser
             ->withTimestamps();
     }
 
+    /**
+     * Lista de oración: por quién ora. Privada de cada cuenta, sin contenido
+     * del sistema.
+     *
+     * @return HasMany<PrayerIntention, $this>
+     */
+    public function prayerIntentions(): HasMany
+    {
+        return $this->hasMany(PrayerIntention::class);
+    }
+
     /** @return HasMany<PracticeSession, $this> */
     public function practiceSessions(): HasMany
     {

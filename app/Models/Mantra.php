@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\MantraColor;
+use App\Models\Concerns\ResolvesImagePath;
 use Database\Factories\MantraFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,7 +13,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -44,7 +44,7 @@ use Illuminate\Support\Facades\Storage;
 class Mantra extends Model
 {
     /** @use HasFactory<MantraFactory> */
-    use HasFactory;
+    use HasFactory, ResolvesImagePath;
 
     /** @return array<string, string> */
     protected function casts(): array
@@ -123,47 +123,27 @@ class Mantra extends Model
     }
 
     /**
-     * Prefijo de las imágenes que viajan con la app (public/img), usadas por
-     * los mantras del sistema. Todo lo demás es una subida del usuario y vive
-     * en el disco public (storage/app/public), que no está en el repo.
+     * Si la imagen viaja con la app (public/img) o es una subida. La regla
+     * vive en ResolvesImagePath, compartida con las deidades del retiro.
      */
-    private const APP_IMAGE_PREFIX = 'img/';
-
     public function hasAppImage(): bool
     {
-        return $this->image_path !== null
-            && str_starts_with($this->image_path, self::APP_IMAGE_PREFIX);
+        return $this->isAppImage($this->image_path);
     }
 
     /** @return Attribute<string|null, mixed> */
     protected function imageUrl(): Attribute
     {
-        return Attribute::make(get: function (): ?string {
-            if ($this->image_path === null) {
-                return null;
-            }
-
-            return $this->hasAppImage()
-                ? asset($this->image_path)
-                : Storage::disk('public')->url($this->image_path);
-        });
+        return Attribute::make(get: fn (): ?string => $this->resolveImageUrl($this->image_path));
     }
 
     /**
-     * Miniatura para las tarjetas de la lista. Las imágenes de la app traen
-     * una versión cuadrada de 128 px al lado (img/budas/thumb/x.jpg); las que
-     * sube el usuario no, y reusan la original.
+     * Miniatura para las tarjetas de la lista.
      *
      * @return Attribute<string|null, mixed>
      */
     protected function imageThumbUrl(): Attribute
     {
-        return Attribute::make(get: function (): ?string {
-            if (! $this->hasAppImage()) {
-                return $this->image_url;
-            }
-
-            return asset(dirname($this->image_path).'/thumb/'.basename($this->image_path));
-        });
+        return Attribute::make(get: fn (): ?string => $this->resolveImageThumbUrl($this->image_path));
     }
 }

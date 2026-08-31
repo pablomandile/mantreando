@@ -9,6 +9,9 @@ use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\PrayerIntentionController;
 use App\Http\Controllers\PrayerReasonController;
 use App\Http\Controllers\RecitationController;
+use App\Http\Controllers\RetreatController;
+use App\Http\Controllers\RetreatDeityController;
+use App\Http\Controllers\RetreatMantraController;
 use App\Http\Controllers\SessionGoalController;
 use App\Http\Controllers\StatsController;
 use Illuminate\Support\Facades\Auth;
@@ -65,6 +68,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('prayers', PrayerIntentionController::class)
         ->except(['show'])
         ->parameters(['prayers' => 'prayer']);
+
+    // Catálogo de deidades y sus etapas: lo mantiene un administrador y queda
+    // para todas las cuentas. Va antes de las rutas del retiro para no ser
+    // tapado por 'retreats/{retreat}'.
+    Route::get('retreats/deities', [RetreatDeityController::class, 'index'])->name('retreats.deities.index');
+    Route::post('retreats/deities', [RetreatDeityController::class, 'store'])->name('retreats.deities.store');
+    Route::get('retreats/deities/{deity}/edit', [RetreatDeityController::class, 'edit'])->name('retreats.deities.edit');
+    // POST y no PUT: el formulario lleva archivos, así que va con _method.
+    Route::post('retreats/deities/{deity}', [RetreatDeityController::class, 'update'])->name('retreats.deities.update');
+    Route::delete('retreats/deities/{deity}', [RetreatDeityController::class, 'destroy'])->name('retreats.deities.destroy');
+
+    Route::post('retreats/deities/{deity}/mantras', [RetreatMantraController::class, 'store'])->name('retreats.mantras.store');
+    Route::patch('retreats/mantras/{mantra}', [RetreatMantraController::class, 'update'])->name('retreats.mantras.update');
+    Route::delete('retreats/mantras/{mantra}', [RetreatMantraController::class, 'destroy'])->name('retreats.mantras.destroy');
+
+    // El retiro del usuario: el ábaco y su conteo.
+    Route::get('retreats', [RetreatController::class, 'index'])->name('retreats.index');
+    Route::post('retreats/activate', [RetreatController::class, 'activate'])->name('retreats.activate');
+    Route::patch('retreats/{retreat}/count', [RetreatController::class, 'count'])->name('retreats.count');
+    Route::patch('retreats/{retreat}/stage', [RetreatController::class, 'completeStage'])->name('retreats.stage');
 
     Route::post('mantras/reorder', MantraReorderController::class)->name('mantras.reorder');
     // Misma pantalla que la biblioteca, filtrada. Con ruta propia y no

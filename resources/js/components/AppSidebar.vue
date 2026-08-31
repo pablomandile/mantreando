@@ -11,6 +11,7 @@ import {
     ScrollText,
     Star,
     Target,
+    Tent,
 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed, onUnmounted } from 'vue';
@@ -64,6 +65,11 @@ const mainNavItems = computed<NavItem[]>(() => [
         title: trans('Otras recitaciones'),
         href: '/recitations',
         icon: ScrollText,
+    },
+    {
+        title: trans('Retiro de aproximación'),
+        href: '/retreats',
+        icon: Tent,
     },
     {
         title: trans('Lista de oración'),

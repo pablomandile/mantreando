@@ -144,6 +144,17 @@ class User extends Authenticatable implements PasskeyUser
         return $this->hasMany(PrayerIntention::class);
     }
 
+    /**
+     * Retiros de aproximación, uno por deidad. El activo es el de
+     * activated_at más reciente.
+     *
+     * @return HasMany<Retreat, $this>
+     */
+    public function retreats(): HasMany
+    {
+        return $this->hasMany(Retreat::class);
+    }
+
     /** @return HasMany<PracticeSession, $this> */
     public function practiceSessions(): HasMany
     {

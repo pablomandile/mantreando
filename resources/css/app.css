@@ -260,7 +260,8 @@
     .mantra-backdrop,
     .recitation-card,
     .prayer-card,
-    .prayer-chip
+    .prayer-chip,
+    .abacus
 )[data-color='blue'] {
     --mantra-color: #3b6fb5;
 }
@@ -270,7 +271,8 @@
     .mantra-backdrop,
     .recitation-card,
     .prayer-card,
-    .prayer-chip
+    .prayer-chip,
+    .abacus
 )[data-color='indigo'] {
     --mantra-color: #4a4d8f;
 }
@@ -280,7 +282,8 @@
     .mantra-backdrop,
     .recitation-card,
     .prayer-card,
-    .prayer-chip
+    .prayer-chip,
+    .abacus
 )[data-color='violet'] {
     --mantra-color: #7a4f96;
 }
@@ -290,7 +293,8 @@
     .mantra-backdrop,
     .recitation-card,
     .prayer-card,
-    .prayer-chip
+    .prayer-chip,
+    .abacus
 )[data-color='red'] {
     --mantra-color: #b93a2b;
 }
@@ -300,7 +304,8 @@
     .mantra-backdrop,
     .recitation-card,
     .prayer-card,
-    .prayer-chip
+    .prayer-chip,
+    .abacus
 )[data-color='amber'] {
     --mantra-color: #c2902f;
 }
@@ -310,7 +315,8 @@
     .mantra-backdrop,
     .recitation-card,
     .prayer-card,
-    .prayer-chip
+    .prayer-chip,
+    .abacus
 )[data-color='orange'] {
     --mantra-color: #c26a2c;
 }
@@ -320,7 +326,8 @@
     .mantra-backdrop,
     .recitation-card,
     .prayer-card,
-    .prayer-chip
+    .prayer-chip,
+    .abacus
 )[data-color='green'] {
     --mantra-color: #4f8a55;
 }
@@ -330,7 +337,8 @@
     .mantra-backdrop,
     .recitation-card,
     .prayer-card,
-    .prayer-chip
+    .prayer-chip,
+    .abacus
 )[data-color='teal'] {
     --mantra-color: #2f8a86;
 }
@@ -340,7 +348,8 @@
     .mantra-backdrop,
     .recitation-card,
     .prayer-card,
-    .prayer-chip
+    .prayer-chip,
+    .abacus
 )[data-color='neutral'] {
     --mantra-color: #8d8579;
 }
@@ -373,6 +382,31 @@
         var(--mantra-color) 55%,
         color-mix(in oklab, var(--mantra-color) 75%, black) 100%
     );
+}
+
+/* La esfera de una cuenta: sombreado esférico más el color del material.
+   La comparten la hebra del mala (.mala-bead trae sus --bead-*) y el ábaco
+   del retiro, que cae en la madera oscura del contador si la deidad no
+   eligió color. */
+.bead-sphere {
+    --bead-base: var(--mantra-color, #6b4a2f);
+    border-radius: 50%;
+    background-image:
+        radial-gradient(
+            circle at 35% 30%,
+            rgb(255 255 255 / 0.3),
+            transparent 48%,
+            rgb(0 0 0 / 0.28) 100%
+        ),
+        radial-gradient(
+            circle at 35% 30%,
+            color-mix(in oklab, var(--bead-base) 72%, white),
+            var(--bead-base) 55%,
+            color-mix(in oklab, var(--bead-base) 62%, black) 100%
+        );
+    box-shadow:
+        0 1px 3px rgb(0 0 0 / 0.35),
+        inset 0 -2px 4px rgb(0 0 0 / 0.2);
 }
 
 /* Chip de motivo de la Lista de oración: es texto, no una tarjeta, así que

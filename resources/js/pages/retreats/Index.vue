@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Check, ChevronDown, Pencil, Settings2 } from '@lucide/vue';
+import {
+    Check,
+    ChevronDown,
+    Lock,
+    LockOpen,
+    Pencil,
+    Settings2,
+} from '@lucide/vue';
 import { trans as t } from 'laravel-vue-i18n';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import Abacus from '@/components/retreats/Abacus.vue';
@@ -304,6 +311,11 @@ function saveDedications(): void {
 
 // Cambiar de deidad trae otro retiro: notas y dedicación arrancan de nuevo
 // desde lo que traiga esa fila, no desde lo que quedó tipeado.
+// Bloqueo del contador: no toca el servidor ni sobrevive a una recarga, es
+// solo para que el teléfono no sume cuentas solo mientras está en el
+// bolsillo o se lo pasa a otra persona a mirar.
+const locked = ref(false);
+
 watch(
     () => props.retreat?.id,
     () => {
@@ -311,6 +323,7 @@ watch(
         dedications.value = props.retreat?.dedications ?? '';
         editingDedications.value = false;
         dedicationsExpanded.value = false;
+        locked.value = false;
     },
 );
 
@@ -604,13 +617,41 @@ const selectClass =
 
                 <Abacus
                     :count="count"
+                    :disabled="locked"
                     :data-color="retreat.deity.color ?? undefined"
                     @update:count="onCount"
                 />
 
-                <p class="text-center text-xs text-muted-foreground">
-                    {{ t('Empujá una cuenta hacia la derecha para contar.') }}
-                </p>
+                <div class="flex items-center justify-center gap-2">
+                    <p class="text-center text-xs text-muted-foreground">
+                        {{
+                            locked
+                                ? t('El contador está bloqueado.')
+                                : t(
+                                      'Empujá una cuenta hacia la derecha para contar.',
+                                  )
+                        }}
+                    </p>
+                    <button
+                        type="button"
+                        class="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        :aria-pressed="locked"
+                        :aria-label="
+                            locked
+                                ? t('Desbloquear el contador')
+                                : t('Bloquear el contador')
+                        "
+                        :title="
+                            locked
+                                ? t('Desbloquear el contador')
+                                : t('Bloquear el contador')
+                        "
+                        @click="locked = !locked"
+                    >
+                        <Lock v-if="locked" class="size-3.5" />
+                        <LockOpen v-else class="size-3.5" />
+                    </button>
+                </div>
             </template>
 
             <div v-if="retreat.stages.length > 1" class="space-y-2">

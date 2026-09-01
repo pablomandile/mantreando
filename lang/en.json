@@ -292,5 +292,8 @@
     "El texto de dedicación de este retiro…": "This retreat's dedication text…",
     "Todavía no hay dedicaciones cargadas.": "No dedications yet.",
     "Mostrar menos": "Show less",
-    "Mostrar más": "Show more"
+    "Mostrar más": "Show more",
+    "El contador está bloqueado.": "The counter is locked.",
+    "Desbloquear el contador": "Unlock the counter",
+    "Bloquear el contador": "Lock the counter"
 }

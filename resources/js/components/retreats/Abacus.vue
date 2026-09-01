@@ -146,7 +146,7 @@ function onKeydown(event: KeyboardEvent, row: RowIndex): void {
                     t(':row: :moved de 10. Cada cuenta suma :value.', {
                         row: t(rowLabels[row]),
                         moved: String(moved[row]),
-                        value: String(ROW_VALUES[row]),
+                        value: ROW_VALUES[row].toLocaleString('es'),
                     })
                 "
                 @pointerdown="onPointerDown($event, row)"

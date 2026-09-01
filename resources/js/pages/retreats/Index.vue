@@ -675,6 +675,46 @@ const selectClass =
                     @update:count="onCount"
                 />
 
+                <!-- Solo en la vista enfocada: el mismo contador de arriba
+                     —número, meta y barra— pero debajo del ábaco. El ábaco
+                     por sí solo no alcanza para saber el total (sus tres
+                     líneas se reinician cada mil vueltas de mala). -->
+                <div class="hidden space-y-1 landscape-touch:block">
+                    <div class="flex items-baseline justify-center gap-2">
+                        <span class="text-lg font-semibold tabular-nums">
+                            {{ formatNumber(count) }}
+                        </span>
+                        <span
+                            class="text-sm text-muted-foreground tabular-nums"
+                        >
+                            {{
+                                t('de :goal', {
+                                    goal: formatNumber(stage.goal),
+                                })
+                            }}
+                        </span>
+                    </div>
+                    <div
+                        class="mx-auto h-1.5 w-56 overflow-hidden rounded-full bg-muted"
+                    >
+                        <div
+                            class="h-full rounded-full bg-foreground transition-[width] duration-300"
+                            :style="{ width: `${progressPercent}%` }"
+                        />
+                    </div>
+                    <p
+                        class="text-center text-xs text-muted-foreground tabular-nums"
+                    >
+                        {{
+                            reached
+                                ? t('Cifra cumplida')
+                                : t('Faltan :count', {
+                                      count: formatNumber(remaining),
+                                  })
+                        }}
+                    </p>
+                </div>
+
                 <div
                     class="flex items-center justify-center gap-2 landscape-touch:hidden"
                 >

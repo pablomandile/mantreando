@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { trans as t } from 'laravel-vue-i18n';
 import { computed, ref } from 'vue';
+import type { Component } from 'vue';
+import BellIcon from '@/components/icons/BellIcon.vue';
+import EndlessKnotIcon from '@/components/icons/EndlessKnotIcon.vue';
+import VajraIcon from '@/components/icons/VajraIcon.vue';
 import { hapticTick } from '@/lib/mala/haptics';
 import {
     applyMove,
@@ -38,6 +42,15 @@ const rowLabels: Record<RowIndex, string> = {
     0: 'Unidades',
     1: 'Decenas',
     2: 'Centenas',
+};
+
+// Un símbolo al final de cada línea, de abajo hacia arriba: vajra, campana y
+// nudo eterno. Las filas se pintan en el orden del array `rows` (0,1,2) sin
+// invertir, así que la última en el DOM —centenas— es la de más abajo.
+const rowIcons: Record<RowIndex, Component> = {
+    2: VajraIcon,
+    1: BellIcon,
+    0: EndlessKnotIcon,
 };
 
 /** Una cuenta está del lado derecho si entra en las últimas `moved`. */
@@ -122,37 +135,38 @@ function onKeydown(event: KeyboardEvent, row: RowIndex): void {
 
 <template>
     <div class="abacus" :aria-disabled="disabled || undefined">
-        <div
-            v-for="row in rows"
-            :key="row"
-            class="abacus-row"
-            :class="{ 'abacus-row--dragging': dragging === row }"
-            :data-disabled="disabled || undefined"
-            tabindex="0"
-            role="button"
-            :aria-label="
-                t(':row: :moved de 10. Cada cuenta suma :value.', {
-                    row: t(rowLabels[row]),
-                    moved: String(moved[row]),
-                    value: String(ROW_VALUES[row]),
-                })
-            "
-            @pointerdown="onPointerDown($event, row)"
-            @pointermove="onPointerMove"
-            @pointerup="onPointerUp"
-            @pointercancel="onPointerUp"
-            @keydown="onKeydown($event, row)"
-        >
-            <span class="abacus-cord" aria-hidden="true" />
-            <span
-                v-for="slot in slots"
-                :key="slot"
-                class="abacus-bead"
-                :style="{ '--slot': isMoved(row, slot) ? slot + 1 : slot }"
-                aria-hidden="true"
+        <div v-for="row in rows" :key="row" class="abacus-row-track">
+            <div
+                class="abacus-row"
+                :class="{ 'abacus-row--dragging': dragging === row }"
+                :data-disabled="disabled || undefined"
+                tabindex="0"
+                role="button"
+                :aria-label="
+                    t(':row: :moved de 10. Cada cuenta suma :value.', {
+                        row: t(rowLabels[row]),
+                        moved: String(moved[row]),
+                        value: String(ROW_VALUES[row]),
+                    })
+                "
+                @pointerdown="onPointerDown($event, row)"
+                @pointermove="onPointerMove"
+                @pointerup="onPointerUp"
+                @pointercancel="onPointerUp"
+                @keydown="onKeydown($event, row)"
             >
-                <span class="bead-sphere" />
-            </span>
+                <span class="abacus-cord" aria-hidden="true" />
+                <span
+                    v-for="slot in slots"
+                    :key="slot"
+                    class="abacus-bead"
+                    :style="{ '--slot': isMoved(row, slot) ? slot + 1 : slot }"
+                    aria-hidden="true"
+                >
+                    <span class="bead-sphere" />
+                </span>
+            </div>
+            <component :is="rowIcons[row]" class="abacus-row-icon" />
         </div>
     </div>
 </template>
@@ -180,9 +194,22 @@ function onKeydown(event: KeyboardEvent, row: RowIndex): void {
     user-select: none;
 }
 
+/* La fila de cuentas y su símbolo, lado a lado: el símbolo no es decorado
+   suelto, es lo que le deja aire a las cuentas hasta el borde derecho de la
+   tarjeta en vez de que la última terminara pegada al marco. */
+.abacus-row-track {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
 .abacus-row {
     position: relative;
-    width: 100%;
+    /* No 100%: ahora comparte la fila con el símbolo. flex-basis 0 más
+       flex-grow reparte el ancho disponible y aspect-ratio saca la altura
+       de lo que le toque, no del contenedor entero. */
+    flex: 1 1 0%;
+    min-width: 0;
     /* La altura sale del ancho: cada cuenta es un círculo de un slot, así que
        la fila mide once cuentas de ancho por una de alto. Nada de height:
        le ganaría al aspect-ratio y dejaría las cuentas en un punto. */
@@ -190,6 +217,14 @@ function onKeydown(event: KeyboardEvent, row: RowIndex): void {
     cursor: grab;
     border-radius: 0.5rem;
     outline-offset: 2px;
+}
+
+.abacus-row-icon {
+    flex: 0 0 auto;
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--mantra-color, var(--muted-foreground));
+    opacity: 0.85;
 }
 
 .abacus-row:focus-visible {

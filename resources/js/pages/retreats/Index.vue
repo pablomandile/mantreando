@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Check, Settings2 } from '@lucide/vue';
+import { Check, ChevronDown, Pencil, Settings2 } from '@lucide/vue';
 import { trans as t } from 'laravel-vue-i18n';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import Abacus from '@/components/retreats/Abacus.vue';
+import ResetRetreatDialog from '@/components/retreats/ResetRetreatDialog.vue';
 import { Button } from '@/components/ui/button';
 import { getLocalDate } from '@/lib/practice/localDate';
 
@@ -34,6 +35,8 @@ interface ActiveRetreat {
     };
     started_on: string;
     completed_on: string | null;
+    notes: string | null;
+    dedications: string | null;
     stages: Stage[];
     current_stage_id: number | null;
 }
@@ -181,6 +184,7 @@ function flush(): void {
 function onHidden(): void {
     if (document.visibilityState === 'hidden') {
         flush();
+        flushNotes();
     }
 }
 
@@ -208,9 +212,115 @@ onMounted(() => {
     }
 });
 
+// ── Notas ───────────────────────────────────────────────────────────────────
+// Apuntes libres durante el retiro: mismo patrón que el conteo (debounced,
+// con flush en los mismos puntos), pero por retiro y no por etapa.
+const NOTES_SYNC_DELAY = 1200;
+const notes = ref(props.retreat?.notes ?? '');
+let notesTimer: ReturnType<typeof setTimeout> | null = null;
+let notesPending = false;
+
+function onNotesInput(): void {
+    notesPending = true;
+
+    if (notesTimer !== null) {
+        clearTimeout(notesTimer);
+    }
+
+    notesTimer = setTimeout(flushNotes, NOTES_SYNC_DELAY);
+}
+
+function flushNotes(): void {
+    if (notesTimer !== null) {
+        clearTimeout(notesTimer);
+        notesTimer = null;
+    }
+
+    if (!notesPending || props.retreat === null) {
+        return;
+    }
+
+    const sent = notes.value;
+    notesPending = false;
+
+    router.patch(
+        `/retreats/${props.retreat.id}`,
+        { notes: sent },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onError: () => {
+                notesPending = true;
+            },
+        },
+    );
+}
+
+// ── Dedicaciones ────────────────────────────────────────────────────────────
+// A diferencia de las notas, no se autoguardan: se editan a mano con el
+// lápiz y se confirman con Guardar, como pidió el usuario.
+const DEDICATIONS_PREVIEW_CHARS = 220;
+const dedications = ref(props.retreat?.dedications ?? '');
+const editingDedications = ref(false);
+const dedicationsDraft = ref('');
+const dedicationsExpanded = ref(false);
+const savingDedications = ref(false);
+
+const dedicationsIsLong = computed(
+    () => dedications.value.trim().length > DEDICATIONS_PREVIEW_CHARS,
+);
+
+function startEditingDedications(): void {
+    dedicationsDraft.value = dedications.value;
+    editingDedications.value = true;
+}
+
+function cancelEditingDedications(): void {
+    editingDedications.value = false;
+}
+
+function saveDedications(): void {
+    if (props.retreat === null) {
+        return;
+    }
+
+    savingDedications.value = true;
+
+    router.patch(
+        `/retreats/${props.retreat.id}`,
+        { dedications: dedicationsDraft.value },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                dedications.value = dedicationsDraft.value;
+                editingDedications.value = false;
+            },
+            onFinish: () => {
+                savingDedications.value = false;
+            },
+        },
+    );
+}
+
+// Cambiar de deidad trae otro retiro: notas y dedicación arrancan de nuevo
+// desde lo que traiga esa fila, no desde lo que quedó tipeado.
+watch(
+    () => props.retreat?.id,
+    () => {
+        notes.value = props.retreat?.notes ?? '';
+        dedications.value = props.retreat?.dedications ?? '';
+        editingDedications.value = false;
+        dedicationsExpanded.value = false;
+    },
+);
+
+const textareaClass =
+    'flex min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none';
+
 onBeforeUnmount(() => {
     document.removeEventListener('visibilitychange', onHidden);
     flush();
+    flushNotes();
 });
 
 // ── Acciones ────────────────────────────────────────────────────────────────
@@ -218,6 +328,7 @@ const switching = ref(false);
 
 function activate(deityId: number): void {
     flush();
+    flushNotes();
     switching.value = true;
     router.post(
         '/retreats/activate',
@@ -252,6 +363,39 @@ function completeStage(): void {
     );
 }
 
+/**
+ * El diálogo ya confirmó el reinicio contra el servidor sin preserveState,
+ * así que las props (stages, current_stage_id) llegan frescas en 0. Lo que
+ * hay que arreglar a mano es lo que vive fuera de las props: el ref local
+ * del conteo en curso (si no, sigue mostrando el número viejo hasta la
+ * próxima recarga), un debounce pendiente de ANTES del reinicio (que si
+ * llegara tarde pisaría el 0 con el número viejo) y la copia de seguridad
+ * en localStorage de cada etapa (si quedara un número viejo ahí, la
+ * recuperación al montar la traería de vuelta).
+ */
+function onReset(): void {
+    if (timer !== null) {
+        clearTimeout(timer);
+        timer = null;
+    }
+
+    pending = false;
+    dismissed.value = false;
+    count.value = stage.value?.count ?? 0;
+
+    if (props.retreat !== null) {
+        for (const item of props.retreat.stages) {
+            try {
+                localStorage.removeItem(
+                    `retreat:${props.retreat.id}:${item.id}`,
+                );
+            } catch {
+                // Sin almacenamiento no hay nada que limpiar.
+            }
+        }
+    }
+}
+
 const dismissed = ref(false);
 
 const selectClass =
@@ -272,17 +416,25 @@ const selectClass =
                 </p>
             </div>
 
-            <Button
-                v-if="canManageDeities"
-                as-child
-                size="sm"
-                variant="outline"
-            >
-                <Link href="/retreats/deities">
-                    <Settings2 class="size-4" />
-                    {{ t('Deidades') }}
-                </Link>
-            </Button>
+            <div class="flex flex-wrap items-center gap-2">
+                <ResetRetreatDialog
+                    v-if="retreat !== null"
+                    :retreat-id="retreat.id"
+                    :deity-name="retreat.deity.name"
+                    @reset="onReset"
+                />
+                <Button
+                    v-if="canManageDeities"
+                    as-child
+                    size="sm"
+                    variant="outline"
+                >
+                    <Link href="/retreats/deities">
+                        <Settings2 class="size-4" />
+                        {{ t('Deidades') }}
+                    </Link>
+                </Button>
+            </div>
         </header>
 
         <!-- Sin retiro: elegir la deidad -->
@@ -491,6 +643,107 @@ const selectClass =
                         </span>
                     </li>
                 </ol>
+            </div>
+
+            <!-- Apuntes libres de esta sesión, privados y autoguardados. -->
+            <div class="space-y-2">
+                <label for="retreat-notes" class="text-sm font-medium">
+                    {{ t('Notas') }}
+                </label>
+                <textarea
+                    id="retreat-notes"
+                    v-model="notes"
+                    :class="textareaClass"
+                    rows="4"
+                    :placeholder="
+                        t(
+                            'Apuntes de esta sesión, instrucciones del lama, lo que quieras recordar…',
+                        )
+                    "
+                    @input="onNotesInput"
+                    @blur="flushNotes"
+                />
+            </div>
+
+            <!-- Dedicaciones: plegadas a las primeras líneas, con el lápiz
+                 para agregar o borrar texto. Va al pie de todo. -->
+            <div class="space-y-2 border-t pt-4">
+                <div class="flex items-center justify-between gap-2">
+                    <h3 class="text-sm font-medium">
+                        {{ t('Dedicaciones del retiro') }}
+                    </h3>
+                    <button
+                        v-if="!editingDedications"
+                        type="button"
+                        class="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        :aria-label="t('Editar dedicaciones')"
+                        :title="t('Editar dedicaciones')"
+                        @click="startEditingDedications"
+                    >
+                        <Pencil class="size-4" />
+                    </button>
+                </div>
+
+                <template v-if="editingDedications">
+                    <textarea
+                        v-model="dedicationsDraft"
+                        :class="textareaClass"
+                        rows="6"
+                        :placeholder="
+                            t('El texto de dedicación de este retiro…')
+                        "
+                    />
+                    <div class="flex gap-2">
+                        <Button
+                            size="sm"
+                            :disabled="savingDedications"
+                            @click="saveDedications"
+                        >
+                            {{ t('Guardar') }}
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            :disabled="savingDedications"
+                            @click="cancelEditingDedications"
+                        >
+                            {{ t('Cancelar') }}
+                        </Button>
+                    </div>
+                </template>
+
+                <template v-else>
+                    <p
+                        v-if="dedications.trim() === ''"
+                        class="text-sm text-muted-foreground"
+                    >
+                        {{ t('Todavía no hay dedicaciones cargadas.') }}
+                    </p>
+                    <template v-else>
+                        <p
+                            class="text-sm leading-relaxed whitespace-pre-line"
+                            :class="{ 'line-clamp-3': !dedicationsExpanded }"
+                        >
+                            {{ dedications }}
+                        </p>
+                        <button
+                            v-if="dedicationsIsLong"
+                            type="button"
+                            class="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                            @click="dedicationsExpanded = !dedicationsExpanded"
+                        >
+                            {{
+                                dedicationsExpanded
+                                    ? t('Mostrar menos')
+                                    : t('Mostrar más')
+                            }}
+                            <ChevronDown
+                                class="size-3.5 transition-transform"
+                                :class="{ 'rotate-180': dedicationsExpanded }"
+                            />
+                        </button>
+                    </template>
+                </template>
             </div>
         </template>
     </div>

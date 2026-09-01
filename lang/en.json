@@ -276,5 +276,21 @@
     "OM VAJRA SATTVA SAMAYA…": "OM VAJRA SATTVA SAMAYA…",
     "Cantidad": "Amount",
     "Cuántas veces se recita en el retiro.": "How many times it is recited in the retreat.",
-    "Agregar mantra": "Add mantra"
+    "Agregar mantra": "Add mantra",
+    "Reiniciar conteo": "Reset count",
+    "¿Reiniciar el conteo de este retiro?": "Reset this retreat's count?",
+    "Todas las etapas vuelven a cero y quedan abiertas de nuevo. No se puede deshacer.": "All stages go back to zero and reopen. This can't be undone.",
+    "No": "No",
+    "Sí": "Yes",
+    "Escribí el nombre de la deidad para confirmar": "Type the deity's name to confirm",
+    "Escribí \":name\" tal cual, sin espacios de más.": "Type \":name\" exactly, no extra spaces.",
+    "Nombre de la deidad": "Deity name",
+    "Notas": "Notes",
+    "Apuntes de esta sesión, instrucciones del lama, lo que quieras recordar…": "Notes for this session, instructions from your teacher, anything you want to remember…",
+    "Dedicaciones del retiro": "Retreat dedications",
+    "Editar dedicaciones": "Edit dedications",
+    "El texto de dedicación de este retiro…": "This retreat's dedication text…",
+    "Todavía no hay dedicaciones cargadas.": "No dedications yet.",
+    "Mostrar menos": "Show less",
+    "Mostrar más": "Show more"
 }

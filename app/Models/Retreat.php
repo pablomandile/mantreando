@@ -23,10 +23,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable $started_on
  * @property CarbonImmutable|null $completed_on
  * @property bool $is_active
+ * @property string|null $notes
+ * @property string|null $dedications
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  */
-#[Fillable(['retreat_deity_id', 'started_on', 'completed_on', 'is_active'])]
+#[Fillable(['retreat_deity_id', 'started_on', 'completed_on', 'is_active', 'notes', 'dedications'])]
 class Retreat extends Model
 {
     /** @use HasFactory<RetreatFactory> */

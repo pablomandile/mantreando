@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Database\Factories\RetreatProgressFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -25,6 +27,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['retreat_id', 'retreat_mantra_id', 'count', 'completed_on'])]
 class RetreatProgress extends Model
 {
+    /** @use HasFactory<RetreatProgressFactory> */
+    use HasFactory;
+
     protected $table = 'retreat_progress';
 
     /** @return array<string, string> */

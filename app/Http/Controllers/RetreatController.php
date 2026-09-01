@@ -104,6 +104,57 @@ class RetreatController
     }
 
     /**
+     * Guarda las notas y/o la dedicación del retiro. Los dos campos son
+     * independientes: `sometimes` hace que validate() devuelva solo los que
+     * vinieron, así que guardar uno no pisa el otro con lo que tuviera el
+     * formulario en ese momento (las notas se autoguardan solas).
+     */
+    public function update(Request $request, Retreat $retreat): RedirectResponse
+    {
+        Gate::authorize('update', $retreat);
+
+        $data = $request->validate([
+            'notes' => ['sometimes', 'nullable', 'string', 'max:20000'],
+            'dedications' => ['sometimes', 'nullable', 'string', 'max:20000'],
+        ], [], ['notes' => 'notas', 'dedications' => 'dedicación']);
+
+        $retreat->update($data);
+
+        return back();
+    }
+
+    /**
+     * Reinicia el conteo del retiro: todas las etapas vuelven a cero y a
+     * abiertas, y el retiro deja de estar completo. No borra la fila ni las
+     * notas — solo lo contado.
+     *
+     * El nombre de la deidad se pide también acá, no solo en el diálogo del
+     * frente: un POST suelto (o una segunda pestaña) no puede reiniciar un
+     * retiro ajeno a lo que el usuario ve en pantalla.
+     */
+    public function reset(Request $request, Retreat $retreat): RedirectResponse
+    {
+        Gate::authorize('update', $retreat);
+
+        $data = $request->validate([
+            'confirm_name' => ['required', 'string'],
+        ], [], ['confirm_name' => 'nombre de la deidad']);
+
+        $retreat->loadMissing('deity');
+
+        if (mb_strtolower(trim($data['confirm_name'])) !== mb_strtolower($retreat->deity->name)) {
+            return back()->withErrors(['confirm_name' => 'El nombre no coincide con la deidad del retiro.']);
+        }
+
+        DB::transaction(function () use ($retreat): void {
+            $retreat->progress()->update(['count' => 0, 'completed_on' => null]);
+            $retreat->update(['completed_on' => null]);
+        });
+
+        return back();
+    }
+
+    /**
      * Cierra (o reabre) una etapa. La cierra el usuario y no la cifra: casi
      * siempre se recita de más antes de pasar a la siguiente.
      */
@@ -207,6 +258,8 @@ class RetreatController
             ],
             'started_on' => $retreat->started_on->toDateString(),
             'completed_on' => $retreat->completed_on?->toDateString(),
+            'notes' => $retreat->notes,
+            'dedications' => $retreat->dedications,
             'stages' => array_values($stages),
             'current_stage_id' => $retreat->currentStage()?->id,
         ];

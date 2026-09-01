@@ -217,6 +217,78 @@ test('un usuario no toca el retiro de otro', function () {
     expect(RetreatProgress::count())->toBe(0);
 });
 
+test('las notas y la dedicacion se guardan por separado', function () {
+    $deity = deityWithStages();
+    $user = User::factory()->create();
+    $retreat = Retreat::factory()->ownedBy($user)->create(['retreat_deity_id' => $deity->id]);
+
+    $this->actingAs($user)
+        ->patch("/retreats/{$retreat->id}", ['notes' => 'Hoy costo mas sostener la postura.'])
+        ->assertRedirect();
+
+    // Guardar solo la dedicacion no pisa las notas: 'sometimes' hace que
+    // validate() devuelva unicamente lo que vino en el request.
+    $this->actingAs($user)
+        ->patch("/retreats/{$retreat->id}", ['dedications' => 'Que todos los seres tengan felicidad.'])
+        ->assertRedirect();
+
+    expect($retreat->fresh()->notes)->toBe('Hoy costo mas sostener la postura.')
+        ->and($retreat->fresh()->dedications)->toBe('Que todos los seres tengan felicidad.');
+});
+
+test('reiniciar el conteo pide el nombre exacto de la deidad', function () {
+    $deity = deityWithStages('Vajrasattva', [100000, 10000]);
+    $user = User::factory()->create();
+    $retreat = Retreat::factory()->ownedBy($user)->create(['retreat_deity_id' => $deity->id]);
+    [$first, $second] = $deity->mantras()->get()->all();
+
+    RetreatProgress::factory()->create([
+        'retreat_id' => $retreat->id,
+        'retreat_mantra_id' => $first->id,
+        'count' => 100000,
+        'completed_on' => '2026-09-01',
+    ]);
+    RetreatProgress::factory()->create([
+        'retreat_id' => $retreat->id,
+        'retreat_mantra_id' => $second->id,
+        'count' => 4200,
+    ]);
+    $retreat->update(['completed_on' => '2026-09-01']);
+
+    // El nombre equivocado no reinicia nada.
+    $this->actingAs($user)
+        ->post("/retreats/{$retreat->id}/reset", ['confirm_name' => 'Heruka'])
+        ->assertSessionHasErrors('confirm_name');
+
+    expect(RetreatProgress::sum('count'))->toBe(104200);
+
+    // El nombre correcto (sin importar mayusculas ni espacios) reinicia todo.
+    $this->actingAs($user)
+        ->post("/retreats/{$retreat->id}/reset", ['confirm_name' => ' vajrasattva '])
+        ->assertRedirect();
+
+    expect(RetreatProgress::sum('count'))->toBe(0)
+        ->and(RetreatProgress::whereNotNull('completed_on')->count())->toBe(0)
+        ->and($retreat->fresh()->completed_on)->toBeNull();
+});
+
+test('un usuario no reinicia ni edita el retiro de otro', function () {
+    $deity = deityWithStages();
+    $user = User::factory()->create();
+    $other = User::factory()->create();
+    $ajeno = Retreat::factory()->ownedBy($other)->create(['retreat_deity_id' => $deity->id]);
+
+    $this->actingAs($user)
+        ->post("/retreats/{$ajeno->id}/reset", ['confirm_name' => $deity->name])
+        ->assertForbidden();
+
+    $this->actingAs($user)
+        ->patch("/retreats/{$ajeno->id}", ['notes' => 'ajeno'])
+        ->assertForbidden();
+
+    expect($ajeno->fresh()->notes)->toBeNull();
+});
+
 test('un invitado no llega al retiro', function () {
     $this->get('/retreats')->assertRedirect('/login');
 });

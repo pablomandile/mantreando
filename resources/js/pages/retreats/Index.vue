@@ -68,6 +68,23 @@ const stage = computed<Stage | null>(
         ) ?? null,
 );
 
+// Marca en <html> si hay una etapa en curso: es lo único que le hace falta
+// al CSS global (app.css) para tapar el sidebar y la barra superior del
+// layout en la vista enfocada del celular apaisado — viven fuera del árbol
+// de esta página, así que un :class de acá adentro no los alcanza. La
+// decisión de mostrar u ocultar sigue siendo 100% del media query; esto
+// solo le pasa el dato de "hay algo para mostrar en esa vista".
+watch(
+    stage,
+    (value) => {
+        document.documentElement.classList.toggle(
+            'retreat-focus',
+            value !== null,
+        );
+    },
+    { immediate: true },
+);
+
 // El conteo se lleva acá y se sincroniza cada tanto: una recitación no puede
 // costar un viaje al servidor.
 const count = ref(stage.value?.count ?? 0);
@@ -332,6 +349,7 @@ const textareaClass =
 
 onBeforeUnmount(() => {
     document.removeEventListener('visibilitychange', onHidden);
+    document.documentElement.classList.remove('retreat-focus');
     flush();
     flushNotes();
 });
@@ -418,8 +436,13 @@ const selectClass =
 <template>
     <Head :title="t('Retiro de aproximación')" />
 
-    <div class="mx-auto w-full max-w-2xl space-y-6 px-4 py-6">
-        <header class="flex flex-wrap items-start justify-between gap-3">
+    <div
+        class="mx-auto w-full max-w-2xl space-y-6 px-4 py-6 landscape-touch:space-y-2 landscape-touch:py-2"
+    >
+        <header
+            class="flex flex-wrap items-start justify-between gap-3"
+            :class="{ 'landscape-touch:hidden': stage !== null }"
+        >
             <div>
                 <h1 class="text-2xl font-semibold">
                     {{ t('Retiro de aproximación') }}
@@ -494,7 +517,10 @@ const selectClass =
 
         <!-- Retiro en curso -->
         <template v-else>
-            <div class="grid gap-2">
+            <div
+                class="grid gap-2"
+                :class="{ 'landscape-touch:hidden': stage !== null }"
+            >
                 <label for="deity" class="text-sm font-medium">
                     {{ t('Deidad') }}
                 </label>
@@ -515,27 +541,54 @@ const selectClass =
                 </select>
             </div>
 
-            <div class="flex items-start gap-4">
-                <img
-                    v-if="retreat.deity.image_url"
-                    :src="retreat.deity.image_url"
-                    :alt="retreat.deity.name"
-                    class="size-24 shrink-0 rounded-xl object-cover"
-                />
-                <div class="min-w-0 flex-1">
-                    <h2 class="text-lg font-semibold">
-                        {{ retreat.deity.name }}
-                    </h2>
-                    <p v-if="stage" class="text-sm text-muted-foreground">
-                        {{ stage.name }}
-                    </p>
+            <div
+                class="gap-4"
+                :class="{
+                    'landscape-touch:grid landscape-touch:grid-cols-[auto_1fr] landscape-touch:items-center':
+                        stage !== null,
+                }"
+            >
+                <div class="flex items-start gap-4">
+                    <img
+                        v-if="retreat.deity.image_url"
+                        :src="retreat.deity.image_url"
+                        :alt="retreat.deity.name"
+                        class="size-24 shrink-0 rounded-xl object-cover"
+                        :class="{ 'landscape-touch:size-16': stage !== null }"
+                    />
+                    <div
+                        class="min-w-0 flex-1"
+                        :class="{ 'landscape-touch:hidden': stage !== null }"
+                    >
+                        <h2 class="text-lg font-semibold">
+                            {{ retreat.deity.name }}
+                        </h2>
+                        <p v-if="stage" class="text-sm text-muted-foreground">
+                            {{ stage.name }}
+                        </p>
+                    </div>
+                    <img
+                        v-if="retreat.deity.syllable_image_url"
+                        :src="retreat.deity.syllable_image_url"
+                        :alt="
+                            t('Sílaba de :name', { name: retreat.deity.name })
+                        "
+                        class="size-16 shrink-0 rounded-xl object-contain"
+                        :class="{ 'landscape-touch:hidden': stage !== null }"
+                    />
                 </div>
-                <img
-                    v-if="retreat.deity.syllable_image_url"
-                    :src="retreat.deity.syllable_image_url"
-                    :alt="t('Sílaba de :name', { name: retreat.deity.name })"
-                    class="size-16 shrink-0 rounded-xl object-contain"
-                />
+
+                <!-- Solo en la vista enfocada: a la misma altura que la
+                     imagen, y a dos líneas como mucho para que la fila no
+                     crezca más que la imagen. La tarjeta de abajo (la de
+                     siempre) se tapa acá al lado para no duplicar el texto
+                     en pantalla. -->
+                <p
+                    v-if="stage !== null"
+                    class="hidden landscape-touch:line-clamp-2 landscape-touch:block landscape-touch:text-sm landscape-touch:leading-snug landscape-touch:font-light"
+                >
+                    {{ stage.text }}
+                </p>
             </div>
 
             <p
@@ -551,12 +604,12 @@ const selectClass =
 
             <template v-else>
                 <p
-                    class="rounded-xl border bg-card/50 p-4 leading-relaxed font-light whitespace-pre-line"
+                    class="rounded-xl border bg-card/50 p-4 leading-relaxed font-light whitespace-pre-line landscape-touch:hidden"
                 >
                     {{ stage.text }}
                 </p>
 
-                <div class="space-y-2">
+                <div class="space-y-2 landscape-touch:hidden">
                     <div class="flex items-baseline justify-between gap-3">
                         <span class="text-3xl font-semibold tabular-nums">
                             {{ formatNumber(count) }}
@@ -590,7 +643,7 @@ const selectClass =
 
                 <div
                     v-if="reached && !dismissed"
-                    class="space-y-3 rounded-xl border border-foreground/20 bg-accent/60 p-4"
+                    class="space-y-3 rounded-xl border border-foreground/20 bg-accent/60 p-4 landscape-touch:hidden"
                 >
                     <p class="text-sm font-medium">
                         {{
@@ -622,7 +675,9 @@ const selectClass =
                     @update:count="onCount"
                 />
 
-                <div class="flex items-center justify-center gap-2">
+                <div
+                    class="flex items-center justify-center gap-2 landscape-touch:hidden"
+                >
                     <p class="text-center text-xs text-muted-foreground">
                         {{
                             locked
@@ -654,7 +709,11 @@ const selectClass =
                 </div>
             </template>
 
-            <div v-if="retreat.stages.length > 1" class="space-y-2">
+            <div
+                v-if="retreat.stages.length > 1"
+                class="space-y-2"
+                :class="{ 'landscape-touch:hidden': stage !== null }"
+            >
                 <h3 class="text-sm font-medium">{{ t('Etapas') }}</h3>
                 <ol class="space-y-1">
                     <li
@@ -687,7 +746,10 @@ const selectClass =
             </div>
 
             <!-- Apuntes libres de esta sesión, privados y autoguardados. -->
-            <div class="space-y-2">
+            <div
+                class="space-y-2"
+                :class="{ 'landscape-touch:hidden': stage !== null }"
+            >
                 <label for="retreat-notes" class="text-sm font-medium">
                     {{ t('Notas') }}
                 </label>
@@ -708,7 +770,10 @@ const selectClass =
 
             <!-- Dedicaciones: plegadas a las primeras líneas, con el lápiz
                  para agregar o borrar texto. Va al pie de todo. -->
-            <div class="space-y-2 border-t pt-4">
+            <div
+                class="space-y-2 border-t pt-4"
+                :class="{ 'landscape-touch:hidden': stage !== null }"
+            >
                 <div class="flex items-center justify-between gap-2">
                     <h3 class="text-sm font-medium">
                         {{ t('Dedicaciones del retiro') }}

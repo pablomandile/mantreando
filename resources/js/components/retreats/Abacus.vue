@@ -31,7 +31,9 @@ const props = defineProps<{
 
 const emit = defineEmits<{ 'update:count': [value: number] }>();
 
-const rows: RowIndex[] = [0, 1, 2];
+// De arriba abajo en el DOM: centenas, decenas, unidades. La de menor valor
+// queda abajo, como en el contador de madera.
+const rows: RowIndex[] = [2, 1, 0];
 const slots = Array.from({ length: BEADS_PER_ROW }, (_, index) => index);
 
 // Cuántas cuentas están corridas en cada línea. El acarreo no se calcula: es
@@ -45,12 +47,13 @@ const rowLabels: Record<RowIndex, string> = {
 };
 
 // Un símbolo al final de cada línea, de abajo hacia arriba: vajra, campana y
-// nudo eterno. Las filas se pintan en el orden del array `rows` (0,1,2) sin
-// invertir, así que la última en el DOM —centenas— es la de más abajo.
+// nudo eterno. Va por posición, no por fila: como `rows` ya no es [0,1,2],
+// acá se invierte también para que el símbolo se quede en su lugar aunque
+// cambie qué línea (unidades/decenas/centenas) pasa por ahí.
 const rowIcons: Record<RowIndex, Component> = {
-    2: VajraIcon,
+    0: VajraIcon,
     1: BellIcon,
-    0: EndlessKnotIcon,
+    2: EndlessKnotIcon,
 };
 
 /** Una cuenta está del lado derecho si entra en las últimas `moved`. */
@@ -192,6 +195,15 @@ function onKeydown(event: KeyboardEvent, row: RowIndex): void {
     );
     touch-action: none;
     user-select: none;
+}
+
+/* Horizontal y con el dedo: la vista enfocada del retiro (Index.vue) le deja
+   el ancho libre, así que las cuentas pueden crecer y quedar más cómodas
+   para el gesto en vez de mantener el tope pensado para el celular parado. */
+@media (orientation: landscape) and (pointer: coarse) {
+    .abacus {
+        max-width: 34rem;
+    }
 }
 
 /* La fila de cuentas y su símbolo, lado a lado: el símbolo no es decorado

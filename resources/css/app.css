@@ -7,6 +7,34 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Horizontal Y con el dedo, no con mouse: un `landscape:` a secas también
+   dispara en cualquier ventana de escritorio más ancha que alta —o sea,
+   casi todas—, así que el modo enfocado del retiro nunca se activaría por
+   girar el teléfono sino por el simple ancho de la ventana. pointer:coarse
+   lo limita a los dispositivos que en verdad se giran con la mano. */
+@custom-variant landscape-touch {
+    @media (orientation: landscape) and (pointer: coarse) {
+        @slot;
+    }
+}
+
+/* La vista enfocada del retiro de aproximación (Index.vue, junto al ábaco)
+ * también tapa el sidebar y la barra superior del layout, no solo su propio
+ * contenido. Un celular apaisado suele ser más ancho que el breakpoint
+ * "escritorio" del sidebar (768px), así que sin esto se ve el panel de
+ * navegación entero al lado — justo lo que se pidió sacar de encima.
+ *
+ * retreat-focus lo pone y lo saca Index.vue (con la etapa activa), es la
+ * única forma de que este CSS global sepa cuándo aplica: el sidebar y el
+ * header viven en el layout, fuera del árbol de esa página.
+ */
+@media (orientation: landscape) and (pointer: coarse) {
+    html.retreat-focus [data-slot='sidebar'],
+    html.retreat-focus [data-slot='app-header'] {
+        display: none;
+    }
+}
+
 @theme inline {
     --font-sans:
         Instrument Sans, ui-sans-serif, system-ui, sans-serif,

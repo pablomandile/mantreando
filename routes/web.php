@@ -85,11 +85,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // El retiro del usuario: el ábaco y su conteo.
     Route::get('retreats', [RetreatController::class, 'index'])->name('retreats.index');
+    Route::get('retreats/history', [RetreatController::class, 'history'])->name('retreats.history');
     Route::post('retreats/activate', [RetreatController::class, 'activate'])->name('retreats.activate');
     Route::patch('retreats/{retreat}', [RetreatController::class, 'update'])->name('retreats.update');
+    Route::delete('retreats/{retreat}', [RetreatController::class, 'destroy'])->name('retreats.destroy');
     Route::patch('retreats/{retreat}/count', [RetreatController::class, 'count'])->name('retreats.count');
     Route::patch('retreats/{retreat}/stage', [RetreatController::class, 'completeStage'])->name('retreats.stage');
     Route::post('retreats/{retreat}/reset', [RetreatController::class, 'reset'])->name('retreats.reset');
+    Route::post('retreats/{retreat}/archive', [RetreatController::class, 'archive'])->name('retreats.archive');
 
     Route::post('mantras/reorder', MantraReorderController::class)->name('mantras.reorder');
     // Misma pantalla que la biblioteca, filtrada. Con ruta propia y no

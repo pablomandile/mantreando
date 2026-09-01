@@ -67,7 +67,10 @@ class RetreatController
             );
 
             if (! $retreat->wasRecentlyCreated) {
-                $retreat->update(['is_active' => true]);
+                // archived_on también se limpia: si no, un retiro guardado
+                // en el historial apareceria ahi Y como el activo a la vez
+                // en cuanto el usuario vuelve a elegir esa misma deidad.
+                $retreat->update(['is_active' => true, 'archived_on' => null]);
             }
         });
 
@@ -86,6 +89,7 @@ class RetreatController
         $data = $request->validate([
             'retreat_mantra_id' => ['required', 'integer', 'exists:retreat_mantras,id'],
             'count' => ['required', 'integer', 'min:0', 'max:100000000'],
+            'local_date' => ['nullable', 'date_format:Y-m-d'],
         ], [], ['count' => 'conteo']);
 
         // Se busca DENTRO de la deidad del retiro: una etapa ajena no aparece.
@@ -99,6 +103,15 @@ class RetreatController
             ['retreat_id' => $retreat->id, 'retreat_mantra_id' => $mantra->id],
             ['count' => $data['count']],
         );
+
+        // first_counted_on/last_counted_on son la práctica en sí, no la
+        // elección del selector: started_on se pone al activar la deidad,
+        // que puede ser días antes de tocar una sola cuenta.
+        $today = $data['local_date'] ?? $this->localDate($request);
+        $retreat->update([
+            'first_counted_on' => $retreat->first_counted_on ?? ($data['count'] > 0 ? $today : null),
+            'last_counted_on' => $today,
+        ]);
 
         return back();
     }
@@ -148,7 +161,11 @@ class RetreatController
 
         DB::transaction(function () use ($retreat): void {
             $retreat->progress()->update(['count' => 0, 'completed_on' => null]);
-            $retreat->update(['completed_on' => null]);
+            $retreat->update([
+                'completed_on' => null,
+                'first_counted_on' => null,
+                'last_counted_on' => null,
+            ]);
         });
 
         return back();
@@ -188,6 +205,66 @@ class RetreatController
                 ? $today
                 : null,
         ]);
+
+        return back();
+    }
+
+    /**
+     * Guarda el retiro terminado en el historial. Terminar el conteo (cerrar
+     * la última etapa) NO manda nada al historial por sí solo: hasta que el
+     * usuario confirma acá, el retiro sigue siendo el activo y la pantalla de
+     * felicitaciones vuelve a aparecer cada vez que entra. Guardar lo saca de
+     * en medio (is_active en false) para que se pueda elegir otra deidad.
+     */
+    public function archive(Request $request, Retreat $retreat): RedirectResponse
+    {
+        Gate::authorize('update', $retreat);
+
+        if ($retreat->completed_on === null) {
+            return back()->withErrors(['retreat' => 'Este retiro todavía no está terminado.']);
+        }
+
+        $retreat->update([
+            'archived_on' => $this->localDate($request),
+            'is_active' => false,
+        ]);
+
+        return redirect()->route('retreats.history');
+    }
+
+    /**
+     * El historial: los retiros que el usuario guardó, con todo lo que
+     * escribió (notas, dedicaciones) y cómo le fue en cada etapa.
+     */
+    public function history(Request $request): Response
+    {
+        $retreats = $request->user()->retreats()
+            ->with('deity.mantras')
+            ->whereNotNull('archived_on')
+            ->orderByDesc('archived_on')
+            ->get()
+            ->map(fn (Retreat $retreat): array => $this->retreatPayload($retreat))
+            ->all();
+
+        return Inertia::render('retreats/History', [
+            'retreats' => array_values($retreats),
+        ]);
+    }
+
+    /**
+     * Borra un retiro guardado en el historial. Solo ahí: uno activo o
+     * terminado-pero-todavía-no-guardado no se toca por acá, para que este
+     * botón no pueda llevarse puesto un conteo en curso.
+     */
+    public function destroy(Retreat $retreat): RedirectResponse
+    {
+        Gate::authorize('delete', $retreat);
+
+        if ($retreat->archived_on === null) {
+            return back()->withErrors(['retreat' => 'Este retiro no está en el historial.']);
+        }
+
+        $retreat->delete();
 
         return back();
     }
@@ -258,6 +335,9 @@ class RetreatController
             ],
             'started_on' => $retreat->started_on->toDateString(),
             'completed_on' => $retreat->completed_on?->toDateString(),
+            'first_counted_on' => $retreat->first_counted_on?->toDateString(),
+            'last_counted_on' => $retreat->last_counted_on?->toDateString(),
+            'archived_on' => $retreat->archived_on?->toDateString(),
             'notes' => $retreat->notes,
             'dedications' => $retreat->dedications,
             'stages' => array_values($stages),

@@ -289,6 +289,216 @@ test('un usuario no reinicia ni edita el retiro de otro', function () {
     expect($ajeno->fresh()->notes)->toBeNull();
 });
 
+test('volver a elegir una deidad archivada la saca del historial', function () {
+    $deity = deityWithStages('Migtsema', [10]);
+    $user = User::factory()->create();
+    $retreat = Retreat::factory()->ownedBy($user)->create([
+        'retreat_deity_id' => $deity->id,
+        'completed_on' => '2026-08-01',
+        'archived_on' => '2026-08-02',
+        'is_active' => false,
+    ]);
+
+    $this->actingAs($user)->post('/retreats/activate', ['retreat_deity_id' => $deity->id]);
+
+    expect($retreat->fresh()->is_active)->toBeTrue()
+        ->and($retreat->fresh()->archived_on)->toBeNull();
+
+    // Si no se limpiara, aparecería en las dos pantallas a la vez.
+    $this->actingAs($user)
+        ->get('/retreats/history')
+        ->assertInertia(fn (Assert $page) => $page->count('retreats', 0));
+});
+
+test('el conteo guarda la fecha de la primera y la ultima cuenta', function () {
+    $deity = deityWithStages('Migtsema', [100]);
+    $user = User::factory()->create();
+    $retreat = Retreat::factory()->ownedBy($user)->create(['retreat_deity_id' => $deity->id]);
+    $stage = $deity->mantras()->first();
+
+    expect($retreat->first_counted_on)->toBeNull()
+        ->and($retreat->last_counted_on)->toBeNull();
+
+    // Un conteo en cero no cuenta como "empezar": todavia no se toco nada.
+    $this->actingAs($user)->patch("/retreats/{$retreat->id}/count", [
+        'retreat_mantra_id' => $stage->id,
+        'count' => 0,
+        'local_date' => '2026-09-01',
+    ]);
+
+    expect($retreat->fresh()->first_counted_on)->toBeNull()
+        ->and($retreat->fresh()->last_counted_on->toDateString())->toBe('2026-09-01');
+
+    // La primera cuenta real la fija.
+    $this->actingAs($user)->patch("/retreats/{$retreat->id}/count", [
+        'retreat_mantra_id' => $stage->id,
+        'count' => 10,
+        'local_date' => '2026-09-02',
+    ]);
+
+    expect($retreat->fresh()->first_counted_on->toDateString())->toBe('2026-09-02');
+
+    // Días después: last_counted_on avanza, first_counted_on no se mueve.
+    $this->actingAs($user)->patch("/retreats/{$retreat->id}/count", [
+        'retreat_mantra_id' => $stage->id,
+        'count' => 50,
+        'local_date' => '2026-09-05',
+    ]);
+
+    expect($retreat->fresh()->first_counted_on->toDateString())->toBe('2026-09-02')
+        ->and($retreat->fresh()->last_counted_on->toDateString())->toBe('2026-09-05');
+});
+
+test('reiniciar el conteo borra tambien las fechas de la primera y la ultima cuenta', function () {
+    $deity = deityWithStages('Migtsema', [100]);
+    $user = User::factory()->create();
+    $retreat = Retreat::factory()->ownedBy($user)->create([
+        'retreat_deity_id' => $deity->id,
+        'first_counted_on' => '2026-08-01',
+        'last_counted_on' => '2026-08-15',
+    ]);
+
+    $this->actingAs($user)->post("/retreats/{$retreat->id}/reset", ['confirm_name' => $deity->name]);
+
+    expect($retreat->fresh()->first_counted_on)->toBeNull()
+        ->and($retreat->fresh()->last_counted_on)->toBeNull();
+});
+
+test('terminar todas las etapas no lo manda solo al historial', function () {
+    $deity = deityWithStages('Migtsema', [10]);
+    $user = User::factory()->create();
+    $retreat = Retreat::factory()->ownedBy($user)->create(['retreat_deity_id' => $deity->id]);
+    $stage = $deity->mantras()->first();
+
+    $this->actingAs($user)->patch("/retreats/{$retreat->id}/stage", [
+        'retreat_mantra_id' => $stage->id,
+        'completed' => true,
+        'local_date' => '2026-09-01',
+    ]);
+
+    expect($retreat->fresh()->completed_on?->toDateString())->toBe('2026-09-01')
+        ->and($retreat->fresh()->archived_on)->toBeNull()
+        ->and($retreat->fresh()->is_active)->toBeTrue();
+
+    // Sigue siendo el retiro activo: la pantalla de "terminado, a guardar"
+    // vuelve a aparecer, no desaparece sola.
+    $this->actingAs($user)
+        ->get('/retreats')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('retreat.completed_on', '2026-09-01')
+            ->etc());
+});
+
+test('guardar el retiro terminado lo archiva y lo saca de la pantalla activa', function () {
+    $deity = deityWithStages('Migtsema', [10]);
+    $user = User::factory()->create();
+    $retreat = Retreat::factory()->ownedBy($user)->create([
+        'retreat_deity_id' => $deity->id,
+        'completed_on' => '2026-09-01',
+    ]);
+
+    $this->actingAs($user)
+        ->post("/retreats/{$retreat->id}/archive")
+        ->assertRedirect('/retreats/history');
+
+    expect($retreat->fresh()->archived_on)->not->toBeNull()
+        ->and($retreat->fresh()->is_active)->toBeFalse();
+
+    $this->actingAs($user)
+        ->get('/retreats')
+        ->assertInertia(fn (Assert $page) => $page->where('retreat', null)->etc());
+});
+
+test('no se puede archivar un retiro sin terminar', function () {
+    $deity = deityWithStages('Migtsema', [10]);
+    $user = User::factory()->create();
+    $retreat = Retreat::factory()->ownedBy($user)->create(['retreat_deity_id' => $deity->id]);
+
+    $this->actingAs($user)
+        ->post("/retreats/{$retreat->id}/archive")
+        ->assertSessionHasErrors('retreat');
+
+    expect($retreat->fresh()->archived_on)->toBeNull();
+});
+
+test('el historial trae los retiros guardados, con sus datos', function () {
+    $deity = deityWithStages('Migtsema', [10]);
+    $user = User::factory()->create();
+    $retreat = Retreat::factory()->ownedBy($user)->create([
+        'retreat_deity_id' => $deity->id,
+        'completed_on' => '2026-09-01',
+        'archived_on' => '2026-09-01',
+        'is_active' => false,
+        'notes' => 'Nota de prueba',
+        'dedications' => 'Dedicacion de prueba',
+    ]);
+
+    // Uno terminado pero todavía sin guardar no aparece.
+    Retreat::factory()->ownedBy($user)->create([
+        'retreat_deity_id' => deityWithStages('Heruka', [10])->id,
+        'completed_on' => '2026-09-01',
+    ]);
+
+    $this->actingAs($user)
+        ->get('/retreats/history')
+        ->assertInertia(fn (Assert $page) => $page
+            ->count('retreats', 1)
+            ->where('retreats.0.id', $retreat->id)
+            ->where('retreats.0.notes', 'Nota de prueba')
+            ->where('retreats.0.dedications', 'Dedicacion de prueba')
+            ->etc());
+});
+
+test('se puede borrar un retiro del historial', function () {
+    $deity = deityWithStages('Migtsema', [10]);
+    $user = User::factory()->create();
+    $retreat = Retreat::factory()->ownedBy($user)->create([
+        'retreat_deity_id' => $deity->id,
+        'completed_on' => '2026-09-01',
+        'archived_on' => '2026-09-01',
+        'is_active' => false,
+    ]);
+
+    $this->actingAs($user)
+        ->delete("/retreats/{$retreat->id}")
+        ->assertRedirect();
+
+    expect(Retreat::find($retreat->id))->toBeNull();
+});
+
+test('no se puede borrar un retiro que no esta en el historial', function () {
+    $deity = deityWithStages('Migtsema', [10]);
+    $user = User::factory()->create();
+    $retreat = Retreat::factory()->ownedBy($user)->create(['retreat_deity_id' => $deity->id]);
+
+    $this->actingAs($user)
+        ->delete("/retreats/{$retreat->id}")
+        ->assertSessionHasErrors('retreat');
+
+    expect(Retreat::find($retreat->id))->not->toBeNull();
+});
+
+test('un usuario no archiva ni borra el retiro de otro', function () {
+    $deity = deityWithStages('Migtsema', [10]);
+    $user = User::factory()->create();
+    $other = User::factory()->create();
+    $ajeno = Retreat::factory()->ownedBy($other)->create([
+        'retreat_deity_id' => $deity->id,
+        'completed_on' => '2026-09-01',
+        'archived_on' => '2026-09-01',
+    ]);
+
+    $this->actingAs($user)
+        ->post("/retreats/{$ajeno->id}/archive")
+        ->assertForbidden();
+
+    $this->actingAs($user)
+        ->delete("/retreats/{$ajeno->id}")
+        ->assertForbidden();
+
+    expect(Retreat::find($ajeno->id))->not->toBeNull();
+});
+
 test('un invitado no llega al retiro', function () {
     $this->get('/retreats')->assertRedirect('/login');
 });

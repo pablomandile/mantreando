@@ -20,4 +20,9 @@ class RetreatPolicy
     {
         return $this->view($user, $retreat);
     }
+
+    public function delete(User $user, Retreat $retreat): bool
+    {
+        return $this->view($user, $retreat);
+    }
 }

@@ -22,13 +22,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $retreat_deity_id
  * @property CarbonImmutable $started_on
  * @property CarbonImmutable|null $completed_on
+ * @property CarbonImmutable|null $first_counted_on
+ * @property CarbonImmutable|null $last_counted_on
+ * @property CarbonImmutable|null $archived_on
  * @property bool $is_active
  * @property string|null $notes
  * @property string|null $dedications
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  */
-#[Fillable(['retreat_deity_id', 'started_on', 'completed_on', 'is_active', 'notes', 'dedications'])]
+#[Fillable([
+    'retreat_deity_id', 'started_on', 'completed_on', 'first_counted_on',
+    'last_counted_on', 'archived_on', 'is_active', 'notes', 'dedications',
+])]
 class Retreat extends Model
 {
     /** @use HasFactory<RetreatFactory> */
@@ -40,6 +46,9 @@ class Retreat extends Model
         return [
             'started_on' => 'date',
             'completed_on' => 'date',
+            'first_counted_on' => 'date',
+            'last_counted_on' => 'date',
+            'archived_on' => 'date',
             'is_active' => 'boolean',
         ];
     }

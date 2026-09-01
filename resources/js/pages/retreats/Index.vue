@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import {
+    Archive,
     Check,
     ChevronDown,
     Lock,
     LockOpen,
+    PartyPopper,
     Pencil,
+    Save,
     Settings2,
 } from '@lucide/vue';
 import { trans as t } from 'laravel-vue-i18n';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import ImageLightbox from '@/components/ImageLightbox.vue';
 import Abacus from '@/components/retreats/Abacus.vue';
+import Confetti from '@/components/retreats/Confetti.vue';
 import ResetRetreatDialog from '@/components/retreats/ResetRetreatDialog.vue';
 import { Button } from '@/components/ui/button';
 import { getLocalDate } from '@/lib/practice/localDate';
@@ -42,6 +47,8 @@ interface ActiveRetreat {
     };
     started_on: string;
     completed_on: string | null;
+    first_counted_on: string | null;
+    last_counted_on: string | null;
     notes: string | null;
     dedications: string | null;
     stages: Stage[];
@@ -90,12 +97,33 @@ watch(
 const count = ref(stage.value?.count ?? 0);
 
 // Al cambiar de etapa (o de deidad) el ábaco arranca donde quedó esa etapa.
+// Si ya no queda etapa en curso PORQUE el retiro se terminó, count no se
+// toca acá: la pantalla de "terminado" no lo usa (usa lastStage, de solo
+// lectura), así que ponerlo en cero sería tocar algo que nadie mira.
 watch(
     () => stage.value?.id,
     () => {
         flush();
-        count.value = stage.value?.count ?? 0;
+
+        if (stage.value !== null) {
+            count.value = stage.value.count;
+        } else if (props.retreat?.completed_on == null) {
+            count.value = 0;
+        }
     },
+);
+
+// La última etapa en el orden del retiro: cuando ES la que está en curso,
+// llegar a su cifra termina el retiro entero, no solo la etapa.
+const lastStage = computed<Stage | null>(
+    () => props.retreat?.stages.at(-1) ?? null,
+);
+
+const isLastStage = computed(
+    () =>
+        stage.value !== null &&
+        lastStage.value !== null &&
+        stage.value.id === lastStage.value.id,
 );
 
 const remaining = computed(() =>
@@ -105,6 +133,10 @@ const remaining = computed(() =>
 const reached = computed(
     () => stage.value !== null && count.value >= stage.value.goal,
 );
+
+// Dispara la serpentina una vez, en el momento exacto en que se completa la
+// ÚLTIMA etapa (no en cada etapa intermedia).
+const justFinishedRetreat = computed(() => reached.value && isLastStage.value);
 
 const progressPercent = computed(() => {
     if (stage.value === null || stage.value.goal === 0) {
@@ -191,7 +223,11 @@ function flush(): void {
 
     router.patch(
         `/retreats/${props.retreat.id}/count`,
-        { retreat_mantra_id: stage.value.id, count: sent },
+        {
+            retreat_mantra_id: stage.value.id,
+            count: sent,
+            local_date: getLocalDate(),
+        },
         {
             preserveScroll: true,
             preserveState: true,
@@ -394,6 +430,25 @@ function completeStage(): void {
     );
 }
 
+const savingToHistory = ref(false);
+
+/**
+ * Guarda el retiro terminado en el historial. El servidor redirige a esa
+ * pantalla si sale bien: no hace falta hacer nada más acá.
+ */
+function saveToHistory(): void {
+    if (props.retreat === null) {
+        return;
+    }
+
+    savingToHistory.value = true;
+    router.post(
+        `/retreats/${props.retreat.id}/archive`,
+        {},
+        { onFinish: () => (savingToHistory.value = false) },
+    );
+}
+
 /**
  * El diálogo ya confirmó el reinicio contra el servidor sin preserveState,
  * así que las props (stages, current_stage_id) llegan frescas en 0. Lo que
@@ -459,6 +514,12 @@ const selectClass =
                     :deity-name="retreat.deity.name"
                     @reset="onReset"
                 />
+                <Button as-child size="sm" variant="outline">
+                    <Link href="/retreats/history">
+                        <Archive class="size-4" />
+                        {{ t('Historial') }}
+                    </Link>
+                </Button>
                 <Button
                     v-if="canManageDeities"
                     as-child
@@ -549,7 +610,7 @@ const selectClass =
                 }"
             >
                 <div class="flex items-start gap-4">
-                    <img
+                    <ImageLightbox
                         v-if="retreat.deity.image_url"
                         :src="retreat.deity.image_url"
                         :alt="retreat.deity.name"
@@ -567,7 +628,7 @@ const selectClass =
                             {{ stage.name }}
                         </p>
                     </div>
-                    <img
+                    <ImageLightbox
                         v-if="retreat.deity.syllable_image_url"
                         :src="retreat.deity.syllable_image_url"
                         :alt="
@@ -591,15 +652,78 @@ const selectClass =
                 </p>
             </div>
 
+            <!-- Retiro terminado (currentStage null porque ya no queda
+                 ninguna etapa abierta) pero todavía no guardado: se muestra
+                 igual que en curso, de solo lectura, con "Guardar datos"
+                 para pasarlo al historial. Nada acá vive en `count`: ese ref
+                 es para la etapa activa, y acá ya no hay ninguna. -->
+            <template
+                v-if="
+                    stage === null &&
+                    retreat.stages.length > 0 &&
+                    lastStage !== null
+                "
+            >
+                <p
+                    class="rounded-xl border bg-card/50 p-4 leading-relaxed font-light whitespace-pre-line"
+                >
+                    {{ lastStage.text }}
+                </p>
+
+                <div class="space-y-2">
+                    <div class="flex items-baseline justify-between gap-3">
+                        <span class="text-3xl font-semibold tabular-nums">
+                            {{ formatNumber(lastStage.count) }}
+                        </span>
+                        <span
+                            class="text-sm text-muted-foreground tabular-nums"
+                        >
+                            {{
+                                t('de :goal', {
+                                    goal: formatNumber(lastStage.goal),
+                                })
+                            }}
+                        </span>
+                    </div>
+                    <div class="h-2 overflow-hidden rounded-full bg-muted">
+                        <div class="h-full w-full rounded-full bg-foreground" />
+                    </div>
+                    <p class="text-xs text-muted-foreground">
+                        {{ t('Cifra cumplida') }}
+                    </p>
+                </div>
+
+                <Abacus
+                    :count="lastStage.count"
+                    disabled
+                    :data-color="retreat.deity.color ?? undefined"
+                />
+
+                <div
+                    class="space-y-3 rounded-xl border border-foreground/20 bg-accent/60 p-4 text-center"
+                >
+                    <p
+                        class="flex items-center justify-center gap-2 text-sm font-medium"
+                    >
+                        <PartyPopper class="size-4 shrink-0" />
+                        {{ t('Completaste todas las etapas de este retiro.') }}
+                    </p>
+                    <Button
+                        size="sm"
+                        :disabled="savingToHistory"
+                        @click="saveToHistory"
+                    >
+                        <Save class="size-4" />
+                        {{ t('Guardar datos') }}
+                    </Button>
+                </div>
+            </template>
+
             <p
-                v-if="stage === null"
+                v-else-if="stage === null"
                 class="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground"
             >
-                {{
-                    retreat.stages.length === 0
-                        ? t('Esta deidad todavía no tiene mantras cargados.')
-                        : t('Completaste todas las etapas de este retiro.')
-                }}
+                {{ t('Esta deidad todavía no tiene mantras cargados.') }}
             </p>
 
             <template v-else>
@@ -643,30 +767,63 @@ const selectClass =
 
                 <div
                     v-if="reached && !dismissed"
-                    class="space-y-3 rounded-xl border border-foreground/20 bg-accent/60 p-4 landscape-touch:hidden"
+                    class="space-y-3 rounded-xl border border-foreground/20 bg-accent/60 p-4"
+                    :class="{ 'landscape-touch:hidden': !isLastStage }"
                 >
-                    <p class="text-sm font-medium">
-                        {{
-                            t('Completaste las :goal de :name.', {
-                                goal: formatNumber(stage.goal),
-                                name: stage.name,
-                            })
-                        }}
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        <Button size="sm" @click="completeStage">
-                            <Check class="size-4" />
-                            {{ t('Pasar a la siguiente') }}
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            @click="dismissed = true"
+                    <template v-if="isLastStage">
+                        <p
+                            class="flex items-center justify-center gap-2 text-sm font-medium"
                         >
-                            {{ t('Seguir contando') }}
-                        </Button>
-                    </div>
+                            <PartyPopper class="size-4 shrink-0" />
+                            {{
+                                t(
+                                    '¡Felicitaciones! Completaste el retiro de :name.',
+                                    {
+                                        name: retreat.deity.name,
+                                    },
+                                )
+                            }}
+                        </p>
+                        <div class="flex flex-wrap justify-center gap-2">
+                            <Button size="sm" @click="completeStage">
+                                <Check class="size-4" />
+                                {{ t('Finalizar retiro') }}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                @click="dismissed = true"
+                            >
+                                {{ t('Seguir contando') }}
+                            </Button>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <p class="text-sm font-medium">
+                            {{
+                                t('Completaste las :goal de :name.', {
+                                    goal: formatNumber(stage.goal),
+                                    name: stage.name,
+                                })
+                            }}
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <Button size="sm" @click="completeStage">
+                                <Check class="size-4" />
+                                {{ t('Pasar a la siguiente') }}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                @click="dismissed = true"
+                            >
+                                {{ t('Seguir contando') }}
+                            </Button>
+                        </div>
+                    </template>
                 </div>
+
+                <Confetti :active="justFinishedRetreat" />
 
                 <Abacus
                     :count="count"

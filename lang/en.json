@@ -295,5 +295,16 @@
     "Mostrar más": "Show more",
     "El contador está bloqueado.": "The counter is locked.",
     "Desbloquear el contador": "Unlock the counter",
-    "Bloquear el contador": "Lock the counter"
+    "Bloquear el contador": "Lock the counter",
+    "Finalizar retiro": "Finish retreat",
+    "¡Felicitaciones! Completaste el retiro de :name.": "Congratulations! You completed the :name retreat.",
+    "Guardar datos": "Save data",
+    "Historial": "History",
+    "Historial de retiros": "Retreat history",
+    "Los retiros que ya guardaste, con todos sus datos.": "The retreats you've already saved, with all their data.",
+    "Todavía no guardaste ningún retiro.": "You haven't saved any retreat yet.",
+    "Del :start al :end": "From :start to :end",
+    "Guardado el :date": "Saved on :date",
+    "Eliminar del historial": "Delete from history",
+    "¿Eliminar este retiro del historial? Se pierde todo lo guardado: notas, dedicaciones y el conteo de cada etapa.": "Delete this retreat from history? Everything saved is lost: notes, dedications, and each stage's count."
 }

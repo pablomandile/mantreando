@@ -34,9 +34,13 @@
             }
         </style>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        {{-- ?v=2: el CDN de Hostinger cachea los estáticos por días sin que
+             lo diga ningún Cache-Control (el mismo problema que tuvo sw.js).
+             Como estas URLs ya estaban en uso con el logo viejo, cambiarles
+             el archivo en el origen no alcanza — hace falta una URL nueva. --}}
+        <link rel="icon" href="/favicon.ico?v=2" sizes="any">
+        <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
 
         @fonts
 

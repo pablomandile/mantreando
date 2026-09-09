@@ -11,7 +11,10 @@ test('el manifest existe, es JSON válido y apunta a íconos existentes', functi
         ->and($manifest['display'])->toBe('standalone');
 
     foreach ($manifest['icons'] as $icon) {
-        expect(file_exists(public_path(ltrim($icon['src'], '/'))))->toBeTrue();
+        // El ?v= de más (para saltear el caché del CDN, como el de sw.js)
+        // no es parte del nombre del archivo real.
+        $file = strtok(ltrim($icon['src'], '/'), '?');
+        expect(file_exists(public_path($file)))->toBeTrue();
     }
 });
 
@@ -64,4 +67,26 @@ test('el service worker se registra con una URL versionada', function () {
     // distinta para saltearla.
     expect(file_get_contents(resource_path('js/lib/pwa.ts')))
         ->toContain("navigator.serviceWorker.register('/sw.js?v=");
+});
+
+test('el favicon y los iconos de la PWA se piden con una URL versionada', function () {
+    // Mismo problema que sw.js pero sin .htaccess que lo cubra: el favicon y
+    // los íconos no tienen Cache-Control propio, así que ante un logo nuevo
+    // el CDN puede seguir sirviendo el viejo bajo la misma URL por días.
+    $blade = file_get_contents(resource_path('views/app.blade.php'));
+
+    expect($blade)->toContain('favicon.ico?v=')
+        ->toContain('favicon.svg?v=')
+        ->toContain('apple-touch-icon.png?v=');
+
+    $manifest = json_decode(
+        file_get_contents(public_path('manifest.webmanifest')),
+        true,
+        512,
+        JSON_THROW_ON_ERROR,
+    );
+
+    foreach ($manifest['icons'] as $icon) {
+        expect($icon['src'])->toContain('?v=');
+    }
 });
